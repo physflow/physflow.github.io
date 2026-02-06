@@ -1,0 +1,69 @@
+<aside id="main-sidebar" class="fixed md:sticky top-0 md:top-[56px] left-0 h-full md:h-[calc(100vh-56px)] w-64 md:w-48 bg-white dark:bg-[#1a1a1b] z-[150] md:z-40 transform -translateX-full md:translate-x-0 transition-transform duration-300 overflow-y-auto pt-14 md:pt-4 border-r dark:border-gray-800">
+    <nav class="flex flex-col text-sm gap-1">
+        <a href="index.html" class="nav-link active">
+            <i class="fas fa-home w-4 text-center"></i> <span>হোম</span>
+        </a>
+
+        <a href="explore.html" class="nav-link">
+            <i class="fas fa-search w-4 text-center"></i> <span>খুঁজুন</span>
+        </a>
+
+   <a href="categories.html" class="nav-link">
+            <i class="fa-regular fa-folder text-center"></i> <span>বিভাগ</span>
+        </a>
+
+
+        <a href="tags.html" class="nav-link">
+            <i class="fas fa-tags w-4 text-center"></i> <span>ট্যাগ</span>
+        </a>
+
+        <a href="blogs.html" class="nav-link">
+            <i class="fa-solid fa-blog text-center"></i> <span>ব্লগ</span>
+        </a>
+    </nav>
+</aside>
+
+<style>
+    /* কমন নেভিগেশন স্টাইল */
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        color: #4b5563;
+        transition: all 0.2s;
+        border-left: 4px solid transparent; /* মোবাইলের জন্য বামে বর্ডার */
+    }
+
+    .dark .nav-link {
+        color: #9ca3af;
+    }
+
+    .nav-link:hover, .nav-link.active {
+        background-color: #f9fafb;
+        color: #F48024;
+        border-left-color: #F48024;
+    }
+
+    .dark .nav-link:hover, .dark .nav-link.active {
+        background-color: #1f2937;
+    }
+
+    /* ডেস্কটপ ভিউ ফিক্স */
+    @media (min-width: 768px) {
+        .nav-link {
+            padding: 10px 16px;
+            border-left: 0;
+            border-right: 4px solid transparent; /* ডেস্কটপে বর্ডার ডানে সুন্দর লাগে */
+        }
+        .nav-link:hover, .nav-link.active {
+            border-left-color: transparent;
+            border-right-color: #F48024;
+        }
+    }
+
+    /* মোবাইলে স্লাইড ইন এনিমেশন ক্লাস */
+    #main-sidebar.open {
+        transform: translateX(0) !important;
+    }
+</style>

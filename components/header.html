@@ -1,0 +1,40 @@
+<header class="border-t-4 border-[#F48024] shadow-sm bg-white dark:bg-[#1a1a1b] dark:border-[#DB6500] fixed top-0 w-full h-[56px] z-[100] border-b dark:border-gray-700">
+    <div class="container mx-auto px-4 h-full flex items-center justify-between">
+        
+        <div class="flex items-center space-x-2 md:space-x-6 h-full">
+            <button id="hamburger-btn" class="md:hidden text-gray-600 dark:text-gray-300 focus:outline-none p-2 -ml-2 rounded active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+
+            <a href="index.html" class="text-2xl flex-shrink-0 py-1 rounded transition-colors active:bg-gray-100 dark:active:bg-gray-800 flex items-center">
+                <span class="font-extrabold text-gray-800 dark:text-white">phys</span><span class="font-light text-gray-500 dark:text-gray-400">flow</span>
+            </a>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button id="theme-toggle" class="text-gray-500 dark:text-gray-400 transition-colors p-2 rounded flex items-center justify-center active:bg-gray-100 dark:active:bg-gray-800">
+                <i id="theme-icon" class="fas fa-moon text-lg"></i>
+            </button>
+            
+            <a href="ask.html" id="header-ask-btn" class="hidden bg-gray-100 dark:bg-gray-800 text-[#F48024] hover:bg-gray-200 dark:hover:bg-gray-700 w-8 h-8 md:w-auto md:h-auto md:px-3 md:py-1.5 flex items-center justify-center rounded-md transition-colors">
+                <i class="fas fa-plus text-sm md:mr-1.5"></i>
+                <span class="hidden md:inline text-sm">প্রশ্ন করুন</span>
+            </a>
+
+            <button id="login-btn" class="bg-gray-100 dark:bg-gray-800 text-[#F48024] px-3 py-1.5 rounded text-sm transition-colors active:bg-gray-200 dark:active:bg-gray-700 font-medium">
+                লগ ইন
+            </button>
+
+            <div id="user-menu" class="hidden relative">
+                <div class="relative">
+                    <img id="profile-btn" src="" class="w-8 h-8 rounded-full cursor-pointer border border-gray-200 dark:border-gray-700">
+                    <div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1b] border dark:border-gray-700 rounded shadow-lg p-2 z-[200]">
+                        <a href="profile.html" class="block text-gray-700 dark:text-gray-300 p-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded">প্রোফাইল</a>
+                        <a href="notifications.html" class="block text-gray-700 dark:text-gray-300 p-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded">নোটিফিকেশন</a>
+                        <button id="logout-btn" class="text-red-500 w-full text-left p-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded">লগআউট</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

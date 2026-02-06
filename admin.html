@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physflow - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .tab-btn { position: relative; transition: all 0.2s; border-bottom: 3px solid transparent; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; font-weight: bold; }
+        .badge { font-size: 9px; padding: 1px 5px; border-radius: 10px; margin-left: 4px; font-weight: bold; }
+        .dropdown-menu { display: none; position: absolute; right: 0; top: 100%; margin-top: 8px; width: 140px; }
+        .dropdown-menu.show { display: block; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .logo-link { transition: background-color 0.2s; border-radius: 6px; padding: 2px 6px; margin-left: -6px; }
+        .logo-link:active { background-color: #e5e7eb; }
+        .dark .logo-link:active { background-color: #374151; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 min-h-screen">
+
+    <header class="border-t-4 border-blue-600 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-[56px] z-[100] border-b dark:border-gray-700">
+        <div class="container mx-auto px-4 h-full flex items-center justify-between">
+            <a href="index.html" class="logo-link flex items-center">
+                <span class="font-extrabold text-xl dark:text-white">phys</span><span class="font-light text-xl text-gray-500">flow</span>
+                <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded ml-2 font-bold">ADMIN</span>
+            </a>
+            <div id="admin-info" class="flex items-center space-x-3"></div>
+        </div>
+    </header>
+
+    <main class="container mx-auto pt-[80px] px-4 pb-10">
+        <div id="access-denied" class="hidden flex flex-col items-center justify-center mt-20 text-center">
+            <i class="fas fa-user-shield text-6xl text-red-500 mb-4"></i>
+            <h1 class="text-2xl font-bold text-red-600">এক্সেস ডিনাইড!</h1>
+            <a href="index.html" class="mt-6 bg-blue-600 text-white px-6 py-2 rounded-full text-sm">হোমে ফিরে যান</a>
+        </div>
+
+        <div id="admin-content" class="hidden">
+            <div class="mb-6 relative max-w-2xl mx-auto">
+                <input type="text" id="admin-search" placeholder="টাইটেল বা লেখকের নাম দিয়ে খুঁজুন..." 
+                    class="w-full bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-full py-2 px-10 focus:ring-2 focus:ring-blue-500 outline-none text-sm shadow-sm transition">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+
+            <div class="flex border-b dark:border-gray-700 mb-6 gap-2 overflow-x-auto no-scrollbar items-center">
+                <button id="tab-pending" class="tab-btn active py-2 px-3 text-sm whitespace-nowrap flex items-center">
+                    পেন্ডিং <span id="badge-pending" class="badge bg-orange-100 text-orange-600 dark:bg-orange-900/30">০</span>
+                </button>
+                <button id="tab-all" class="tab-btn py-2 px-3 text-sm whitespace-nowrap flex items-center">
+                    পোস্ট <span id="badge-all" class="badge bg-blue-100 text-blue-600 dark:bg-blue-900/30">০</span>
+                </button>
+                <button id="tab-featured" class="tab-btn py-2 px-3 text-sm whitespace-nowrap flex items-center">
+                    ফিচারড <span id="badge-featured" class="badge bg-purple-100 text-purple-600 dark:bg-purple-900/30">০</span>
+                </button>
+                <button id="tab-users" class="tab-btn py-2 px-3 text-sm whitespace-nowrap flex items-center">
+                    ইউজার <span id="badge-users" class="badge bg-green-100 text-green-600 dark:bg-green-900/30">০</span>
+                </button>
+                <button id="tab-reports" class="tab-btn py-2 px-3 text-sm whitespace-nowrap flex items-center">
+                    রিপোর্ট <span id="badge-reports" class="badge bg-red-100 text-red-600 dark:bg-red-900/30">০</span>
+                </button>
+            </div>
+
+            <div id="list-container" class="grid grid-cols-1 gap-3">
+                <div class="text-center py-10 text-gray-500">লোড হচ্ছে...</div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyGf_NQLsckjUQH1FwbUP1DKZvzpbrYHo",
+            authDomain: "phyflow-devs.firebaseapp.com",
+            projectId: "phyflow-devs",
+            storageBucket: "phyflow-devs.firebasestorage.app",
+            messagingSenderId: "34351515593",
+            appId: "1:34351515593:web:ca06f69f07ace936b7ca18"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const ADMIN_EMAILS = ['phys.arif@gmail.com', 'physflow.devs@gmail.com'];
+        let unsubscribe = null;
+        let currentFilter = 'pending';
+        let searchQuery = '';
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user && ADMIN_EMAILS.includes(user.email)) {
+                await setDoc(doc(db, "users", user.uid), {
+                    displayName: user.displayName,
+                    email: user.email,
+                    photoURL: user.photoURL,
+                    lastLogin: serverTimestamp(),
+                    role: 'admin'
+                }, { merge: true });
+
+                document.getElementById('admin-content').classList.remove('hidden');
+                setupAdminUI(user);
+                syncStats();
+                loadData('pending');
+            } else {
+                document.getElementById('access-denied').classList.remove('hidden');
+            }
+        });
+
+        function syncStats() {
+            onSnapshot(collection(db, "questions"), (snap) => {
+                const docs = snap.docs.map(d => d.data());
+                document.getElementById('badge-all').innerText = snap.size;
+                document.getElementById('badge-pending').innerText = docs.filter(d => d.status === 'pending').length;
+                document.getElementById('badge-featured').innerText = docs.filter(d => d.featured === true).length;
+            });
+            onSnapshot(collection(db, "users"), (snap) => document.getElementById('badge-users').innerText = snap.size);
+            onSnapshot(collection(db, "reports"), (snap) => document.getElementById('badge-reports').innerText = snap.size);
+        }
+
+        function setupAdminUI(user) {
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('admin-info').innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                        <i class="fas ${isDark ? 'fa-sun text-yellow-500' : 'fa-moon text-blue-600'} text-lg"></i>
+                    </button>
+                    <div class="relative">
+                        <button id="profile-menu-btn" class="flex items-center outline-none">
+                            <img src="${user.photoURL}" class="w-8 h-8 rounded-full border-2 border-blue-500 p-0.5 object-cover">
+                        </button>
+                        <div id="dropdown" class="dropdown-menu bg-white dark:bg-gray-800 border dark:border-gray-700 shadow-xl rounded-lg py-1 z-[110]">
+                            <a href="profile.html?id=${user.uid}" class="block px-4 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition">প্রোফাইল</a>
+                            <button id="logout-btn-action" class="w-full text-left px-4 py-2 text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition border-t dark:border-gray-700">লগ আউট</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('theme-toggle').onclick = () => {
+                const isNowDark = document.documentElement.classList.toggle('dark');
+                localStorage.setItem('theme', isNowDark ? 'dark' : 'light');
+                document.getElementById('theme-toggle').innerHTML = `<i class="fas ${isNowDark ? 'fa-sun text-yellow-500' : 'fa-moon text-blue-600'} text-lg"></i>`;
+            };
+
+            const dropdown = document.getElementById('dropdown');
+            document.getElementById('profile-menu-btn').onclick = (e) => { e.stopPropagation(); dropdown.classList.toggle('show'); };
+            window.addEventListener('click', () => dropdown.classList.remove('show'));
+            document.getElementById('logout-btn-action').onclick = () => signOut(auth);
+
+            ['pending', 'all', 'featured', 'users', 'reports'].forEach(tab => {
+                document.getElementById(`tab-${tab}`).onclick = () => {
+                    currentFilter = tab;
+                    switchTab(tab);
+                    if(tab === 'users') loadUsers();
+                    else if(tab === 'reports') loadReports();
+                    else loadData(tab);
+                };
+            });
+        }
+
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+        }
+
+        function loadData(filterType) {
+            if (unsubscribe) unsubscribe();
+            const container = document.getElementById('list-container');
+            let q;
+            const qRef = collection(db, "questions");
+            if (filterType === 'pending') q = query(qRef, where("status", "==", "pending"), orderBy("createdAt", "desc"));
+            else if (filterType === 'featured') q = query(qRef, where("featured", "==", true), orderBy("createdAt", "desc"));
+            else q = query(qRef, orderBy("createdAt", "desc"));
+
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                container.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (searchQuery && !data.title.toLowerCase().includes(searchQuery)) return;
+                    const id = docSnap.id;
+                    const card = document.createElement('div');
+                    card.className = "bg-white dark:bg-gray-800 p-4 rounded-lg border dark:border-gray-700 shadow-sm flex flex-col gap-2";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="min-w-0 flex-1">
+                                <h3 class="font-bold text-sm truncate">${data.title}</h3>
+                                <p class="text-[10px] opacity-60">ID: ${id} | By: ${data.authorName}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1 shrink-0">
+                                <span class="text-[8px] uppercase px-1.5 py-0.5 rounded font-bold ${data.status === 'approved' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${data.status}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mt-2 pt-2 border-t dark:border-gray-700/50">
+                            ${data.status === 'pending' ? `<button onclick="window.updateStatus('${id}', 'approved')" class="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-bold">Approve</button>` : ''}
+                            <button onclick="window.toggleFeatured('${id}', ${data.featured || false})" class="text-[10px] border dark:border-gray-600 px-2.5 py-1 rounded"><i class="fa-star ${data.featured ? 'fas text-yellow-500' : 'far'}"></i></button>
+                            <a href="ask.html?id=${id}" class="text-[10px] bg-gray-100 dark:bg-gray-700 px-2.5 py-1 rounded"><i class="fas fa-edit"></i></a>
+                            <button onclick="window.deleteItem('${id}')" class="text-red-500 ml-auto p-1"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        function loadUsers() {
+            if (unsubscribe) unsubscribe();
+            const container = document.getElementById('list-container');
+            unsubscribe = onSnapshot(collection(db, "users"), (snapshot) => {
+                container.innerHTML = '';
+                snapshot.forEach(docSnap => {
+                    const user = docSnap.data();
+                    if (searchQuery && !user.email.toLowerCase().includes(searchQuery)) return;
+                    const id = docSnap.id;
+                    const card = document.createElement('div');
+                    card.className = "bg-white dark:bg-gray-800 p-3 rounded-lg border dark:border-gray-700 flex items-center justify-between";
+                    card.innerHTML = `
+                        <a href="profile.html?id=${id}" class="flex items-center gap-3 min-w-0 hover:opacity-80 transition-opacity">
+                            <img src="${user.photoURL}" class="w-8 h-8 rounded-full">
+                            <div class="min-w-0">
+                                <p class="font-bold text-xs truncate">${user.displayName}</p>
+                                <p class="text-[9px] opacity-60 truncate">${user.email}</p>
+                            </div>
+                        </a>
+                        <div class="flex items-center gap-2">
+                            <select onchange="window.updateRole('${id}', this.value)" class="text-[9px] bg-gray-50 dark:bg-gray-700 border dark:border-gray-600 rounded px-1 py-1 outline-none">
+                                <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                                <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            </select>
+                            <button onclick="window.deleteUser('${id}')" class="text-red-500 p-1"><i class="fas fa-trash-alt text-xs"></i></button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        function loadReports() {
+            if (unsubscribe) unsubscribe();
+            const container = document.getElementById('list-container');
+            unsubscribe = onSnapshot(collection(db, "reports"), (snapshot) => {
+                container.innerHTML = snapshot.empty ? '<p class="text-center py-10 opacity-50">কোনো রিপোর্ট নেই।</p>' : '';
+                snapshot.forEach(docSnap => {
+                    const report = docSnap.data();
+                    const card = document.createElement('div');
+                    card.className = "bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 p-4 rounded-lg";
+                    card.innerHTML = `
+                        <p class="text-xs font-bold text-red-700 dark:text-red-400">কারণ: ${report.reason}</p>
+                        <p class="text-[10px] opacity-70">পোস্ট ID: ${report.questionId}</p>
+                        <div class="mt-2 flex gap-2">
+                            <button onclick="window.deleteItem('${report.questionId}')" class="bg-red-600 text-white px-2 py-1 rounded text-[9px]">ডিলিট পোস্ট</button>
+                            <button onclick="window.dismissReport('${docSnap.id}')" class="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded text-[9px]">খারিজ</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        window.updateStatus = async (id, status) => await updateDoc(doc(db, "questions", id), { status });
+        window.toggleFeatured = async (id, cur) => await updateDoc(doc(db, "questions", id), { featured: !cur });
+        window.deleteItem = async (id) => { if(confirm('ডিলিট করবেন?')) await deleteDoc(doc(db, "questions", id)); };
+        window.dismissReport = async (id) => await deleteDoc(doc(db, "reports", id));
+        window.updateRole = async (id, role) => await updateDoc(doc(db, "users", id), { role });
+        window.deleteUser = async (id) => { if(confirm('ইউজার রিমুভ করতে চান?')) await deleteDoc(doc(db, "users", id)); };
+
+        document.getElementById('admin-search').oninput = (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            if(currentFilter === 'users') loadUsers(); else if(currentFilter === 'reports') loadReports(); else loadData(currentFilter);
+        };
+    </script>
+</body>
+</html>

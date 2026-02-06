@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রশ্ন করুন - physflow</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { 500: '#F48024' }, blue: { 500: '#0a95ff' } } } }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* এডিটর ও টুলবার ডার্ক মোড ফিক্স */
+        .dark .ql-toolbar.ql-snow {
+            background-color: #2d2d2e;
+            border-color: #374151;
+            color: #e5e7eb;
+        }
+        .dark .ql-container.ql-snow {
+            background-color: #1e1e1f;
+            border-color: #374151;
+            color: #e5e7eb;
+        }
+        .dark .ql-snow .ql-stroke { stroke: #e5e7eb; }
+        .dark .ql-snow .ql-fill { fill: #e5e7eb; }
+        .dark .ql-snow .ql-picker { color: #e5e7eb; }
+
+        #editor {
+            min-height: 250px;
+            font-family: inherit;
+        }
+
+        /* ইমেজ রিসাইজার হ্যান্ডেল স্টাইল */
+        .ql-editor img { max-width: 100%; height: auto; border-radius: 4px; }
+        
+        /* প্রিভিউ এরিয়া স্টাইল */
+        #preview-area:empty { display: none; }
+    </style>
+</head>
+<body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
+
+    <div id="header-placeholder"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden md:hidden"></div>
+
+    <div class="container mx-auto pt-[56px] flex flex-col md:flex-row gap-0 md:gap-6 flex-grow">    
+        <div id="sidebar-left-placeholder"></div>
+
+        <main class="flex-grow px-4 md:px-0 py-6">
+            <div class="max-w-3xl">
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 p-5 rounded-md mb-8 text-sm">
+                    <h2 class="text-lg font-bold text-blue-800 dark:text-blue-400 mb-2">একটি ভালো প্রশ্ন করার নিয়মাবলী</h2>
+                    <ul class="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-300">
+                        <li>স্পষ্ট শিরোনাম দিন।</li>
+                        <li>গাণিতিক সূত্র লিখতে <b>f(x)</b> বাটনে ক্লিক করুন।</li>
+                        <li>প্রয়োজনে ছবি বা ইউটিউব ভিডিও যুক্ত করুন।</li>
+                    </ul>
+                </div>
+
+                <form id="ask-form" class="space-y-6">
+                    <div class="bg-white dark:bg-[#1e1e1f] border border-gray-300 dark:border-gray-800 p-5 rounded-md shadow-sm">
+                        <label for="title" class="text-sm font-bold block mb-2">শিরোনাম</label>
+                        <input type="text" id="title" placeholder="উদা: ভেক্টরের লব্ধি নির্ণয়ের সূত্রটি কী?" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white">
+                    </div>
+
+                    <div class="bg-white dark:bg-[#1e1e1f] border border-gray-300 dark:border-gray-800 p-5 rounded-md shadow-sm">
+                        <label class="text-sm font-bold block mb-2">বিস্তারিত বর্ণনা</label>
+                        <div id="editor-container">
+                            <div id="editor" class="bg-white dark:bg-gray-800"></div>
+                            </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-[#1e1e1f] border border-gray-300 dark:border-gray-800 p-5 rounded-md shadow-sm">
+                        <label for="category" class="text-sm font-bold block mb-2">বিভাগ</label>
+                        <select id="category" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded py-2.5 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white">
+                            <option value="">নির্বাচন করুন</option>
+                            <option value="গতি ও গতিবিদ্যা">গতি ও গতিবিদ্যা</option>
+                            <option value="বলবিদ্যা">বলবিদ্যা</option>
+                            <option value="পদার্থের ধর্ম">পদার্থের ধর্ম</option>
+                        </select>
+                        <div id="tag-display" class="mt-4 flex flex-wrap gap-2"></div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-4 pt-4">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium py-2.5 px-6 rounded shadow-sm transition">
+                            পোস্ট করুন
+                        </button>
+                        <button type="button" onclick="showPreview()" class="bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium py-2.5 px-6 rounded shadow-sm transition">
+                            প্রিভিউ দেখুন
+                        </button>
+                    </div>
+
+                    <div id="preview-area"></div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill-image-resize-module@3.0.0/image-resize.min.js"></script>
+    
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/ask-question.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>physflow - পদার্থবিজ্ঞানের প্রশ্নোত্তর কেন্দ্র</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 500: '#F48024' },
+                        blue: { 500: '#0a95ff' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
+
+    <div id="header-placeholder"></div>
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden md:hidden"></div>
+
+    <div class="container mx-auto pt-[56px] flex flex-col md:flex-row gap-0 md:gap-6 flex-grow">    
+        
+        <div id="sidebar-left-placeholder"></div>
+
+        <main class="flex-grow px-4 md:px-0">
+            
+            <div class="mt-6 mb-4 max-w-2xl mx-auto">
+                <div class="relative">
+                    <input type="text" id="search-input" placeholder="প্রশ্ন খুঁজুন..." 
+                        class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full py-2 px-5 pr-12 focus:outline-none focus:ring-2 focus:ring-brand-500 transition text-sm">
+                    <button id="search-btn" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-brand-600 transition">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between mb-4 gap-2 py-2 border-b dark:border-gray-800">
+                <div class="flex items-center gap-3 text-[11px] font-medium text-gray-500 dark:text-gray-400">
+                    <div><span class="text-blue-600 dark:text-blue-400 font-bold" id="total-questions">০</span> প্রশ্ন</div>
+                    <div><span class="text-green-600 dark:text-green-500 font-bold" id="total-answers">০</span> সমাধান</div>
+                </div>
+                <div class="inline-flex border border-gray-300 dark:border-gray-700 rounded overflow-hidden text-[11px] bg-white dark:bg-transparent">
+                    <button id="btn-latest" class="filter-btn active px-3 py-1.5 border-r dark:border-gray-700 transition">সর্বশেষ</button>
+                    <button id="btn-featured" class="filter-btn px-3 py-1.5 transition">জনপ্রিয়</button>
+                    <button id="btn-trending" class="filter-btn px-3 py-1.5 border-r dark:border-gray-700 transition">ট্রেন্ডিং</button>
+                </div>
+            </div>
+
+            <div id="question-container" class="grid grid-cols-1 gap-0 border-x border-t dark:border-gray-800">
+                <div class="p-10 text-center text-gray-400 text-xs">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> লোড হচ্ছে...
+                </div>
+            </div>
+
+            <div class="py-8 mt-6 border-t border-b dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 px-4 rounded">
+                <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed text-center">
+                    আরও খুঁজছেন? আমাদের <a href="questions.html" class="text-brand-500 hover:underline font-medium">সম্পূর্ণ তালিকা</a> দেখুন।
+                </p>
+            </div>
+
+            <section class="mt-8 mb-10">
+                <h2 class="text-xs font-bold mb-5 flex items-center gap-2 text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                    <i class="fas fa-star text-yellow-500"></i> নির্বাচিত প্রশ্ন
+                </h2>
+                <div id="popular-questions-container" class="max-w-6xl"></div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script type="module" src="js/config.js"></script>
+    <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/data.js"></script>
+
+</body>
+</html>

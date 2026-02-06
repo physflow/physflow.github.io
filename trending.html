@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physflow - রেসপনসিভ লেআউট</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        500: '#F48024', // StackOverflow Orange
+                        600: '#DB6500',
+                        700: '#B34700'
+                    },
+                    blue: {
+                        50: '#f0f8ff',
+                        100: '#e1f0ff',
+                        500: '#0a95ff', // StackOverflow Blue
+                        600: '#005999',
+                        700: '#004578',
+                    },
+                    green: {
+                        500: '#0F9D58'
+                    },
+                    red: {
+                        500: '#DB4437'
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background-color 0.3s, color 0.3s; }
+        
+        header a, header .logo-text {
+            transition: background-color 0.1s ease !important;
+            transform: none !important;
+            text-shadow: none !important;
+            color: inherit !important;
+        }
+
+        @media (max-width: 767px) {
+            #mobile-sidebar {
+                position: fixed; top: 0; left: 0; height: 100vh; width: 240px;
+                z-index: 150; transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            #mobile-sidebar.open { transform: translateX(0); }
+        }
+
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;  
+            overflow: hidden;
+        }
+
+        .fab {
+            position: fixed; bottom: 24px; right: 24px; width: 56px; height: 56px;
+            background-color: #0a95ff; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            z-index: 200; border: 3px solid white; 
+        }
+        
+        .filter-btn.active { 
+            background-color: #fef7f0; /* light brand orange */
+            font-weight: 600; 
+            color: #F48024;
+        }
+        .dark .filter-btn.active { background-color: #4d2c00; color: #F48024; }
+
+        .question-title {
+            color: #0a95ff;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline;
+        }
+        .dark .question-title {
+            color: #60a5fa;
+        }
+        .question-title:hover {
+            text-decoration: underline;
+        }
+
+        #question-container {
+            border-top: none;
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
+
+    <header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] dark:border-brand-600 fixed top-0 w-full h-[56px] z-[100] border-b dark:border-gray-700">
+        <div class="container mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center space-x-2 md:space-x-4 h-full">
+                <button id="hamburger-btn" class="md:hidden text-gray-600 dark:text-gray-300 focus:outline-none p-2 -ml-2 rounded active:bg-gray-100 dark:active:bg-gray-800 transition-colors">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+                <a href="index.html" class="text-2xl flex-shrink-0 py-1 rounded transition-colors active:bg-gray-100 dark:active:bg-gray-800">
+                    <span class="font-extrabold text-gray-800 dark:text-white">phys</span><span class="font-light text-gray-500 dark:text-gray-400">flow</span>
+                </a>
+                <nav class="hidden md:flex space-x-1 text-sm text-gray-600 dark:text-gray-400 h-full items-center">
+                    <a href="index.html" class="px-3 py-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">হোম</a>
+                    <a href="explore.html" class="px-3 py-2 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800">অনুসন্ধান</a>
+                    <a href="tags.html" class="px-3 py-2 rounded transition-colors hover:bg-gray-100 dark:hover:bg-gray-800">ট্যাগস</a>
+                </nav>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button id="theme-toggle" class="text-gray-500 dark:text-gray-400 transition-colors p-2 rounded active:bg-gray-100 dark:active:bg-gray-800">
+                    <i id="theme-icon" class="fas fa-moon text-lg"></i>
+                </button>
+                <button id="login-btn" class="bg-brand-50 text-brand-500 px-3 py-1.5 rounded text-sm transition-colors active:bg-brand-100 dark:bg-brand-900 dark:text-brand-200 dark:active:bg-brand-800">লগ ইন</button>
+                <div id="user-menu" class="hidden relative"></div>
+            </div>
+        </div>
+    </header>
+
+    <a href="ask.html" id="ask-fab" class="fab hidden" title="প্রশ্ন করুন"><i class="fas fa-plus"></i></a>
+
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-[140] hidden"></div>
+    
+    <aside id="mobile-sidebar" class="md:hidden bg-white dark:bg-[#1a1a1b] border-r dark:border-gray-700 pt-2 overflow-y-auto">
+        <nav class="text-sm flex flex-col">
+            <a href="index.html" class="py-3 px-6 bg-gray-50 dark:bg-gray-800 border-r-4 border-brand-500 font-bold dark:text-white">হোম</a>
+            <a href="explore.html" class="py-3 px-6 hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-gray-300">অনুসন্ধান</a>
+            <a href="tags.html" class="py-3 px-6 hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-gray-300">ট্যাগস</a>
+        </nav>
+    </aside>
+
+    <div class="container mx-auto pt-[56px] flex-grow">
+        <div class="px-8 md:px-16 mt-4 mb-4">
+            <div class="relative max-w-xl mx-auto">
+                <input type="text" id="search-input" placeholder="প্রশ্ন খুঁজুন..." 
+                    class="w-full bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-full py-2 px-5 pr-12 focus:outline-none focus:ring-2 focus:ring-brand-500 transition text-sm text-gray-800 dark:text-white">
+                <button id="search-btn" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-gray-500 hover:text-brand-600 transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <main class="min-h-screen">
+            <div class="flex flex-wrap items-center justify-between mb-0 gap-2 px-8 md:px-16 py-2">
+                <div class="flex items-center gap-3 text-[11px] font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded">
+                    <div><span class="text-blue-600 dark:text-blue-400 font-bold" id="total-questions">০</span> প্রশ্ন</div>
+                    <div><span class="text-green-600 dark:text-green-500 font-bold" id="total-answers">০</span> সমাধান</div>
+                </div>
+              <div class="inline-flex border border-gray-300 dark:border-gray-700 rounded overflow-hidden text-[11px] bg-white dark:bg-transparent">
+    <button id="btn-latest" class="filter-btn px-3 py-1.5 border-r dark:border-gray-700 transition">সর্বশেষ</button>
+    <button id="btn-featured" class="filter-btn px-3 py-1.5 border-r dark:border-gray-700 transition">জনপ্রিয়</button>
+    <button id="btn-trending" class="filter-btn active px-3 py-1.5 transition">ট্রেন্ডিং</button>
+</div>
+
+            </div>
+
+            <div id="question-container" class="grid grid-cols-1 md:grid-cols-2 bg-white dark:bg-[#1a1a1b] px-8 md:px-16 gap-0">
+                <div class="col-span-full p-10 text-center text-gray-400 text-xs">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> লোড হচ্ছে...
+                </div>
+            </div>
+
+            <div class="px-8 md:px-16 py-8 mt-6 border-t border-b dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20">
+                <p class="text-sm md:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+                    আরও খুঁজছেন? আমাদের 
+                    <a href="questions.html" class="text-brand-500 dark:text-brand-400 hover:underline font-medium">প্রশ্নের সম্পূর্ণ তালিকা</a> 
+                    দেখুন, অথবা 
+                    <a href="categories.html" class="text-brand-500 dark:text-brand-400 hover:underline font-medium">বিভাগ</a> 
+                    ও
+                    <a href="tags.html?filter=unanswered" class="text-brand-500 dark:text-brand-400 hover:underline font-medium">ট্যাগগুলো</a> 
+                    ঘুরে দেখুন।
+                </p>
+            </div>
+
+            <section class="container mx-auto px-8 md:px-16 mt-6 mb-10 border-t pt-4 dark:border-gray-800">
+                <h2 class="text-xs font-bold mb-5 flex items-center gap-2 text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                    <i class="fas fa-star text-yellow-500"></i> নির্বাচিত প্রশ্ন (Featured)
+                </h2>
+                <div id="popular-questions-container" class="max-w-6xl">
+                </div>
+            </section>
+        </main>
+
+        <footer class="bg-[#232629] text-gray-400 py-6 w-full border-t border-gray-800 mt-10">
+            <div class="container mx-auto px-4">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                    <div class="flex flex-wrap gap-x-6 text-[12px] font-normal">
+                        <a href="about.html" class="hover:text-white transition-colors">সম্পর্কে</a>
+                        <a href="contact.html" class="hover:text-white transition-colors">যোগাযোগ</a>
+                        <a href="terms.html" class="hover:text-white transition-colors">শর্তাবলী</a>
+                        <a href="privacy.html" class="hover:text-white transition-colors">গোপনীয়তা নীতি</a>
+                    </div>
+                    <div class="text-[11px] text-gray-500 font-normal">
+                        &copy; ২০২৬ physflow Inc. সর্বস্বত্ব সংরক্ষিত।
+                    </div>
+                </div>
+                <div class="border-t border-gray-800/50 w-full"></div>
+            </div>
+        </footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, where, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCyGf_NQLsckjUQH1FwbUP1DKZvzpbrYHo",
+    authDomain: "phyflow-devs.firebaseapp.com",
+    projectId: "phyflow-devs",
+    storageBucket: "phyflow-devs.firebasestorage.app",
+    messagingSenderId: "34351515593",
+    appId: "1:34351515593:web:ca06f69f07ace936b7ca18",
+    measurementId: "G-E00E61978Q"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+const db = getFirestore(app);
+
+function timeAgo(timestamp) {
+    if (!timestamp) return 'এইমাত্র';
+    const seconds = Math.floor((new Date() - timestamp.toDate()) / 1000);
+    let interval = Math.floor(seconds / 31536000);
+    if (interval >= 1) return interval.toLocaleString('bn-BD') + " বছর আগে";
+    interval = Math.floor(seconds / 2592000);
+    if (interval >= 1) return interval.toLocaleString('bn-BD') + " মাস আগে";
+    interval = Math.floor(seconds / 86400);
+    if (interval >= 1) return interval.toLocaleString('bn-BD') + " দিন আগে";
+    interval = Math.floor(seconds / 3600);
+    if (interval >= 1) return interval.toLocaleString('bn-BD') + " ঘণ্টা আগে";
+    interval = Math.floor(seconds / 60);
+    if (interval >= 1) return interval.toLocaleString('bn-BD') + " মিনিট আগে";
+    return "এইমাত্র";
+}
+
+// থিম ও মেনু কন্ট্রোল
+const themeToggle = document.getElementById('theme-toggle');
+const themeIcon = document.getElementById('theme-icon'); 
+const html = document.documentElement;
+
+const applyTheme = (theme) => {
+    if (theme === 'dark') {
+        html.classList.add('dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun'); 
+    } else {
+        html.classList.remove('dark');
+        themeIcon.classList.replace('fa-sun', 'fa-moon'); 
+    }
+};
+applyTheme(localStorage.getItem('theme') || 'light');
+themeToggle.onclick = () => {
+    const newTheme = html.classList.contains('dark') ? 'light' : 'dark';
+    localStorage.setItem('theme', newTheme);
+    applyTheme(newTheme);
+};
+
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const mobileSidebar = document.getElementById('mobile-sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+if(hamburgerBtn) { hamburgerBtn.onclick = () => { mobileSidebar.classList.toggle('open'); sidebarOverlay.classList.toggle('hidden'); }; }
+if(sidebarOverlay) { sidebarOverlay.onclick = () => { mobileSidebar.classList.remove('open'); sidebarOverlay.classList.add('hidden'); }; }
+
+// অথেন্টিকেশন
+onAuthStateChanged(auth, user => {
+    const adminEmails = ["phys.arif@gmail.com", "physflow.devs@gmail.com"];
+    const logoContainer = document.querySelector('header .container > div:first-child');
+    const loginBtn = document.getElementById('login-btn');
+    const userMenu = document.getElementById('user-menu');
+    const askFab = document.getElementById('ask-fab');
+    if (user) {
+        loginBtn.classList.add('hidden'); if(askFab) askFab.classList.remove('hidden'); userMenu.classList.remove('hidden');
+        userMenu.innerHTML = `<div class="relative"><img src="${user.photoURL}" class="w-8 h-8 rounded-full cursor-pointer" id="profile-btn"><div id="profile-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1b] border dark:border-gray-700 rounded shadow-lg p-2 z-[200]"><button id="logout-btn" class="text-red-500 w-full text-left p-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800 rounded">লগআউট</button></div></div>`;
+        if (adminEmails.includes(user.email) && !document.getElementById('admin-badge')) {
+            const adminBadge = document.createElement('a'); adminBadge.id = 'admin-badge'; adminBadge.href = 'admin.html'; adminBadge.className = 'ml-2 px-2 py-0.5 bg-brand-600 !text-white text-[10px] font-bold rounded uppercase'; adminBadge.innerText = 'ADMIN';
+            logoContainer.querySelector('a').insertAdjacentElement('afterend', adminBadge);
+        }
+        document.getElementById('profile-btn').onclick = (e) => { e.stopPropagation(); document.getElementById('profile-dropdown').classList.toggle('hidden'); };
+        document.getElementById('logout-btn').onclick = () => signOut(auth);
+    } else {
+        loginBtn.classList.remove('hidden'); userMenu.classList.add('hidden'); if(askFab) askFab.classList.add('hidden'); document.getElementById('admin-badge')?.remove();
+    }
+});
+
+// প্রশ্ন লোডিং
+const questionContainer = document.getElementById('question-container');
+let unsubscribeQuestions = null;
+// সার্চ ফাংশনালিটি
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+
+function handleSearch() {
+    const query = searchInput.value.trim();
+    if (query) {
+        window.location.href = `explore.html?id=${encodeURIComponent(query)}`;
+    }
+}
+
+searchBtn.onclick = handleSearch;
+searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        handleSearch();
+    }
+});
+
+function loadQuestions() {
+    if (unsubscribeQuestions) unsubscribeQuestions();
+    
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const questionsRef = collection(db, "questions");
+    
+    // শুধুমাত্র গত ৭ দিনের অনুমোদিত প্রশ্নগুলো আনবে
+    const q = query(
+        questionsRef, 
+        where("status", "==", "approved"), 
+        where("createdAt", ">=", sevenDaysAgo),
+        orderBy("createdAt", "desc") 
+    );
+
+    unsubscribeQuestions = onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) { 
+            questionContainer.innerHTML = '<p class="p-10 text-center text-gray-400 text-xs">গত ৭ দিনে কোনো ট্রেন্ডিং পোস্ট পাওয়া যায়নি।</p>'; 
+            return; 
+        }
+
+        // ডেটাগুলোকে অ্যারেতে নিয়ে ভিউ (views) অনুযায়ী সর্ট করা
+        let questions = [];
+        snapshot.forEach(doc => {
+            questions.push({ id: doc.id, ...doc.data() });
+        });
+
+        // জাভাস্ক্রিপ্ট দিয়ে ভিউ অনুযায়ী বড় থেকে ছোট সাজানো
+        questions.sort((a, b) => (b.views || 0) - (a.views || 0));
+
+        // প্রথম ১২টি প্রশ্ন দেখানো
+        let html = '';
+        questions.slice(0, 12).forEach(data => {
+            const categoryLink = `categories.html?id=${encodeURIComponent(data.category || 'general')}`;
+            
+            html += `<div class="bg-white dark:bg-[#1a1a1b] p-4 border border-gray-200 dark:border-gray-800 -mb-[1px] -mr-[1px]">
+                <div class="flex justify-between mb-1.5 text-[11px] font-bold">
+                    <div class="flex gap-3">
+                        <span class="text-red-500">${(data.votes || 0).toLocaleString('bn-BD')} ভোট</span>
+                        <span class="text-green-500">${(data.answerCount || 0).toLocaleString('bn-BD')} উত্তর</span>
+                        <span class="text-blue-500 font-extrabold">${(data.views || 0).toLocaleString('bn-BD')} ভিউ</span>
+                    </div>
+                    <span class="text-gray-400 font-normal">${timeAgo(data.createdAt)}</span>
+                </div>
+                <h3 class="line-clamp-2 mb-0">
+                    <a href="question.html?id=${data.id}" class="text-[#0a95ff] hover:text-[#005999] hover:underline">
+                        ${data.title}
+                    </a>
+                </h3>
+                <p class="text-xs text-gray-500 line-clamp-2 mb-3">${data.description?.replace(/<[^>]*>/g, '') || ''}</p>
+                <div class="flex flex-wrap items-center gap-y-2 gap-x-1 text-[10px]">
+                    <a href="${categoryLink}" class="bg-[#e1f0ff] dark:bg-blue-900/30 text-[#0078d4] dark:text-blue-400 px-2 py-0.5 rounded border border-[#0a95ff]/20 font-bold whitespace-nowrap mr-1">
+                        ${data.category || 'সাধারণ'}
+                    </a>
+                    ${(data.tags || []).slice(0,5).map(t => 
+                        `<a href="tags.html?id=${encodeURIComponent(t)}" class="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 px-2 py-0.5 rounded font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition whitespace-nowrap">#${t}</a>`
+                    ).join('')}
+                </div>
+            </div>`;
+        });
+        questionContainer.innerHTML = html;
+    }, (error) => { 
+        console.error("Error:", error); 
+    });
+}
+
+
+
+
+function loadFeaturedList() {
+    const popularContainer = document.getElementById('popular-questions-container');
+    const qFeat = query(collection(db, "questions"), where("featured", "==", true), orderBy("createdAt", "desc"), limit(16));
+
+    onSnapshot(qFeat, (snapshot) => {
+        let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">';
+        if (snapshot.empty) { 
+            html += '<p class="text-xs text-blue-400">কোনো নির্বাচিত প্রশ্ন নেই।</p>'; 
+        } else {
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                html += `
+                <div class="flex items-start gap-3 group">
+                    <span class="text-gray-400 text-lg leading-none mt-1">•</span>
+                    <a href="question.html?id=${doc.id}" class="text-sm md:text-base text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 leading-snug">
+                        ${data.title}
+                    </a>
+                </div>`;
+            });
+        }
+        popularContainer.innerHTML = html + '</div>';
+    });
+}
+
+
+async function updateStats() {
+    onSnapshot(query(collection(db, "questions"), where("status", "==", "approved")), (snap) => { document.getElementById('total-questions').innerText = snap.size.toLocaleString('bn-BD'); });
+    onSnapshot(collection(db, "answers"), (snap) => { document.getElementById('total-answers').innerText = snap.size.toLocaleString('bn-BD'); });
+}
+
+updateStats(); loadQuestions(); loadFeaturedList();
+document.getElementById('btn-latest').onclick = () => { window.location.href = 'index.html'; };
+document.getElementById('btn-featured').onclick = () => { window.location.href = 'popular.html'; };
+document.getElementById('btn-trending').onclick = () => { window.location.href = 'trending.html'; };
+
+if(document.getElementById('login-btn')) document.getElementById('login-btn').onclick = () => signInWithPopup(auth, provider);
+window.addEventListener('click', () => { document.getElementById('profile-dropdown')?.classList.add('hidden'); });
+</script>
+
+</body>
+</html>

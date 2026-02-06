@@ -1,0 +1,56 @@
+/* ==========================================
+   Responsive Sidebar Logic (Single Sidebar)
+   ========================================== */
+
+/* মোবাইল ভিউ (ডিফল্ট - সবার আগে) */
+#main-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 260px;
+    z-index: 150;
+    transform: translateX(-100%); /* ডিফল্টভাবে বামে লুকিয়ে থাকবে */
+    transition: transform 0.3s ease-in-out;
+}
+
+/* যখন জাভাস্ক্রিপ্ট দিয়ে 'open' ক্লাস যোগ হবে (মোবাইলে) */
+#main-sidebar.open {
+    transform: translateX(0) !important;
+}
+
+/* মোবাইল ওভারলে */
+#sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 140;
+    display: none; /* ডিফল্ট হাইড */
+}
+
+#sidebar-overlay:not(.hidden) {
+    display: block;
+}
+
+/* ডেস্কটপ ভিউ (768px এবং তার বেশি) */
+@media (min-width: 768px) {
+    #main-sidebar {
+        position: sticky; /* স্ক্রল করলে আটকে থাকবে */
+        top: 56px; /* হেডারের ঠিক নিচে */
+        height: calc(100vh - 56px);
+        width: 192px; /* w-48 equivalent */
+        transform: translateX(0) !important; /* সব সময় দেখা যাবে */
+        z-index: 40;
+        display: block !important;
+    }
+
+    /* ডেস্কটপে ওভারলে দরকার নেই */
+    #sidebar-overlay {
+        display: none !important;
+    }
+
+    /* মেইন কন্টেন্ট যাতে সাইডবারের নিচে না চাপা পড়ে */
+    main {
+        margin-left: 0; /* Tailwind container handle করবে অথবা padding দিতে পারো */
+    }
+}
