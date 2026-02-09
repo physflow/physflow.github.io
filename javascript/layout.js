@@ -1,61 +1,57 @@
-import { createClient } from '@supabase/supabase-api-js'
+import { supabase } from './supabase-config.js';
 
-// 1. Supabase Configuration
-const supabaseUrl = 'https://hmzcipbchhsdycgozhzd.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtemNpcGJjaGhzZHljZ296aHpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1ODIzNDksImV4cCI6MjA4NjE1ODM0OX0.5rMQnPHo6haSnJwdagPOt9c4MnLWJWKx5gk8eKRO66A'
+// লেআউট ইনজেক্ট করার ফাংশন
+export function injectLayout() {
+    const layoutHTML = `
+    <header class="border-t-4 border-[#f48225] bg-white dark:bg-[#393939] shadow-sm sticky top-0 z-50 border-b dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="index.html" class="text-lg font-bold tracking-tighter">Phys<span class="font-black">flow</span></a>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button onclick="window.toggleTheme()" class="p-2">🌓</button>
+                <div id="auth-section">
+                    <button id="login-btn" class="bg-[#e1ecf4] text-[#39739d] px-3 py-1.5 rounded text-[12px] border border-[#7aa7c7]">Log in</button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <div class="max-w-7xl mx-auto flex">
+        <aside class="w-48 hidden md:block border-r dark:border-gray-700 min-h-screen pt-4 text-[13px]">
+            <nav class="space-y-1">
+                <a href="index.html" class="block py-2 px-4 border-r-4 border-[#f48225] bg-gray-50 dark:bg-gray-800 font-bold">Home</a>
+                <div class="px-4 py-2 uppercase text-[11px] font-semibold text-gray-500">Public</div>
+                <a href="#" class="block py-2 px-8 text-gray-600 dark:text-gray-400">Questions</a>
+            </nav>
+        </aside>
+        <main id="main-content" class="flex-1 p-6 border-l dark:border-gray-700"></main>
+    </div>`;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// 2. Google Login Function
-export async function signInWithGoogle() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-  })
-  if (error) console.error('Error logging in:', error.message)
+    const bodyContent = document.body.innerHTML;
+    document.body.innerHTML = layoutHTML;
+    document.getElementById('main-content').innerHTML = bodyContent;
 }
 
-// 3. Logout Function
-export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  if (error) console.error('Error logging out:', error.message)
-}
-
-// 4. Auth State UI Update (Profile Pic & Name)
-export function setupAuthUI(onUserUpdate) {
-  supabase.auth.onAuthStateChange((event, session) => {
-    if (session?.user) {
-      const user = session.user;
-      const userData = {
-        name: user.user_metadata.full_name,
-        avatar: user.user_metadata.avatar_url
-      };
-      onUserUpdate(userData);
-    } else {
-      onUserUpdate(null);
-    }
-  });
-}
-
-// 5. Day-Night Mode Logic
+// Theme Logic
 export function initTheme() {
-  const html = document.documentElement;
-  const savedTheme = localStorage.getItem('theme');
-
-  // ইউজার আগে থেকে কোনো থিম সেট করে রাখলে সেটা অ্যাপ্লাই করবে
-  if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    html.classList.add('dark');
-  } else {
-    html.classList.remove('dark');
-  }
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
 }
 
-export function toggleTheme() {
-  const html = document.documentElement;
-  if (html.classList.contains('dark')) {
-    html.classList.remove('dark');
-    localStorage.setItem('theme', 'light');
-  } else {
-    html.classList.add('dark');
-    localStorage.setItem('theme', 'dark');
-  }
+window.toggleTheme = () => {
+    document.documentElement.classList.toggle('dark');
+    localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+};
+
+// Auth UI Logic
+export function setupAuth() {
+    const loginBtn = document.getElementById('login-btn');
+    if(loginBtn) {
+        loginBtn.onclick = async () => {
+            await supabase.auth.signInWithOAuth({ provider: 'google' });
+        };
+    }
 }
