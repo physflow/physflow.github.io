@@ -1,6 +1,6 @@
 import { supabase } from './supabase-config.js';
 
-// সময়কে 'কতক্ষণ আগে' ফরমেটে দেখানোর ফাংশন (বাংলায়)
+// সময়কে 'কতক্ষণ আগে' ফরমেটে দেখানোর ফাংশন (বাংলায়) 
 function timeAgo(dateString) {
     const seconds = Math.floor((new Date() - new Date(dateString)) / 1000);
     let interval = Math.floor(seconds / 31536000);
