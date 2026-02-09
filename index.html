@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physflow - All Questions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#f48225',
+                        'post-hover': '#f8f9f9',
+                        'dark-post-hover': '#323232'
+                    },
+                    fontSize: {
+                        'xs-stack': '12px',
+                        'sm-stack': '13px',
+                        'title-stack': '17px',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-[#2d2d2d] text-[#232629] dark:text-gray-200 text-sm-stack">
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 space-y-3 sm:space-y-0">
+        <h1 class="text-2xl font-normal">All Questions</h1>
+        <button id="ask-question-btn" class="bg-[#0a95ff] hover:bg-[#0074cc] text-white px-3 py-2 rounded shadow-inner text-sm-stack transition">
+            Ask Question
+        </button>
+    </div>
+
+    <div class="flex justify-between items-center border-b dark:border-gray-700 pb-3 mb-0">
+        <div id="question-count" class="text-title-stack font-normal">0 questions</div>
+        <div class="flex border dark:border-gray-600 rounded text-xs-stack">
+            <button class="px-3 py-1.5 border-r dark:border-gray-600 bg-gray-100 dark:bg-gray-700">Newest</button>
+            <button class="px-3 py-1.5 border-r dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800">Active</button>
+            <button class="px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800">Unanswered</button>
+        </div>
+    </div>
+
+    <div id="questions-list" class="divide-y dark:divide-gray-700 border-b dark:border-gray-700">
+        <div class="p-4 flex space-x-4 animate-pulse">
+            <div class="w-16 space-y-2">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+            <div class="flex-1 space-y-3">
+                <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                <div class="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="javascript/supabase-config.js"></script>
+    <script type="module" src="javascript/main.js"></script>
+</body>
+</html>
