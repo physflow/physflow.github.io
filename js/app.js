@@ -1,99 +1,72 @@
 /* ==========================================
-   js/app.js - Global UI & Component Loader (Supabase Ready)
+   js/auth.js - Supabase Google Auth
    ========================================== */
 
-// ১. কম্পোনেন্ট লোডার ফাংশন
-async function loadComponent(elementId, filePath) {
-    try {
-        const response = await fetch(filePath);
-        if (!response.ok) throw new Error(`${filePath} পাওয়া যায়নি`);
-        const html = await response.text();
-        const element = document.getElementById(elementId);
-        
-        if (element) {
-            element.innerHTML = html;
-            return true; 
-        }
-    } catch (error) {
-        console.error("Component error:", error);
-        return false;
-    }
-}
+import { supabase } from './supabase-config.js';
 
-// ২. থিম কন্ট্রোল
-function setupThemeToggle() {
-    const themeToggle = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
-    const html = document.documentElement;
-
-    const applyTheme = (theme) => {
-        if (theme === 'dark') {
-            html.classList.add('dark');
-            if(themeIcon) {
-                themeIcon.classList.replace('fa-moon', 'fa-sun');
-            }
-        } else {
-            html.classList.remove('dark');
-            if(themeIcon) {
-                themeIcon.classList.replace('fa-sun', 'fa-moon');
-            }
-        }
-    };
-
-    applyTheme(localStorage.getItem('theme') || 'light');
-
-    if (themeToggle) {
-        themeToggle.onclick = (e) => {
-            e.preventDefault();
-            const newTheme = html.classList.contains('dark') ? 'light' : 'dark';
-            localStorage.setItem('theme', newTheme);
-            applyTheme(newTheme);
-        };
-    }
-}
-
-// ৩. মোবাইল মেনু ও সাইডবার কন্ট্রোল
-function setupSidebar() {
-    document.addEventListener('click', (e) => {
-        const btn = e.target.closest('#hamburger-btn');
-        const sidebar = document.getElementById('main-sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-
-        if (btn && sidebar) {
-            e.preventDefault();
-            sidebar.classList.toggle('open');
-            if (overlay) overlay.classList.toggle('hidden');
-        }
-
-        if (overlay && e.target === overlay) {
-            sidebar?.classList.remove('open');
-            overlay.classList.add('hidden');
+// ১. গুগল দিয়ে লগইন করার ফাংশন
+async function loginWithGoogle() {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin // লগইন শেষে এই পেজে ফিরে আসবে
         }
     });
+
+    if (error) {
+        console.error("Login Error:", error.message);
+    }
 }
 
-// ৪. পেজ লোড হলে কার্যক্রম শুরু
-document.addEventListener("DOMContentLoaded", async () => {
-    // সাইডবার সেটআপ
-    setupSidebar(); 
+// ২. লগআউট ফাংশন
+async function logout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error("Logout Error:", error.message);
+    else window.location.reload();
+}
+
+// ৩. অথেন্টিকেশন স্টেট চেক (UI আপডেট করার জন্য)
+async function checkSupabaseAuth() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const loginBtn = document.getElementById('login-btn');
+    const userMenu = document.getElementById('user-menu');
+    const profileBtn = document.getElementById('profile-btn');
+    const headerAskBtn = document.getElementById('header-ask-btn');
+
+    if (user) {
+        // ইউজার লগইন থাকলে
+        if (loginBtn) loginBtn.classList.add('hidden');
+        if (userMenu) userMenu.classList.remove('hidden');
+        if (headerAskBtn) headerAskBtn.classList.remove('hidden');
+        
+        if (profileBtn) {
+            profileBtn.src = user.user_metadata.avatar_url || 'default-avatar.png';
+        }
+    } else {
+        // ইউজার লগইন না থাকলে
+        if (loginBtn) loginBtn.classList.remove('hidden');
+        if (userMenu) userMenu.classList.add('hidden');
+        if (headerAskBtn) headerAskBtn.classList.add('hidden');
+    }
+}
+
+// ৪. ইভেন্ট লিসেনার সেটআপ
+document.addEventListener('click', (e) => {
+    if (e.target.id === 'login-btn') {
+        loginWithGoogle();
+    }
     
-    // কম্পোনেন্ট লোড হওয়ার জন্য অপেক্ষা
-    await Promise.all([
-        loadComponent('header-placeholder', 'components/header.html'),
-        loadComponent('sidebar-left-placeholder', 'components/sidebar-left.html'),
-        loadComponent('footer-placeholder', 'components/footer.html')
-    ]);
-
-    // থিম টগল সেটআপ
-    setupThemeToggle();
-
-    // গুরুত্বপূর্ণ: Supabase Auth স্টেট চেক করার ফাংশন এখানে কল করো
-    // তোমার auth.js এ যদি checkSupabaseAuth নামে ফাংশন থাকে:
-    if (typeof checkSupabaseAuth === 'function') {
-        checkSupabaseAuth();
-    } else if (window.checkSupabaseAuth) {
-        window.checkSupabaseAuth();
+    if (e.target.id === 'logout-btn') {
+        logout();
     }
 
-    console.log("সব কম্পোনেন্ট লোড শেষ এবং Supabase Auth চেক সম্পন্ন।");
+    // প্রোফাইল ড্রপডাউন টগল
+    if (e.target.id === 'profile-btn') {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) dropdown.classList.toggle('hidden');
+    }
 });
+
+// গ্লোবাল এক্সেস দেওয়ার জন্য (app.js এর জন্য)
+window.checkSupabaseAuth = checkSupabaseAuth;
