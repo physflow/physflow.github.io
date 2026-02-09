@@ -2,7 +2,7 @@ import { supabase } from './supabase-config.js';
 
 /**
  * লেআউট ইনজেক্ট করার ফাংশন
- * এটি বডির বর্তমান কন্টেন্টকে 'main-content' এর ভেতর ঢুকিয়ে দেয়
+ * এটি বডির বর্তমান কন্টেন্টকে 'main-content' এর ভেতর ঢুকিয়ে দেয় 
  */
 export function injectLayout() {
     const mainArea = document.getElementById('main-content');
