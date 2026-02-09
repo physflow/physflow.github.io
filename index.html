@@ -1,38 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <title>Physflow - All Questions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physflow - পদার্থবিজ্ঞান প্রশ্নোত্তর</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { brand: '#f48225' }}}}
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { 500: '#F48024' }}}}
+        }
     </script>
 </head>
-<body class="bg-white dark:bg-[#2d2d2d] text-[#232629] dark:text-gray-200">
+<body class="bg-white dark:bg-[#1a1a1b]">
 
-    <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-normal">All Questions</h1>
-        <button id="ask-btn" class="bg-[#0a95ff] text-white px-3 py-2 rounded text-[13px] hover:bg-[#0074cc]">Ask Question</button>
-    </div>
+    <div id="page-content">
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+            <h1 class="text-2xl font-normal dark:text-gray-100">শীর্ষ প্রশ্নসমূহ</h1>
+            <a href="ask.html" class="bg-[#0a95ff] hover:bg-[#0074cc] text-white px-4 py-2 rounded text-sm transition text-center">
+                প্রশ্ন করুন
+            </div>
+        </div>
 
-    <div id="questions-list" class="divide-y dark:divide-gray-700">
-        <p class="p-4 text-gray-500">Loading questions...</p>
+        <div class="flex items-center justify-between border-b dark:border-gray-700 pb-3 mb-0">
+            <div id="question-count" class="text-lg font-medium dark:text-gray-300">
+                ০ প্রশ্ন
+            </div>
+            <div class="flex border dark:border-gray-700 rounded overflow-hidden text-xs">
+                <button class="px-3 py-2 bg-gray-100 dark:bg-gray-800 border-r dark:border-gray-700 font-bold">নতুন</button>
+                <button class="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 border-r dark:border-gray-700">জনপ্রিয়</button>
+                <button class="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800">ট্রেন্ডিং</button>
+            </div>
+        </div>
+
+        <div id="questions-list" class="divide-y dark:divide-gray-800 border-b dark:border-gray-800">
+            <div class="py-20 text-center text-gray-400">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                <p class="text-sm">প্রশ্নগুলো লোড হচ্ছে...</p>
+            </div>
+        </div>
     </div>
 
     <script type="module">
         import { injectLayout, initTheme, setupAuth } from './javascript/layout.js';
         
-        // ১. আগে থিম এবং লেআউট লোড হবে
+        // ১. লেআউট এবং অথেন্টিকেশন সেটআপ
         initTheme();
         injectLayout(); 
-        
-        // ২. লেআউট ইনজেক্ট হওয়ার পর অথেন্টিকেশন সেটআপ
         setupAuth();
 
-        // ৩. লেআউট তৈরি হওয়ার পর ডাটা লোড করার লজিক (main.js) ইম্পোর্ট হবে
-        // এটি সবার শেষে করা ভালো যাতে main.js এর DOM এলিমেন্টগুলো (যেমন: questions-list) খুঁজে পেতে সমস্যা না হয়
+        // ২. ডাটা ফেচিং শুরু (main.js থেকে)
         import('./javascript/main.js').then(module => {
-            // যদি main.js এ কোনো ইনিশিয়াল ফাংশন থাকে তা এখানে কল করা যেতে পারে
+            // main.js লোড হওয়ার পর স্বয়ংক্রিয়ভাবে ডাটা রেন্ডার হবে
         });
     </script>
 </body>
