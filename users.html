@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - PhysFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            750: '#2d3748',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <!-- Header -->
+    <div id="header"></div>
+    
+    <!-- Main Layout -->
+    <div class="flex pt-14">
+        <!-- Sidebar -->
+        <div id="sidebar"></div>
+        
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-6">
+            <div class="max-w-5xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold mb-2">Users</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Browse our community members sorted by reputation.</p>
+                </div>
+                
+                <!-- Search -->
+                <div class="mb-6">
+                    <input type="text" id="userSearch" 
+                        placeholder="Search users..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                </div>
+                
+                <!-- Users Grid -->
+                <div id="usersContainer">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <div id="footer"></div>
+    
+    <!-- Scripts -->
+    <script src="/javascript/supabase-config.js"></script>
+    <script src="/javascript/auth.js"></script>
+    <script src="/javascript/layout.js"></script>
+    <script src="/javascript/users.js"></script>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Question - PhysFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            750: '#2d3748',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <!-- Header -->
+    <div id="header"></div>
+    
+    <!-- Main Layout -->
+    <div class="flex pt-14">
+        <!-- Sidebar -->
+        <div id="sidebar"></div>
+        
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-6">
+            <div class="max-w-4xl mx-auto">
+                <!-- Page Header -->
+                <div class="mb-6">
+                    <h1 class="text-2xl font-bold mb-2">Ask a Question</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Be specific and clear. Include all relevant details to help others understand your question.</p>
+                </div>
+                
+                <!-- Question Form -->
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <!-- Title -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold mb-2">Title</label>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Be specific and imagine you're asking a question to another person.</p>
+                        <input type="text" id="questionTitle" 
+                            placeholder="e.g., How does quantum entanglement work?"
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <div id="titleCount" class="text-xs text-gray-500 dark:text-gray-400 mt-1">0 characters (minimum 15)</div>
+                    </div>
+                    
+                    <!-- Body -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold mb-2">Body</label>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Include all the information someone would need to answer your question.</p>
+                        <textarea id="questionBody" rows="10"
+                            placeholder="Provide detailed information about your question..."
+                            class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+                        <div id="bodyCount" class="text-xs text-gray-500 dark:text-gray-400 mt-1">0 characters (minimum 30)</div>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold mb-2">Tags</label>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Add up to 5 tags to describe what your question is about.</p>
+                        <div class="relative">
+                            <input type="text" id="tagInput" 
+                                placeholder="e.g., physics, quantum-mechanics"
+                                class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                            <div id="tagSuggestions" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                                <!-- Suggestions will be shown here -->
+                            </div>
+                        </div>
+                        <button onclick="addTag()" class="mt-2 px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
+                            Add Tag
+                        </button>
+                        
+                        <!-- Selected Tags -->
+                        <div id="selectedTags" class="mt-3 flex flex-wrap gap-2">
+                            <!-- Selected tags will appear here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Guidelines -->
+                    <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                        <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-2">Writing a good question</h3>
+                        <ul class="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
+                            <li>Make sure your question is clear and specific</li>
+                            <li>Include all relevant details and context</li>
+                            <li>Use proper grammar and spelling</li>
+                            <li>Add relevant tags to help others find your question</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="flex gap-3">
+                        <button onclick="submitQuestion()" class="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 font-medium">
+                            Post Your Question
+                        </button>
+                        <a href="/index.html" class="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <div id="footer"></div>
+    
+    <!-- Scripts -->
+    <script src="/javascript/supabase-config.js"></script>
+    <script src="/javascript/auth.js"></script>
+    <script src="/javascript/layout.js"></script>
+    <script src="/javascript/ask.js"></script>
+</body>
+</html>

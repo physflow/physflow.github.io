@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question - PhysFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gray: {
+                            750: '#2d3748',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white">
+    <!-- Header -->
+    <div id="header"></div>
+    
+    <!-- Main Layout -->
+    <div class="flex pt-14">
+        <!-- Sidebar -->
+        <div id="sidebar"></div>
+        
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-6">
+            <div class="max-w-5xl mx-auto">
+                <!-- Question -->
+                <div id="questionContainer">
+                    <!-- Question will be loaded here -->
+                </div>
+                
+                <!-- Answers Section -->
+                <div class="mb-6">
+                    <h2 id="answerCount" class="text-xl font-bold mb-4">0 Answers</h2>
+                    <div id="answersContainer">
+                        <!-- Answers will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Your Answer -->
+                <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <h2 class="text-xl font-bold mb-4">Your Answer</h2>
+                    <textarea id="answerBody" rows="10"
+                        placeholder="Write your answer here..."
+                        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"></textarea>
+                    
+                    <button onclick="submitAnswer()" class="px-6 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 font-medium">
+                        Post Your Answer
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <div id="footer"></div>
+    
+    <!-- Scripts -->
+    <script src="/javascript/supabase-config.js"></script>
+    <script src="/javascript/auth.js"></script>
+    <script src="/javascript/layout.js"></script>
+    <script src="/javascript/question.js"></script>
+</body>
+</html>
