@@ -2,27 +2,11 @@
    js/config.js
    ========================================== */
 
-// Firebase SDK মডিউলগুলো CDN থেকে ইমপোর্ট করা হচ্ছে
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAiZW_WtuMbNfh7KLYjv_aKeAbaL9FJ8-4",
-  authDomain: "physflow-devs.firebaseapp.com",
-  projectId: "physflow-devs",
-  storageBucket: "physflow-devs.firebasestorage.app",
-  messagingSenderId: "241187925332",
-  appId: "1:241187925332:web:4e40aff9a3e62760406cc1",
-  measurementId: "G-H9690N7R9G"
-};
+const supabaseUrl = 'https://hmzcipbchhsdycgozhzd.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhtemNpcGJjaGhzZHljZ296aHpkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1ODIzNDksImV4cCI6MjA4NjE1ODM0OX0.5rMQnPHo6haSnJwdagPOt9c4MnLWJWKx5gk8eKRO66A'
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const supabase = createClient(supabaseUrl, supabaseKey)
 
-// Export instances to use in other files
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-
-
-console.log("Firebase Configured Successfully!");
+console.log("Supabase Configured Successfully!");
