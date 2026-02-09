@@ -12,19 +12,28 @@
 
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-normal">All Questions</h1>
-        <button class="bg-[#0a95ff] text-white px-3 py-2 rounded text-[13px]">Ask Question</button>
+        <button id="ask-btn" class="bg-[#0a95ff] text-white px-3 py-2 rounded text-[13px] hover:bg-[#0074cc]">Ask Question</button>
     </div>
 
     <div id="questions-list" class="divide-y dark:divide-gray-700">
-        </div>
+        <p class="p-4 text-gray-500">Loading questions...</p>
+    </div>
 
     <script type="module">
         import { injectLayout, initTheme, setupAuth } from './javascript/layout.js';
-        import './javascript/main.js'; // এটি ডাটা লোড করবে
-
+        
+        // ১. আগে থিম এবং লেআউট লোড হবে
         initTheme();
-        injectLayout(); // এটি হেডার ও সাইডবার ইনজেক্ট করবে
+        injectLayout(); 
+        
+        // ২. লেআউট ইনজেক্ট হওয়ার পর অথেন্টিকেশন সেটআপ
         setupAuth();
+
+        // ৩. লেআউট তৈরি হওয়ার পর ডাটা লোড করার লজিক (main.js) ইম্পোর্ট হবে
+        // এটি সবার শেষে করা ভালো যাতে main.js এর DOM এলিমেন্টগুলো (যেমন: questions-list) খুঁজে পেতে সমস্যা না হয়
+        import('./javascript/main.js').then(module => {
+            // যদি main.js এ কোনো ইনিশিয়াল ফাংশন থাকে তা এখানে কল করা যেতে পারে
+        });
     </script>
 </body>
 </html>
