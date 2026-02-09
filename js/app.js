@@ -1,5 +1,5 @@
 /* ==========================================
-   js/app.js - Global UI & Component Loader
+   js/app.js - Global UI & Component Loader (Supabase Ready)
    ========================================== */
 
 // ১. কম্পোনেন্ট লোডার ফাংশন
@@ -12,7 +12,7 @@ async function loadComponent(elementId, filePath) {
         
         if (element) {
             element.innerHTML = html;
-            return true; // লোড সফল হলে true রিটার্ন করবে
+            return true; 
         }
     } catch (error) {
         console.error("Component error:", error);
@@ -72,30 +72,28 @@ function setupSidebar() {
     });
 }
 
-// ৪. পেজ লোড হলে কার্যক্রম শুরু (এটিকে async করা হয়েছে)
+// ৪. পেজ লোড হলে কার্যক্রম শুরু
 document.addEventListener("DOMContentLoaded", async () => {
     // সাইডবার সেটআপ
     setupSidebar(); 
     
-    // সব কম্পোনেন্ট লোড হওয়ার জন্য অপেক্ষা করবে (await ব্যবহার করা হয়েছে)
+    // কম্পোনেন্ট লোড হওয়ার জন্য অপেক্ষা
     await Promise.all([
         loadComponent('header-placeholder', 'components/header.html'),
         loadComponent('sidebar-left-placeholder', 'components/sidebar-left.html'),
         loadComponent('footer-placeholder', 'components/footer.html')
     ]);
 
-    // --- এই অংশের নিচে যা থাকবে তা হেডার লোড হওয়ার পর রান হবে ---
-    
     // থিম টগল সেটআপ
     setupThemeToggle();
 
-    // গুরুত্বপূর্ণ: লগইন চেক করার ফাংশন এখানে কল করো
-    // যদি তোমার auth.js এ checkAuthState নামে কোনো ফাংশন থাকে:
-    if (typeof checkAuthState === 'function') {
-        checkAuthState();
-    } else if (window.checkAuthState) {
-        window.checkAuthState();
+    // গুরুত্বপূর্ণ: Supabase Auth স্টেট চেক করার ফাংশন এখানে কল করো
+    // তোমার auth.js এ যদি checkSupabaseAuth নামে ফাংশন থাকে:
+    if (typeof checkSupabaseAuth === 'function') {
+        checkSupabaseAuth();
+    } else if (window.checkSupabaseAuth) {
+        window.checkSupabaseAuth();
     }
 
-    console.log("সব কম্পোনেন্ট লোড শেষ এবং অথেন্টিকেশন চেক সম্পন্ন।");
+    console.log("সব কম্পোনেন্ট লোড শেষ এবং Supabase Auth চেক সম্পন্ন।");
 });
