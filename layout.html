@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physflow - Physics Q&A</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: '#f48225', // StackOverflow orange
+                    },
+                    fontSize: {
+                        'xs-stack': '12px',
+                        'sm-stack': '13px',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+</head>
+<body class="bg-white dark:bg-[#2d2d2d] text-[#232629] dark:text-gray-200 text-sm-stack">
+
+    <header class="border-t-4 border-brand bg-white dark:bg-[#393939] shadow-sm sticky top-0 z-50 border-b dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a href="#" class="text-lg font-bold flex items-center tracking-tighter">
+                    Phys<span class="font-black">flow</span>
+                </a>
+            </div>
+            
+            <div class="flex-1 max-w-2xl mx-8 hidden md:block">
+                <input type="text" placeholder="Search physics topics..." 
+                    class="w-full px-3 py-1.5 border dark:border-gray-600 dark:bg-[#2d2d2d] rounded focus:outline-none focus:ring-1 focus:ring-blue-400 text-xs-stack">
+            </div>
+
+            <div class="flex items-center space-x-3" id="auth-section">
+                <button onclick="toggleTheme()" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">🌓</button>
+                <button onclick="signInWithGoogle()" id="login-btn" class="bg-[#e1ecf4] text-[#39739d] px-3 py-1.5 rounded text-xs-stack border border-[#7aa7c7] hover:bg-[#b3d3ea]">Log in</button>
+                <div id="user-profile" class="hidden flex items-center space-x-2 text-xs-stack">
+                    <img id="user-avatar" class="w-7 h-7 rounded-sm border dark:border-gray-600" src="" alt="">
+                    <span id="user-name" class="font-medium"></span>
+                    <button onclick="signOut()" class="text-red-500 hover:underline">Logout</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto flex">
+        <aside class="w-48 hidden md:block border-r dark:border-gray-700 h-screen sticky top-12 pt-4 text-xs-stack text-gray-600 dark:text-gray-400">
+            <nav class="space-y-1">
+                <a href="#" class="block py-2 px-4 border-r-4 border-brand bg-gray-50 dark:bg-gray-800 text-black dark:text-white font-bold">Home</a>
+                <div class="px-4 py-2 uppercase text-[11px] font-semibold text-gray-500">Public</div>
+                <a href="#" class="block py-2 px-8 hover:text-black dark:hover:text-white">Questions</a>
+                <a href="#" class="block py-2 px-8 hover:text-black dark:hover:text-white">Tags</a>
+                <a href="#" class="block py-2 px-8 hover:text-black dark:hover:text-white">Users</a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 p-6 border-l dark:border-gray-700 min-h-screen">
+            <div id="content">
+                <h1 class="text-2xl mb-4">Physics Questions</h1>
+                <hr class="dark:border-gray-700">
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initTheme, toggleTheme, signInWithGoogle, signOut, setupAuthUI } from './layout.js';
+
+        // Initialize theme and Auth
+        window.toggleTheme = toggleTheme;
+        window.signInWithGoogle = signInWithGoogle;
+        window.signOut = signOut;
+
+        initTheme();
+
+        setupAuthUI((user) => {
+            const loginBtn = document.getElementById('login-btn');
+            const userProfile = document.getElementById('user-profile');
+            if (user) {
+                loginBtn.classList.add('hidden');
+                userProfile.classList.remove('hidden');
+                document.getElementById('user-name').innerText = user.name;
+                document.getElementById('user-avatar').src = user.avatar;
+            } else {
+                loginBtn.classList.remove('hidden');
+                userProfile.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
