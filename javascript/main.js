@@ -55,46 +55,7 @@ const truncateText = (text, maxLength = 150) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create skeleton loader
-const createSkeletonCard = () => {
-    return `
-        <div class="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
-            <div class="flex flex-col gap-3 items-center min-w-[4rem]">
-                <div class="skeleton w-12 h-6 rounded"></div>
-                <div class="skeleton w-12 h-6 rounded"></div>
-                <div class="skeleton w-12 h-6 rounded"></div>
-            </div>
-            <div class="flex-1 space-y-3">
-                <div class="skeleton h-6 w-3/4 rounded"></div>
-                <div class="skeleton h-4 w-full rounded"></div>
-                <div class="skeleton h-4 w-5/6 rounded"></div>
-                <div class="flex gap-2 mt-3">
-                    <div class="skeleton h-6 w-16 rounded"></div>
-                    <div class="skeleton h-6 w-20 rounded"></div>
-                    <div class="skeleton h-6 w-16 rounded"></div>
-                </div>
-                <div class="flex items-center gap-2 mt-4">
-                    <div class="skeleton w-6 h-6 rounded-full"></div>
-                    <div class="skeleton h-4 w-24 rounded"></div>
-                    <div class="skeleton h-4 w-32 rounded ml-auto"></div>
-                </div>
-            </div>
-        </div>
-    `;
-};
 
-// Show skeleton loaders
-const showLoadingSkeleton = (count = 5) => {
-    const skeleton = document.getElementById('loading-skeleton');
-    skeleton.innerHTML = Array(count).fill(createSkeletonCard()).join('');
-    skeleton.classList.remove('hidden');
-};
-
-// Hide skeleton loaders
-const hideLoadingSkeleton = () => {
-    const skeleton = document.getElementById('loading-skeleton');
-    skeleton.classList.add('hidden');
-};
 
 // Create question card HTML
 const createQuestionCard = (question) => {
