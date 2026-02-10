@@ -84,18 +84,19 @@ function updateSelectedTagsUI() {
     }
 }
 
-// ৬. Utility: Slug Generation
+// ৬. Utility: সরাসরি বাংলা সাপোর্টসহ Slug Generation
 function generateSlug(text) {
-    const banglaToEnglish = {
-        'অ': 'o', 'আ': 'a', 'ই': 'i', 'ঈ': 'i', 'উ': 'u', 'ঊ': 'u', 'ঋ': 'ri', 'এ': 'e', 'ঐ': 'oi', 'ও': 'o', 'ঔ': 'ou',
-        'ক': 'k', 'খ': 'kh', 'গ': 'g', 'ঘ': 'gh', 'ঙ': 'ng', 'চ': 'ch', 'ছ': 'chh', 'জ': 'j', 'ঝ': 'jh', 'ঞ': 'n',
-        'ট': 't', 'ঠ': 'th', 'ড': 'd', 'ঢ': 'dh', 'ণ': 'n', 'ত': 't', 'থ': 'th', 'দ': 'd', 'ধ': 'dh', 'ন': 'n',
-        'প': 'p', 'ফ': 'ph', 'ব': 'b', 'ভ': 'bh', 'ম': 'm', 'য': 'j', 'র': 'r', 'ল': 'l', 'শ': 'sh', 'ষ': 'sh',
-        'স': 's', 'হ': 'h', 'ড়': 'r', 'ঢ়': 'rh', 'য়': 'y', 'ৎ': 't', 'ং': 'ng', 'ঃ': 'h', 'ঁ': 'n'
-    };
-    let slug = '';
-    for (let char of text) { slug += banglaToEnglish[char] || char; }
-    return slug.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').substring(0, 80) + '-' + Date.now().toString(36);
+    let slug = text
+        .toLowerCase()
+        .trim()
+        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '') // বাংলা বর্ণমালা, ইংরেজি ও নম্বর ছাড়া সব বাদ
+        .replace(/\s+/g, '-')                      // স্পেসকে হাইফেন করা
+        .replace(/-+/g, '-')                       // একাধিক হাইফেনকে একটি করা
+        .substring(0, 100);                        // দৈর্ঘ্য সীমাবদ্ধ করা
+
+    // ইউনিক করার জন্য টাইমস্ট্যাম্প যোগ
+    const timestamp = Date.now().toString(36);
+    return `${slug}-${timestamp}`;
 }
 
 // ৭. মেসেজ প্রদর্শন
@@ -135,7 +136,7 @@ form.addEventListener('submit', async (e) => {
 
         localStorage.removeItem('question_draft');
         showMessage('প্রশ্ন সফলভাবে জমা হয়েছে!');
-        setTimeout(() => window.location.href = `question.html?slug=${slug}`, 1500);
+        setTimeout(() => window.location.href = `question.html?slug=${encodeURIComponent(slug)}`, 1500);
 
     } catch (err) {
         console.error(err);
