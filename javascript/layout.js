@@ -20,6 +20,28 @@ export function initTheme() {
     }
 }
 
+
+// মোবাইল সার্চ টগল লজিক
+const mobileSearchBtn = document.getElementById('mobile-search-btn');
+const mobileSearchBar = document.getElementById('mobile-search-bar');
+
+if (mobileSearchBtn && mobileSearchBar) {
+    mobileSearchBtn.addEventListener('click', () => {
+        mobileSearchBar.classList.toggle('hidden');
+        if (!mobileSearchBar.classList.contains('hidden')) {
+            mobileSearchBar.querySelector('input').focus();
+        }
+    });
+
+    // স্ক্রল করলে বা অন্য কোথাও ক্লিক করলে সার্চ বার বন্ধ করা (ঐচ্ছিক)
+    document.addEventListener('click', (e) => {
+        if (!mobileSearchBtn.contains(e.target) && !mobileSearchBar.contains(e.target)) {
+            mobileSearchBar.classList.add('hidden');
+        }
+    });
+}
+
+
 /**
  * Layout এর সব interactivity setup করে
  */
