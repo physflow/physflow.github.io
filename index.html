@@ -14,7 +14,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            500: '#F48024',
+                            500: '#e1f0ff',
                             600: '#DB6500'
                         }
                     }
@@ -51,13 +51,12 @@
             </a>
         </div>
 
-<button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                <i id="theme-icon" class="fas fa-moon"></i>
-            </button>
-
-
-        <div class="flex items-center space-x-3">
-            <a href="ask.html" class="bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 rounded text-sm font-medium transition flex items-center">
+        <div class="flex items-center space-x-2">
+           <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+            <i id="theme-icon" class="fas fa-moon"></i>
+        </button>
+        
+            <a href="ask.html" class="bg-brand-500 hover:bg-brand-600 text-white px-3 py-1.5 rounded-sm md:rounded text-sm font-medium transition flex items-center">
                 <i class="fas fa-plus mr-2 text-xs"></i>
                 <span class="hidden sm:inline">প্রশ্ন করুন</span>
             </a>
@@ -67,12 +66,13 @@
                     লগ ইন
                 </button>
                 <div id="user-menu" class="hidden flex items-center space-x-3">
-                    <img id="user-avatar" class="w-8 h-8 rounded-sm border border-gray-300 dark:border-gray-600" src="" alt="Profile">
+                    <img id="user-avatar" class="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 object-cover" src="" alt="Profile">
                 </div>
             </div>
         </div>
     </div>
 </header>
+
 
 
     <!-- Overlay for mobile sidebar -->
@@ -166,4 +166,4 @@
     </script>
 
 </body>
-</html>tml>
+</html>
