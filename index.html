@@ -89,44 +89,41 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden"></div>
 
     <div class="container mx-auto flex flex-1 pt-14">
-        <aside id="mobile-sidebar" class="fixed md:sticky top-14 left-0 w-64 h-[calc(100vh-3.5rem)] bg-white dark:bg-[#1a1a1b] border-r dark:border-gray-700 pt-4 z-[150] md:z-40 -translate-x-full md:translate-x-0 overflow-y-auto transition-transform duration-300">
-        
-    <nav class="flex flex-col text-[13px]">
-        </nav>
+        <aside id="mobile-sidebar" class="fixed md:sticky top-14 left-0 w-64 h-[calc(100vh-3.5rem)] bg-white dark:bg-[#1a1a1b] border-r dark:border-gray-700 z-[150] md:z-40 -translate-x-full md:translate-x-0 transition-transform duration-300 flex flex-col">
+    
+    <nav class="flex-1 overflow-y-auto py-4 text-[13px]">
+        <a href="index.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+            <i class="fas fa-home w-5 mr-2"></i>হোম
+        </a>
+        <a href="questions.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+            <i class="fas fa-magnifying-glass w-5 mr-2"></i>খুঁজুন
+        </a>
+        <a href="categories.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+            <i class="fas fa-folder w-5 mr-2"></i>বিভাগ
+        </a>
+        <a href="tags.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+            <i class="fas fa-tags w-5 mr-2"></i>ট্যাগ
+        </a>
+        <a href="blogs.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+            <i class="fas fa-blog w-5 mr-2"></i>ব্লগ
+        </a>
+    </nav>
+
+    <div class="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-[#1a1a1b]">
+        <div class="flex items-center justify-between px-2">
+            <div class="flex items-center gap-3">
+                <i id="theme-icon" class="fas fa-moon text-lg text-gray-600 dark:text-gray-300"></i>
+                <span class="text-sm font-medium">ডার্ক মোড</span>
+            </div>
+            
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="theme-toggle" class="sr-only peer">
+                <div class="w-10 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+            </label>
+        </div>
+    </div>
 </aside>
 
-            <nav class="flex flex-col text-[13px]">
-       <a href="index.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-                    <i class="fas fa-home w-5 mr-2"></i>হোম
-                </a>
- 
-               <a href="questions.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-                    <i class="fas fa-magnifying-glass w-5 mr-2"></i>খুঁজুন
-                </a>
-                <a href="categories.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-                    <i class="fas fa-folder w-5 mr-2"></i>বিভাগ
-                </a>
-                <a href="tags.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-                    <i class="fas fa-tags w-5 mr-2"></i>ট্যাগ
-                </a>
-               <a href="blogs.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-                    <i class="fas fa-blog w-5 mr-2"></i>ব্লগ
-                </a>
-
-            </nav>
-<aside id="mobile-sidebar" ...>
-    <div class="px-6 py-4 border-b dark:border-gray-700 mb-2 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <i id="theme-icon" class="fas fa-moon text-lg text-gray-600 dark:text-gray-300"></i>
-            <span class="text-sm font-medium">ডার্ক মোড</span>
-        </div>
-        
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="theme-toggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
-        </label>
-    </div>
-        </aside>
 
         <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
             <h1 class="text-3xl font-bold mb-6">পেজ টাইটেল</h1>
