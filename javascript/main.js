@@ -43,33 +43,38 @@ const createQuestionCard = (question) => {
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 transition-all duration-200">
-            <div class="flex flex-col gap-3 items-center text-center min-w-[4rem] shrink-0">
-                <div class="p-2">
-                    <div class="text-lg font-semibold text-gray-600 dark:text-gray-400">${toBanglaNumber(question.votes || 0)}</div>
-                    <div class="text-[10px] text-gray-500 mt-1">ভোট</div>
+        <article class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200">
+            <div class="flex items-center justify-between mb-3 border-b border-gray-100 dark:border-gray-700 pb-2">
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-1">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-xs text-gray-500">ভোট</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-xs text-gray-500">উত্তর</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-xs text-gray-500">ভিউ</span>
+                    </div>
                 </div>
-                <div class="p-2">
-                    <div class="text-lg font-semibold text-gray-600 dark:text-gray-400">${toBanglaNumber(question.answers_count || 0)}</div>
-                    <div class="text-[10px] text-gray-500 mt-1">উত্তর</div>
-                </div>
+                
+                <time datetime="${question.created_at}" class="text-[10px] text-gray-400 whitespace-nowrap">
+                    ${timeAgo}
+                </time>
             </div>
             
-            <div class="flex-1 min-w-0">
+            <div class="min-w-0">
                 <h3 class="text-lg font-semibold mb-2">
                     <a href="questions/${question.slug}.html" class="text-blue-600 dark:text-blue-400 hover:underline">
                         ${question.title}
                     </a>
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">${excerpt}</p>
-                <div class="flex flex-wrap gap-1 mb-3">
+                
+                <div class="flex flex-wrap gap-1">
                     ${tags.map(tag => `<span class="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded">${tag}</span>`).join('')}
-                </div>
-                <div class="flex items-center justify-between text-xs text-gray-500">
-                    <div class="flex items-center gap-2">
-                        <span class="font-medium">${question.author_name || 'অজ্ঞাত ব্যবহারকারী'}</span>
-                    </div>
-                    <time datetime="${question.created_at}">${timeAgo}</time>
                 </div>
             </div>
         </article>
