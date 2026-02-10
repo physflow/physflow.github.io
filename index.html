@@ -153,15 +153,21 @@
 
 
         <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
-            <h1 class="text-3xl font-bold mb-6">পেজ টাইটেল</h1>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <p class="text-gray-600 dark:text-gray-300">
-                    এখানে আপনার content যোগ করুন...
-                </p>
-            </div>
-        </main>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl md:text-3xl font-bold">শীর্ষ প্রশ্নসমূহ</h1>
+        <a href="ask.html" class="bg-brand-600 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition text-sm">
+            প্রশ্ন করুন
+        </a>
     </div>
+
+    <div id="questions-container" class="space-y-4">
+        <div id="loader" class="text-center py-10">
+            <i class="fas fa-spinner fa-spin text-3xl text-brand-600"></i>
+            <p class="mt-2 text-gray-500">প্রশ্নগুলো লোড হচ্ছে...</p>
+        </div>
+    </div>
+</main>
+
 
 
 
