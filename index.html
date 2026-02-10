@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bn"> 
+<html lang="bn">
 <head> 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -147,44 +147,38 @@
 
 
 
-            <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)] w-full flex justify-center">
-        <div class="max-w-5xl w-full"> 
-            
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 w-full">
-                <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">
-                    <span id="total-questions-count">০</span> প্রশ্ন, 
-                    <span id="total-answers-count">০</span> উত্তর
-                </div>
 
-                <div class="flex items-center bg-gray-100 dark:bg-[#2d2d2d] p-1 rounded-lg border dark:border-gray-700">
-                    <a href="index.html" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow-sm text-brand-600 dark:text-white">
-                        সর্বশেষ
-                    </a>
-                    <a href="popular.html" class="px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 transition">
-                        জনপ্রিয়
-                    </a>
-                    <a href="trending.html" class="px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 transition">
-                        ট্রেন্ডিং
-                    </a>
-                </div>
-            </div>
 
-            <div id="questions-container" class="border-t dark:border-gray-700 w-full">
-                <div id="loading-spinner" class="py-20 text-center">
-                    <i class="fas fa-spinner fa-spin text-3xl text-brand-600"></i>
-                    <p class="mt-2 text-gray-500">লোড হচ্ছে...</p>
-                </div>
-            </div>
-        </div>
-    </main>
 
-    <footer class="bg-[#232629] text-gray-400 py-6 mt-auto w-full border-t dark:border-gray-800">
+
+
+        <div id="questions-container" class="border-t dark:border-gray-700 w-full">
+    <div id="loading-spinner" class="py-20 text-center">
+        <i class="fas fa-spinner fa-spin text-3xl text-brand-600"></i>
+        <p class="mt-2 text-gray-500">লোড হচ্ছে...</p>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <footer class="bg-[#232629] text-gray-400 py-6 mt-auto">
         <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-            <div class="flex flex-wrap justify-center md:justify-start gap-6 text-xs uppercase font-medium">
+            <div class="flex space-x-6 text-xs uppercase font-medium">
                 <a href="#" class="hover:text-gray-100 transition">সম্পর্কে</a>
-                <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
-                <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
-                <a href="#" class="hover:text-gray-100 transition">গোপনীয়তা নীতি</a>
+                 <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
+                 <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
+                 <a href="#" class="hover:text-gray-100 transition">গোপনীয়তা নীতি</a>
             </div>
             <div class="text-[11px]">
                 physflow – &copy; ২০২৬ সর্বস্বত্ব সংরক্ষিত
@@ -194,8 +188,11 @@
 
     <script type="module">
         import { setupLayout, initTheme, setupAuth } from './javascript/layout.js';
-        initTheme(); setupLayout(); setupAuth();
+        
+        initTheme();
+        setupLayout();
+        setupAuth();
     </script>
-    <script type="module" src="./javascript/main.js"></script>
+
 </body>
 </html>
