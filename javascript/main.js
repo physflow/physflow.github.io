@@ -55,8 +55,6 @@ const truncateText = (text, maxLength = 150) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-
-
 // Create question card HTML
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
@@ -218,7 +216,6 @@ const updateQuestionCount = (count) => {
 
 // Show error state
 const showErrorState = () => {
-    document.getElementById('loading-skeleton').classList.add('hidden');
     document.getElementById('questions-list').classList.add('hidden');
     document.getElementById('empty-state').classList.add('hidden');
     document.getElementById('error-state').classList.remove('hidden');
@@ -239,7 +236,6 @@ const loadQuestions = async (filter = 'newest', append = false) => {
     
     if (!append) {
         currentPage = 0;
-        showLoadingSkeleton();
     }
     
     try {
@@ -251,7 +247,6 @@ const loadQuestions = async (filter = 'newest', append = false) => {
         
         hasMore = more;
         
-        hideLoadingSkeleton();
         renderQuestions(questions, append);
         
         if (!append) {
@@ -261,7 +256,6 @@ const loadQuestions = async (filter = 'newest', append = false) => {
         currentPage++;
     } catch (error) {
         console.error('Failed to load questions:', error);
-        hideLoadingSkeleton();
         showErrorState();
     } finally {
         isLoading = false;
