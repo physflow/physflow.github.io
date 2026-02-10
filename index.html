@@ -198,10 +198,15 @@
 
     <script type="module">
         import { setupLayout, initTheme, setupAuth } from './javascript/layout.js';
+        // তোমার নতুন main.js ফাইলটি এখান ইম্পোর্ট করো
+        import { loadQuestions } from './javascript/main.js'; 
         
         initTheme();
         setupLayout();
         setupAuth();
+        
+        // ফাংশনটি কল করো
+        loadQuestions();
     </script>
 
 </body>
