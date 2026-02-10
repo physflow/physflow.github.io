@@ -36,14 +36,14 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML (Based on your provided image)
+// Create question card HTML (হুবহু ছবির মতো এবং চারপাশে বর্ডারসহ)
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-200">
+        <article class="p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-200">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex gap-4">
                     <div class="flex items-center gap-1">
@@ -67,7 +67,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-xl font-normal mb-2">
-                    <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline transition-colors">
+                    <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
@@ -93,6 +93,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 // Fetch and Render Questions
 const loadLatestQuestions = async () => {
