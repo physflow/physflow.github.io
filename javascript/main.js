@@ -66,15 +66,25 @@ const createQuestionCard = (question) => {
             </div>
             
             <div class="min-w-0">
-                <h3 class="text-lg font-semibold mb-2">
-                    <a href="questions/${question.slug}.html" class="text-blue-600 dark:text-blue-400 hover:underline">
+                <h3 class="text-lg font-normal mb-2">
+                    <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">${excerpt}</p>
                 
                 <div class="flex flex-wrap gap-1">
-                    ${tags.map(tag => `<span class="px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded">${tag}</span>`).join('')}
+                    ${question.category ? `
+                        <span class="px-2 py-1 text-xs text-white rounded" style="background-color: #0a95ff;">
+                            ${question.category}
+                        </span>
+                    ` : ''}
+
+                    ${tags.map(tag => `
+                        <span class="px-2 py-1 text-xs bg-gray-500 dark:bg-gray-600 text-white rounded">
+                            ${tag}
+                        </span>
+                    `).join('')}
                 </div>
             </div>
         </article>
@@ -84,6 +94,7 @@ const createQuestionCard = (question) => {
 // Fetch and Render Questions
 const loadLatestQuestions = async () => {
     const questionsList = document.getElementById('questions-list');
+    if (!questionsList) return;
     
     try {
         const { data: questions } = await supabase
@@ -95,12 +106,11 @@ const loadLatestQuestions = async () => {
         if (questions && questions.length > 0) {
             questionsList.innerHTML = questions.map(q => createQuestionCard(q)).join('');
             
-            // Update total count display if element exists
             const countEl = document.getElementById('question-count');
             if (countEl) countEl.textContent = `সর্বশেষ ${toBanglaNumber(questions.length)} টি প্রশ্ন`;
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching questions:', error);
     }
 };
 
