@@ -39,49 +39,27 @@ const truncateText = (text, maxLength = 150) => {
 // Create question card HTML
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
-    const excerpt = truncateText(question.body, 150);
-    const timeAgo = formatTimeAgo(question.created_at);
+    const excerpt = truncateText(question.body, 120); // মার্জিন কম হওয়ায় টেক্সট একটু কমিয়েছি
     
     return `
-        <article class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 transition-all duration-200">
-            <div class="flex items-center justify-between mb-3 border-b border-gray-100 dark:border-gray-700 pb-2">
-                <div class="flex gap-4">
-                    <div class="flex items-center gap-1">
-                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-xs text-gray-500">ভোট</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(question.answers_count || 0)}</span>
-                        <span class="text-xs text-gray-500">উত্তর</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-xs text-gray-500">ভিউ</span>
-                    </div>
-                </div>
-                
-                <time datetime="${question.created_at}" class="text-[10px] text-gray-400 whitespace-nowrap">
-                    ${timeAgo}
-                </time>
-            </div>
-            
+        <article class="p-2 md:p-3 border border-gray-100 dark:border-gray-700 rounded bg-white dark:bg-gray-800 transition-all duration-200 shadow-sm">
             <div class="min-w-0">
-                <h3 class="text-lg font-normal mb-2">
+                <h3 class="text-base font-normal mb-1">
                     <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">${excerpt}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">${excerpt}</p>
                 
                 <div class="flex flex-wrap gap-1">
                     ${question.category ? `
-                        <span class="px-2 py-1 text-xs text-white rounded" style="background-color: #0a95ff;">
+                        <span class="px-1.5 py-0.5 text-[10px] text-white rounded" style="background-color: #0a95ff;">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tags.map(tag => `
-                        <span class="px-2 py-1 text-xs bg-gray-500 dark:bg-gray-600 text-white rounded">
+                        <span class="px-1.5 py-0.5 text-[10px] bg-gray-400 dark:bg-gray-600 text-white rounded">
                             ${tag}
                         </span>
                     `).join('')}
@@ -90,6 +68,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 // Fetch and Render Questions
 const loadLatestQuestions = async () => {
