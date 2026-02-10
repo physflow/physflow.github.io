@@ -25,89 +25,89 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
+        /* সাইডবার লিঙ্ক স্টাইল */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+            border-right: 4px solid transparent;
+        }
+
+        /* অ্যাক্টিভ সাইডবার লিঙ্কের রং ঠিক করা হয়েছে */
         .sidebar-active { 
             background-color: #e1f0ff; 
-            border-right: 4px solid #0a95ff;
-            font-weight: normal;
-            color: #e1f0ff;
+            border-right-color: #0a95ff;
+            color: #0a95ff !important;
+            font-weight: 600;
         }
+
         .dark .sidebar-active { 
             background-color: #2d2d2d; 
-            color: #0a95ff;
+            color: #0a95ff !important;
+            border-right-color: #0a95ff;
         }
     </style>
 </head>
 <body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
 
-    <!-- Header - Fixed -->
-<header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-14 z-[100] border-b dark:border-gray-700">
-    <div class="container mx-auto px-4 h-full flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-            <button id="hamburger-btn" class="md:hidden p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                <i class="fas fa-bars"></i>
-            </button>
-            <a href="index.html" class="text-2xl font-extrabold tracking-tighter">
-                phys<span class="font-light text-gray-500">flow</span>
-            </a>
-        </div>
-
-        <div class="flex items-center space-x-2">
-           <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-            <i id="theme-icon" class="fas fa-moon"></i>
-        </button>
-        
-            <a href="ask.html" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-sm md:rounded text-sm font-medium transition flex items-center">
-                <i class="fas fa-plus mr-2 text-xs"></i>
-                <span class="hidden sm:inline">প্রশ্ন করুন</span>
-            </a>
-            
-            <div id="auth-section">
-                <button id="login-btn" class="bg-[#e1f0ff] text-[#0a95ff] px-4 py-1.5 rounded text-sm font-medium dark:bg-blue-900/30 hover:bg-[#d0e7ff] dark:hover:bg-blue-900/50 transition">
-                    লগ ইন
+    <header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-14 z-[100] border-b dark:border-gray-700">
+        <div class="container mx-auto px-4 h-full flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <button id="hamburger-btn" class="md:hidden p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <i class="fas fa-bars"></i>
                 </button>
-                <div id="user-menu" class="hidden flex items-center space-x-3">
-                    <img id="user-avatar" class="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 object-cover" src="" alt="Profile">
+                <a href="index.html" class="text-2xl font-extrabold tracking-tighter">
+                    phys<span class="font-light text-gray-500">flow</span>
+                </a>
+            </div>
+
+            <div class="flex items-center space-x-2">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <i id="theme-icon" class="fas fa-moon"></i>
+                </button>
+            
+                <a href="ask.html" class="bg-brand-600 hover:bg-brand-500 text-white px-3 py-1.5 rounded-sm md:rounded text-sm font-medium transition flex items-center">
+                    <i class="fas fa-plus mr-2 text-xs"></i>
+                    <span class="hidden sm:inline">প্রশ্ন করুন</span>
+                </a>
+                
+                <div id="auth-section">
+                    <button id="login-btn" class="bg-[#e1f0ff] text-[#0a95ff] px-4 py-1.5 rounded text-sm font-medium dark:bg-blue-900/30 hover:bg-[#d0e7ff] dark:hover:bg-blue-900/50 transition">
+                        লগ ইন
+                    </button>
+                    <div id="user-menu" class="hidden flex items-center space-x-3">
+                        <img id="user-avatar" class="w-8 h-8 rounded-full border border-gray-300 dark:border-gray-600 object-cover" src="" alt="Profile">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</header>
+    </header>
 
-
-
-    <!-- Overlay for mobile sidebar -->
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden"></div>
 
-    <!-- Main Container -->
     <div class="container mx-auto flex flex-1 pt-14">
-        <!-- Sidebar -->
         <aside id="mobile-sidebar" class="fixed md:sticky top-14 left-0 w-64 h-[calc(100vh-3.5rem)] bg-white dark:bg-[#1a1a1b] border-r dark:border-gray-700 pt-4 z-[150] md:z-40 -translate-x-full md:translate-x-0 overflow-y-auto transition-transform duration-300">
-            <nav class="flex flex-col text-sm">
-                <a href="index.html" class="py-3 px-6 transition hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <i class="fas fa-home mr-2"></i>হোম
+            <nav class="flex flex-col text-[13px]">
+                <a href="index.html" class="sidebar-link sidebar-active">
+                    <i class="fas fa-home w-5 mr-2"></i>হোম
                 </a>
                 <div class="px-6 py-4 uppercase text-[11px] font-bold text-gray-500 dark:text-gray-400 tracking-wider">
-                    কুইক লিংক 
+                    পাবলিক
                 </div>
-                <a href="questions.html" class="py-2 px-10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                    <i class="fas fa-question-circle mr-2 text-gray-400"></i>প্রশ্নসমূহ
+                <a href="questions.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-globe w-5 mr-2"></i>প্রশ্নসমূহ
                 </a>
-                <a href="tags.html" class="py-2 px-10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                    <i class="fas fa-tags mr-2 text-gray-400"></i>ট্যাগস
+                <a href="tags.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-tags w-5 mr-2"></i>ট্যাগস
                 </a>
-                <a href="users.html" class="py-2 px-10 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                    <i class="fas fa-users mr-2 text-gray-400"></i>ইউজার
+                <a href="users.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-users w-5 mr-2"></i>ইউজার
                 </a>
             </nav>
         </aside>
 
-        <!-- Main Content Area -->
         <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
-            
-            <!-- ============================================ -->
-            <!-- এখানে আপনার পেজ কন্টেন্ট লিখুন -->
-            <!-- ============================================ -->
-            
             <h1 class="text-3xl font-bold mb-6">পেজ টাইটেল</h1>
             
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -115,45 +115,27 @@
                     এখানে আপনার content যোগ করুন...
                 </p>
             </div>
-
-            <!-- 
-========================= -->
-            <!-- কন্টেন্ট শেষ -->
-            <!-- =
-========================= -->
-            
         </main>
     </div>
 
-    <!-- Footer -->
     <footer class="bg-[#232629] text-gray-400 py-6 mt-auto">
-    <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
-        
-        <div class="flex space-x-6 text-xs uppercase font-medium">
-            <a href="#" class="hover:text-gray-100 transition">সম্পর্কে</a>
-            <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
-            <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
+        <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <div class="flex space-x-6 text-xs uppercase font-medium">
+                <a href="#" class="hover:text-gray-100 transition">সম্পর্কে</a>
+                <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
+                <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
+            </div>
+            <div class="text-[11px]">
+                &copy; ২০২৬ physflow Inc. সর্বস্বত্ব সংরক্ষিত।
+            </div>
         </div>
+    </footer>
 
-        <div class="text-[11px]">
-            &copy; ২০২৬ physflow Inc. সর্বস্বত্ব সংরক্ষিত।
-        </div>
-        
-    </div>
-</footer>
-
-
-    <!-- JavaScript -->
     <script type="module">
         import { setupLayout, initTheme, setupAuth } from './javascript/layout.js';
         
-        // থিম initialize করো
         initTheme();
-        
-        // Layout interactivity setup করো (sidebar toggle, etc)
         setupLayout();
-        
-        // Authentication setup করো
         setupAuth();
     </script>
 
