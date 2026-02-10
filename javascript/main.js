@@ -55,7 +55,7 @@ const truncateText = (text, maxLength = 150) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML
+// Create question card HTML (Pure Tailwind CSS)
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
     const excerpt = truncateText(question.body, 150);
@@ -64,31 +64,46 @@ const createQuestionCard = (question) => {
     // Default avatar if none provided
     const avatar = question.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(question.author_name || 'User')}&background=0a95ff&color=fff&size=128`;
     
+    // Determine vote color
+    const voteColor = question.votes > 0 
+        ? 'text-green-600 dark:text-green-400' 
+        : question.votes < 0 
+        ? 'text-red-600 dark:text-red-400' 
+        : 'text-gray-600 dark:text-gray-400';
+    
+    // Determine answer color
+    const answerColor = question.answers_count > 0 
+        ? 'text-green-600 dark:text-green-400' 
+        : 'text-gray-600 dark:text-gray-400';
+    
     return `
-        <article class="question-card flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
-            <!-- Stats Section -->
+        <article class="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-all duration-200">
+            <!-- Stats Section (Left) -->
             <div class="flex flex-col gap-3 items-center text-center min-w-[4rem] shrink-0">
-                <div class="stat-badge ${question.votes > 0 ? 'text-green-600 dark:text-green-400' : question.votes < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'}">
-                    <div class="stat-number">${toBanglaNumber(question.votes || 0)}</div>
-                    <div class="stat-label">ভোট</div>
+                <!-- Votes -->
+                <div class="flex flex-col items-center justify-center min-w-[3rem] p-2">
+                    <div class="text-lg font-semibold leading-none ${voteColor}">${toBanglaNumber(question.votes || 0)}</div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">ভোট</div>
                 </div>
                 
-                <div class="stat-badge ${question.answers_count > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-600 dark:text-gray-400'}">
-                    <div class="stat-number">${toBanglaNumber(question.answers_count || 0)}</div>
-                    <div class="stat-label">উত্তর</div>
+                <!-- Answers -->
+                <div class="flex flex-col items-center justify-center min-w-[3rem] p-2">
+                    <div class="text-lg font-semibold leading-none ${answerColor}">${toBanglaNumber(question.answers_count || 0)}</div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">উত্তর</div>
                 </div>
                 
-                <div class="stat-badge text-gray-600 dark:text-gray-400">
-                    <div class="stat-number">${toBanglaNumber(question.views || 0)}</div>
-                    <div class="stat-label">ভিউ</div>
+                <!-- Views -->
+                <div class="flex flex-col items-center justify-center min-w-[3rem] p-2">
+                    <div class="text-lg font-semibold leading-none text-gray-600 dark:text-gray-400">${toBanglaNumber(question.views || 0)}</div>
+                    <div class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">ভিউ</div>
                 </div>
             </div>
             
-            <!-- Content Section -->
+            <!-- Content Section (Right) -->
             <div class="flex-1 min-w-0">
                 <!-- Title -->
                 <h3 class="text-lg font-semibold mb-2">
-                    <a href="questions/${question.slug}.html" class="text-brand-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition">
+                    <a href="questions/${question.slug}.html" class="text-brand-600 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
                         ${question.title}
                     </a>
                 </h3>
@@ -101,7 +116,8 @@ const createQuestionCard = (question) => {
                 <!-- Tags -->
                 <div class="flex flex-wrap gap-1 mb-3">
                     ${tags.map(tag => `
-                        <a href="tags.html?tag=${encodeURIComponent(tag)}" class="tag">
+                        <a href="tags.html?tag=${encodeURIComponent(tag)}" 
+                           class="inline-block px-2 py-1 text-xs bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
                             ${tag}
                         </a>
                     `).join('')}
@@ -112,9 +128,10 @@ const createQuestionCard = (question) => {
                     <div class="flex items-center gap-2">
                         <img src="${avatar}" 
                              alt="${question.author_name || 'ব্যবহারকারী'}" 
-                             class="w-6 h-6 rounded-full object-cover"
+                             class="w-6 h-6 rounded-full object-cover border border-gray-200 dark:border-gray-600"
                              onerror="this.src='https://ui-avatars.com/api/?name=User&background=0a95ff&color=fff&size=128'">
-                        <a href="users/${question.author_name || 'user'}.html" class="hover:text-brand-600 dark:hover:text-blue-400 transition font-medium">
+                        <a href="users/${question.author_name || 'user'}.html" 
+                           class="hover:text-brand-600 dark:hover:text-blue-400 transition-colors font-medium">
                             ${question.author_name || 'অজ্ঞাত ব্যবহারকারী'}
                         </a>
                     </div>
@@ -270,12 +287,12 @@ const setupFilterTabs = () => {
         tab.addEventListener('click', () => {
             // Remove active class from all tabs
             filterTabs.forEach(t => {
-                t.classList.remove('active', 'bg-brand-500', 'text-brand-600', 'border-b-2', 'border-brand-600');
+                t.classList.remove('bg-brand-500', 'text-brand-600', 'border-b-2', 'border-brand-600');
                 t.classList.add('text-gray-600', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-800');
             });
             
             // Add active class to clicked tab
-            tab.classList.add('active', 'bg-brand-500', 'text-brand-600', 'border-b-2', 'border-brand-600');
+            tab.classList.add('bg-brand-500', 'text-brand-600', 'border-b-2', 'border-brand-600');
             tab.classList.remove('text-gray-600', 'dark:text-gray-400', 'hover:bg-gray-100', 'dark:hover:bg-gray-800');
             
             // Update current filter
@@ -285,13 +302,6 @@ const setupFilterTabs = () => {
             loadQuestions(currentFilter, false);
         });
     });
-    
-    // Set initial active tab
-    const activeTab = document.querySelector('.filter-tab.active');
-    if (activeTab) {
-        activeTab.classList.add('bg-brand-500', 'text-brand-600', 'border-b-2', 'border-brand-600');
-        activeTab.classList.remove('text-gray-600', 'dark:text-gray-400');
-    }
 };
 
 // Setup load more button
