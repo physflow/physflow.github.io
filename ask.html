@@ -145,101 +145,106 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         <!-- Main Content Area -->
-        <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
-            <h1 class="text-3xl font-bold mb-6">নতুন প্রশ্ন করুন</h1>
+        
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <form id="ask-form" class="flex flex-col gap-6">
-                    <!-- Question Title -->
-                    <div>
-                        <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-title">
-                            প্রশ্নের শিরোনাম <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" id="question-title" name="title" 
-                               placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন..." required
-                               class="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 dark:bg-[#2d2d2d] dark:text-gray-200">
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">স্পষ্ট এবং সংক্ষিপ্ত শিরোনাম লিখুন</p>
-                    </div>
 
-                    <!-- Question Body -->
-                    <div>
-                        <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-body">
-                            প্রশ্নের বিস্তারিত <span class="text-red-500">*</span>
-                        </label>
-                        <textarea id="question-body" name="body" rows="8" 
-                                  placeholder="প্রশ্নের বিস্তারিত লিখুন... আপনার সমস্যা, প্রেক্ষাপট এবং আপনি কী জানতে চান তা উল্লেখ করুন।" required
-                                  class="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 dark:bg-[#2d2d2d] dark:text-gray-200"></textarea>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">যত বেশি তথ্য দিবেন, উত্তর পাওয়ার সম্ভাবনা তত বাড়বে</p>
-                    </div>
+<main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
+    <h1 class="text-3xl font-bold mb-6">নতুন প্রশ্ন করুন</h1>
 
-                    <!-- Category Selection -->
-                    <div>
-                        <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-category">
-                            ক্যাটাগরি <span class="text-red-500">*</span>
-                        </label>
-                        <select id="question-category" name="category" required
-                                class="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 dark:bg-[#2d2d2d] dark:text-gray-200">
-                            <option value="">ক্যাটাগরি নির্বাচন করুন</option>
-                            <option value="mechanics">বলবিদ্যা (Mechanics)</option>
-                            <option value="thermodynamics">তাপগতিবিদ্যা (Thermodynamics)</option>
-                            <option value="electromagnetism">তড়িৎ ও চুম্বকত্ব (Electromagnetism)</option>
-                            <option value="optics">আলোকবিদ্যা (Optics)</option>
-                            <option value="modern-physics">আধুনিক পদার্থবিদ্যা (Modern Physics)</option>
-                            <option value="quantum">কোয়ান্টাম পদার্থবিদ্যা (Quantum Physics)</option>
-                            <option value="relativity">আপেক্ষিকতা (Relativity)</option>
-                            <option value="astrophysics">জ্যোতির্পদার্থবিদ্যা (Astrophysics)</option>
-                            <option value="other">অন্যান্য (Other)</option>
-                        </select>
-                    </div>
-
-                    <!-- Tags Input -->
-                    <div>
-                        <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-tags-input">
-                            ট্যাগ (সর্বোচ্চ ৫টি)
-                        </label>
-                        <div class="tag-input-container" id="tag-container">
-                            <input type="text" id="question-tags-input" 
-                                   placeholder="ট্যাগ লিখুন এবং Enter চাপুন..." 
-                                   class="flex-1 min-w-[150px] border-none outline-none bg-transparent text-sm dark:text-gray-200">
-                        </div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">প্রাসঙ্গিক ট্যাগ যোগ করুন (যেমন: ভেক্টর, নিউটন, শক্তি)</p>
-                        <input type="hidden" id="question-tags" name="tags">
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="flex items-center gap-4">
-                        <button type="submit" id="submit-btn"
-                                class="bg-brand-600 hover:bg-blue-600 text-white px-6 py-2.5 rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
-                            প্রশ্ন জমা দিন
-                        </button>
-                        <button type="button" onclick="window.history.back()" 
-                                class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-6 py-2.5 rounded font-medium transition">
-                            বাতিল
-                        </button>
-                    </div>
-
-                    <!-- Message Display -->
-                    <div id="ask-message" class="text-sm mt-2 hidden"></div>
-                </form>
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <form id="ask-form" class="flex flex-col gap-6">
+            <div>
+                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-title">
+                    প্রশ্নের শিরোনাম <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="question-title" name="title" 
+                       placeholder="আপনার প্রশ্ন সংক্ষেপে লিখুন..." required
+                       class="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 dark:bg-[#2d2d2d] dark:text-gray-200">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">স্পষ্ট এবং সংক্ষিপ্ত শিরোনাম লিখুন</p>
             </div>
 
-            <!-- Help Section -->
-            <div class="mt-8 bg-blue-50 dark:bg-gray-800 rounded-lg p-6 border-l-4 border-brand-600">
-                <h3 class="font-bold text-lg mb-3 text-gray-800 dark:text-gray-200">
-                    <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
-                    ভালো প্রশ্ন করার টিপস
-                </h3>
-                <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                    <li><i class="fas fa-check text-green-500 mr-2"></i>স্পষ্ট এবং সুনির্দিষ্ট শিরোনাম ব্যবহার করুন</li>
-                    <li><i class="fas fa-check text-green-500 mr-2"></i>প্রশ্নের প্রেক্ষাপট এবং আপনার চেষ্টা উল্লেখ করুন</li>
-                    <li><i class="fas fa-check text-green-500 mr-2"></i>প্রাসঙ্গিক ট্যাগ ব্যবহার করুন যাতে সঠিক মানুষ আপনার প্রশ্ন দেখতে পান</li>
-                    <li><i class="fas fa-check text-green-500 mr-2"></i>ব্যাকরণ এবং বানান সঠিক রাখুন</li>
-                    <li><i class="fas fa-check text-green-500 mr-2"></i>একসাথে একাধিক প্রশ্ন করবেন না</li>
-                </ul>
+            <div>
+                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-body">
+                    প্রশ্নের বিস্তারিত <span class="text-red-500">*</span>
+                </label>
+                <textarea id="question-body" name="body" rows="8" 
+                          placeholder="প্রশ্নের বিস্তারিত লিখুন... আপনার সমস্যা, প্রেক্ষাপট এবং আপনি কী জানতে চান তা উল্লেখ করুন।" required
+                          class="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 dark:bg-[#2d2d2d] dark:text-gray-200"></textarea>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">যত বেশি তথ্য দিবেন, উত্তর পাওয়ার সম্ভাবনা তত বাড়বে</p>
             </div>
-        </main>
+
+            <div>
+                <label class="block mb-2 font-medium text-gray-700 dark:text-gray-300" for="question-category">
+                    ক্যাটাগরি <span class="text-red-500">*</span>
+                </label>
+                <select id="question-category" name="category" required
+                        class="w-full border border-gray-300 dark:border-gray-600 rounded py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 dark:bg-[#2d2d2d] dark:text-gray-200">
+                    <option value="">ক্যাটাগরি নির্বাচন করুন</option>
+                    <option value="mechanics">বলবিদ্যা</option>
+                    <option value="motion-dynamics">গতি ও গতিবিদ্যা</option>
+                    <option value="heat-thermodynamics">তাপ ও তাপগতিবিদ্যা</option>
+                    <option value="matter-properties">পদার্থের ধর্ম</option>
+                    <option value="waves-sound">তরঙ্গ ও শব্দ</option>
+                </select>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button type="submit" id="submit-btn"
+                        class="bg-brand-600 hover:bg-blue-600 text-white px-6 py-2.5 rounded font-medium transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    প্রশ্ন জমা দিন
+                </button>
+                <button type="button" onclick="window.history.back()" 
+                        class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-6 py-2.5 rounded font-medium transition">
+                    বাতিল
+                </button>
+            </div>
+
+            <div id="ask-message" class="text-sm mt-2 hidden"></div>
+        </form>
     </div>
+
+    <div class="mt-8 bg-blue-50 dark:bg-gray-800 rounded-lg p-6 border-l-4 border-brand-600">
+        <h3 class="font-bold text-lg mb-3 text-gray-800 dark:text-gray-200">
+            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+            ভালো প্রশ্ন করার টিপস
+        </h3>
+        <ul class="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+            <li><i class="fas fa-check text-green-500 mr-2"></i>স্পষ্ট এবং সুনির্দিষ্ট শিরোনাম ব্যবহার করুন</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i>প্রশ্নের প্রেক্ষাপট এবং আপনার চেষ্টা উল্লেখ করুন</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i>ব্যাকরণ এবং বানান সঠিক রাখুন</li>
+            <li><i class="fas fa-check text-green-500 mr-2"></i>একসাথে একাধিক প্রশ্ন করবেন না</li>
+        </ul>
+    </div>
+</main>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
      <footer class="bg-[#232629] text-gray-400 py-6 mt-auto">
         <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
