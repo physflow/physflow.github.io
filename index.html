@@ -37,7 +37,7 @@
             border-right: 4px solid transparent;
         }
 
-        /* অ্যাক্টিভ সাইডবার লিঙ্কের রং ঠিক করা হয়েছে */
+        /* অ্যাক্টিভ সাইডবার লিঙ্কের রং */
         .sidebar-active { 
             background-color: #e1f0ff; 
             border-right-color: #0a95ff;
@@ -49,77 +49,6 @@
             background-color: #2d2d2d; 
             color: #0a95ff !important;
             border-right-color: #0a95ff;
-        }
-
-        /* Question card hover effect */
-        .question-card {
-            transition: all 0.2s ease;
-        }
-
-        .question-card:hover {
-            background-color: #fafafa;
-            border-color: #e1e4e8;
-        }
-
-        .dark .question-card:hover {
-            background-color: #2d2d2d;
-            border-color: #404040;
-        }
-
-
-
-        /* Tag styles */
-        .tag {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            background-color: #e1ecf4;
-            color: #39739d;
-            border-radius: 0.25rem;
-            font-size: 0.75rem;
-            margin-right: 0.25rem;
-            margin-bottom: 0.25rem;
-            transition: all 0.2s;
-        }
-
-        .tag:hover {
-            background-color: #d0e3f1;
-            color: #2c5877;
-        }
-
-        .dark .tag {
-            background-color: #3d464d;
-            color: #a5b3bd;
-        }
-
-        .dark .tag:hover {
-            background-color: #4d565d;
-            color: #c5d3dd;
-        }
-
-        /* Stats badge */
-        .stat-badge {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-width: 3rem;
-            padding: 0.5rem;
-        }
-
-        .stat-number {
-            font-size: 1.125rem;
-            font-weight: 600;
-            line-height: 1;
-        }
-
-        .stat-label {
-            font-size: 0.625rem;
-            color: #6c757d;
-            margin-top: 0.25rem;
-        }
-
-        .dark .stat-label {
-            color: #9ca3af;
         }
     </style>
 </head>
@@ -220,19 +149,19 @@
 
             <!-- Filter Tabs -->
             <div class="flex flex-wrap gap-2 mb-6 border-b dark:border-gray-700 pb-2">
-                <button class="filter-tab active px-4 py-2 text-sm font-medium rounded-t-lg transition" data-filter="newest">
+                <button class="filter-tab px-4 py-2 text-sm font-medium rounded-t-lg transition bg-brand-500 text-brand-600 border-b-2 border-brand-600" data-filter="newest">
                     সর্বশেষ
                 </button>
-                <button class="filter-tab px-4 py-2 text-sm font-medium rounded-t-lg transition" data-filter="unanswered">
+                <button class="filter-tab px-4 py-2 text-sm font-medium rounded-t-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" data-filter="unanswered">
                     অনুত্তরিত
                 </button>
-                <button class="filter-tab px-4 py-2 text-sm font-medium rounded-t-lg transition" data-filter="popular">
+                <button class="filter-tab px-4 py-2 text-sm font-medium rounded-t-lg transition text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" data-filter="popular">
                     জনপ্রিয়
                 </button>
             </div>
 
-<!-- Questions List -->
-            <div id="questions-list" class="space-y-4 hidden">
+            <!-- Questions List -->
+            <div id="questions-list" class="space-y-4">
                 <!-- Questions will be dynamically loaded here -->
             </div>
 
