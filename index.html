@@ -54,7 +54,7 @@
 </head>
 <body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
 
-    <header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-14 z-[100] border-b dark:border-gray-700">
+   <header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-14 z-[100] border-b dark:border-gray-700">
     <div class="container mx-auto px-4 h-full flex items-center gap-4">
         <div class="flex items-center space-x-4 shrink-0">
             <button id="hamburger-btn" class="md:hidden p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition">
@@ -65,10 +65,10 @@
             </a>
         </div>
 
-        <div class="hidden md:flex flex-1 max-w-2xl relative group">
+        <form action="questions.html" method="GET" class="hidden md:flex flex-1 max-w-2xl relative group">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-600"></i>
-            <input type="text" placeholder="খুঁজুন..." class="w-full bg-white dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all">
-        </div>
+            <input type="text" name="q" placeholder="খুঁজুন..." class="w-full bg-white dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all">
+        </form>
 
         <div class="flex items-center space-x-2 ml-auto shrink-0">
             <button id="mobile-search-btn" class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition" title="খুঁজুন">
@@ -90,13 +90,14 @@
         </div>
     </div>
 
-    <div id="mobile-search-bar" class="absolute top-14 left-0 w-full bg-white dark:bg-[#1a1a1b] border-b dark:border-gray-700 p-2 hidden md:hidden shadow-lg animate-in slide-in-from-top duration-200">
-        <div class="relative">
+    <div id="mobile-search-bar" class="absolute top-14 left-0 w-full bg-white dark:bg-[#1a1a1b] border-b dark:border-gray-700 p-2 hidden md:hidden shadow-lg">
+        <form action="questions.html" method="GET" class="relative">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-            <input type="text" placeholder="এখানে খুঁজুন..." class="w-full bg-gray-50 dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
-        </div>
+            <input type="text" name="q" placeholder="এখানে খুঁজুন..." class="w-full bg-gray-50 dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </form>
     </div>
 </header>
+
 
 
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden"></div>
