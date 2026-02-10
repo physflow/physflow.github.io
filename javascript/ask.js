@@ -10,7 +10,7 @@ const categoryTags = {
 };
 
 let selectedTags = [];
-const MAX_TAGS = 5;
+const MAX_TAGS = 3;
 
 // DOM Elements
 const form = document.getElementById('ask-form');
@@ -94,9 +94,7 @@ function generateSlug(text) {
         .replace(/-+/g, '-')                       // একাধিক হাইফেনকে একটি করা
         .substring(0, 100);                        // দৈর্ঘ্য সীমাবদ্ধ করা
 
-    // ইউনিক করার জন্য টাইমস্ট্যাম্প যোগ
-    const timestamp = Date.now().toString(36);
-    return `${slug}-${timestamp}`;
+    return slug;
 }
 
 // ৭. মেসেজ প্রদর্শন
