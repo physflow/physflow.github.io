@@ -66,22 +66,6 @@
             border-color: #404040;
         }
 
-        /* Skeleton loader animation */
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-
-        .skeleton {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 1000px 100%;
-            animation: shimmer 2s infinite;
-        }
-
-        .dark .skeleton {
-            background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
-            background-size: 1000px 100%;
-        }
 
         /* Tag styles */
         .tag {
@@ -245,11 +229,13 @@
                     জনপ্রিয়
                 </button>
             </div>
+            
 
             <!-- Loading Skeleton -->
-            <div id="loading-skeleton" class="space-y-4">
-                <!-- Skeleton cards will be inserted here -->
-            </div>
+            <div id="loading-text" class="text-center py-10 text-gray-500">
+    প্রশ্নগুলো লোড হচ্ছে, দয়া করে অপেক্ষা করুন...
+</div>
+
 
             <!-- Questions List -->
             <div id="questions-list" class="space-y-4 hidden">
