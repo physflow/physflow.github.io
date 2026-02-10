@@ -36,14 +36,14 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML (হুবহু ছবির মতো এবং চারপাশে বর্ডারসহ)
+// Create question card HTML (সম্পূর্ণ ফ্ল্যাট ডিজাইন, কোনো ইফেক্ট নেই)
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="p-4 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-200">
+        <article class="p-4 border border-gray-200 dark:border-gray-700 bg-transparent shadow-none transition-none">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex gap-4">
                     <div class="flex items-center gap-1">
@@ -78,13 +78,13 @@ const createQuestionCard = (question) => {
                 
                 <div class="flex flex-wrap gap-2">
                     ${question.category ? `
-                        <span class="px-3 py-1 text-sm font-medium bg-blue-50 text-blue-500 border border-blue-100 rounded-md">
+                        <span class="px-3 py-1 text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-500 border border-blue-100 dark:border-blue-900/30 rounded-md">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tags.map(tag => `
-                        <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-md">
+                        <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md">
                             #${tag}
                         </span>
                     `).join('')}
@@ -93,6 +93,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 
 // Fetch and Render Questions
