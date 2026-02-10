@@ -19,7 +19,7 @@ const formatTimeAgo = (date) => {
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${toBanglaNumber(minutes)} মিনিট আগে`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${toBanglaNumber(hours)} ঘন্টা আগে`;
+    if (hours < 24) return `${toBanglaNumber(hours)} ঘণ্টা আগে`;
     const days = Math.floor(hours / 24);
     if (days < 30) return `${toBanglaNumber(days)} দিন আগে`;
     const months = Math.floor(days / 30);
@@ -29,60 +29,63 @@ const formatTimeAgo = (date) => {
 };
 
 // Truncate text
-const truncateText = (text, maxLength = 150) => {
+const truncateText = (text, maxLength = 130) => {
     if (!text) return '';
     const stripped = text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
     if (stripped.length <= maxLength) return stripped;
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML
+// Create question card HTML (Based on your provided image)
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
-    const excerpt = truncateText(question.body, 120); 
+    const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="p-2 md:p-3 border border-gray-100 dark:border-gray-700 rounded bg-white dark:bg-gray-800 transition-all duration-200 shadow-sm">
-            <div class="flex items-center justify-between mb-2 border-b border-gray-50 dark:border-gray-700 pb-1.5">
-                <div class="flex gap-3">
+        <article class="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 transition-all duration-200">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex gap-4">
                     <div class="flex items-center gap-1">
-                        <span class="text-[11px] font-bold text-gray-600 dark:text-gray-300">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-[10px] text-gray-400">ভোট</span>
+                        <span class="text-base font-bold text-red-600">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-base font-bold text-red-600">ভোট</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[11px] font-bold text-gray-600 dark:text-gray-300">${toBanglaNumber(question.answers_count || 0)}</span>
-                        <span class="text-[10px] text-gray-400">উত্তর</span>
+                        <span class="text-base font-bold text-green-600">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-base font-bold text-green-600">উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[11px] font-bold text-gray-600 dark:text-gray-300">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[10px] text-gray-400">ভিউ</span>
+                        <span class="text-base text-gray-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-base text-gray-500">দেখা</span>
                     </div>
                 </div>
                 
-                <time datetime="${question.created_at}" class="text-[9px] text-gray-400 whitespace-nowrap">
+                <time datetime="${question.created_at}" class="text-sm text-gray-400">
                     ${timeAgo}
                 </time>
             </div>
 
             <div class="min-w-0">
-                <h3 class="text-base font-normal mb-1">
-                    <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
+                <h3 class="text-xl font-normal mb-2">
+                    <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline transition-colors">
                         ${question.title}
                     </a>
                 </h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">${excerpt}</p>
                 
-                <div class="flex flex-wrap gap-1">
+                <p class="text-[15px] text-gray-600 dark:text-gray-400 mb-4 leading-relaxed line-clamp-2">
+                    ${excerpt}
+                </p>
+                
+                <div class="flex flex-wrap gap-2">
                     ${question.category ? `
-                        <span class="px-1.5 py-0.5 text-[10px] bg-gray-500 dark:bg-gray-600 text-white rounded">
+                        <span class="px-3 py-1 text-sm font-medium bg-blue-50 text-blue-500 border border-blue-100 rounded-md">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tags.map(tag => `
-                        <span class="px-1.5 py-0.5 text-[10px] bg-gray-400 dark:bg-gray-600 text-white rounded">
-                            ${tag}
+                        <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600 rounded-md">
+                            #${tag}
                         </span>
                     `).join('')}
                 </div>
@@ -90,7 +93,6 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
-
 
 // Fetch and Render Questions
 const loadLatestQuestions = async () => {
