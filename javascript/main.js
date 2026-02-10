@@ -36,7 +36,7 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML (সম্পূর্ণ ফ্ল্যাট ডিজাইন, কোনো ইফেক্ট নেই)
+// Create question card HTML (ভিউ কাউন্ট এখন হলুদ রঙে)
 const createQuestionCard = (question) => {
     const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
     const excerpt = truncateText(question.body, 130); 
@@ -55,8 +55,8 @@ const createQuestionCard = (question) => {
                         <span class="text-base font-bold text-green-600">উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-base text-gray-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-base text-gray-500">দেখা</span>
+                        <span class="text-base font-bold text-amber-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-base font-bold text-amber-500">দেখা</span>
                     </div>
                 </div>
                 
@@ -93,6 +93,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 
 
