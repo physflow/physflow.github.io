@@ -147,19 +147,37 @@
 
 
 
-        <main class="flex-1 p-4 md:p-6 border-r dark:border-gray-700">
-            <div class="flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold">শীর্ষ প্রশ্নসমূহ</h1>
-                <a href="ask.html" class="bg-brand-600 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition">প্রশ্ন করুন</a>
+        <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
+    <div class="max-w-5xl mx-auto"> 
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            
+            <div class="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                <span id="total-questions-count">০</span> প্রশ্ন, 
+                <span id="total-answers-count">০</span> উত্তর
             </div>
 
-            <div id="questions-container" class="border-t dark:border-gray-700">
-                <div id="loading-spinner" class="py-20 text-center">
-                    <i class="fas fa-spinner fa-spin text-3xl text-brand-600"></i>
-                    <p class="mt-2 text-gray-500">লোড হচ্ছে...</p>
-                </div>
+            <div class="flex items-center bg-gray-100 dark:bg-[#2d2d2d] p-1 rounded-lg border dark:border-gray-700">
+                <a href="index.html" class="px-4 py-1.5 text-sm font-medium rounded-md bg-white dark:bg-gray-600 shadow-sm text-brand-600 dark:text-white">
+                    সর্বশেষ
+                </a>
+                <a href="popular.html" class="px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 transition">
+                    জনপ্রিয়
+                </a>
+                <a href="trending.html" class="px-4 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-brand-600 transition">
+                    ট্রেন্ডিং
+                </a>
             </div>
-        </main>
+        </div>
+
+        <div id="questions-container" class="border-t dark:border-gray-700">
+            <div id="loading-spinner" class="py-20 text-center">
+                <i class="fas fa-spinner fa-spin text-3xl text-brand-600"></i>
+                <p class="mt-2 text-gray-500">লোড হচ্ছে...</p>
+            </div>
+        </div>
+    </div>
+</main>
 
         <aside class="hidden lg:block w-80 p-6 space-y-6">
             <div class="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30 p-4 rounded shadow-sm">
