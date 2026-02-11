@@ -1,7 +1,8 @@
 import { supabase } from './supabase-config.js';
 
 // State management
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 15; // ১৫টি করে প্রশ্ন
+let currentPage = 0;
 
 // ১. বাংলা সংখ্যা কনভার্টার
 const toBanglaNumber = (num) => {
@@ -36,9 +37,8 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৪. কোশ্চেন কার্ড তৈরির HTML (যেখানে tags -> tag হয়েছে)
+// ৪. কোশ্চেন কার্ড তৈরির HTML
 const createQuestionCard = (question) => {
-    // tag ডাটা পার্সিং (Array হিসেবে থাকলে সরাসরি নেবে, না থাকলে খালি রাখবে)
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
@@ -95,25 +95,29 @@ const createQuestionCard = (question) => {
     `;
 };
 
-// ৫. ডাটা লোড করার মেইন ফাংশন (যেখানে questions -> question হয়েছে)
-const loadLatestQuestion = async () => {
+// ৫. ডাটা লোড করার মেইন ফাংশন (প্যাগিনেশন সহ)
+const loadLatestQuestion = async (page = 0) => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
     try {
-        const { data: questionData, error } = await supabase
-            .from('question') // টেবিল নাম question
-            .select('*')
+        const { data: questionData, error, count } = await supabase
+            .from('question')
+            .select('*', { count: 'exact' })
             .order('created_at', { ascending: false })
-            .range(0, PAGE_SIZE - 1);
+            .range(from, to);
         
         if (error) throw error;
 
         if (questionData && questionData.length > 0) {
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
+            updatePaginationControls(count, page);
             
             const countEl = document.getElementById('question-count');
-            if (countEl) countEl.textContent = `সর্বশেষ ${toBanglaNumber(questionData.length)} টি প্রশ্ন`;
+            if (countEl) countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
         } else {
             questionList.innerHTML = '<p class="p-8 text-center text-gray-500">এখনো কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
@@ -123,12 +127,64 @@ const loadLatestQuestion = async () => {
     }
 };
 
-// ৬. ইনিশিয়ালাইজেশন ফাংশন
-export const initHomePage = () => {
-    loadLatestQuestion();
+// ৭. প্যাগিনেশন কন্ট্রোল আপডেট
+const updatePaginationControls = (totalCount, page) => {
+    let paginationContainer = document.getElementById('pagination-container');
+    
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'pagination-container';
+        paginationContainer.className = 'flex justify-center gap-2 p-6';
+        document.getElementById('question-list').after(paginationContainer);
+    }
+
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    let buttons = '';
+
+    if (totalPages > 1) {
+        // আগের বাটন
+        buttons += `
+            <button ${page === 0 ? 'disabled' : ''} 
+                onclick="window.changePage(${page - 1})"
+                class="px-3 py-1 border rounded ${page === 0 ? 'text-gray-300' : 'hover:bg-gray-100'}">
+                আগের
+            </button>
+        `;
+
+        // পেজ নম্বর (সরলীকৃত)
+        for (let i = 0; i < totalPages; i++) {
+            if (i === page) {
+                buttons += `<span class="px-3 py-1 bg-blue-500 text-white rounded">${toBanglaNumber(i + 1)}</span>`;
+            } else {
+                buttons += `<button onclick="window.changePage(${i})" class="px-3 py-1 border rounded hover:bg-gray-100">${toBanglaNumber(i + 1)}</button>`;
+            }
+        }
+
+        // পরের বাটন
+        buttons += `
+            <button ${page === totalPages - 1 ? 'disabled' : ''} 
+                onclick="window.changePage(${page + 1})"
+                class="px-3 py-1 border rounded ${page === totalPages - 1 ? 'text-gray-300' : 'hover:bg-gray-100'}">
+                পরের
+            </button>
+        `;
+    }
+
+    paginationContainer.innerHTML = buttons;
 };
 
-// অটোমেটিক রেন্ডারিং নিশ্চিত করা
+// গ্লোবাল ফাংশন যাতে HTML বাটন থেকে কল করা যায়
+window.changePage = (newPage) => {
+    currentPage = newPage;
+    loadLatestQuestion(currentPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ৬. ইনিশিয়ালাইজেশন ফাংশন
+export const initHomePage = () => {
+    loadLatestQuestion(currentPage);
+};
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initHomePage);
 } else {
