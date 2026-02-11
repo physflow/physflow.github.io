@@ -1,21 +1,21 @@
 import { supabase } from './supabase-config.js';
 
-// State management
-const PAGE_SIZE = 15; // ১৫টি করে প্রশ্ন
-let currentPage = 0;
+// ১. কনফিগারেশন
+const PAGE_SIZE = 15;
 
-// ১. বাংলা সংখ্যা কনভার্টার
+// ২. URL থেকে বর্তমান পেজ নম্বর নেওয়া (URL ?page=2 থাকলে তা ধরবে)
+const urlParams = new URLSearchParams(window.location.search);
+const currentPage = parseInt(urlParams.get('page')) || 1;
+
 const toBanglaNumber = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     return String(num).split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
 };
 
-// ২. সময় ফরম্যাট (কতক্ষণ আগে)
 const formatTimeAgo = (date) => {
     const now = new Date();
     const then = new Date(date);
     const seconds = Math.floor((now - then) / 1000);
-    
     if (seconds < 60) return `${toBanglaNumber(seconds)} সেকেন্ড আগে`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${toBanglaNumber(minutes)} মিনিট আগে`;
@@ -29,7 +29,6 @@ const formatTimeAgo = (date) => {
     return `${toBanglaNumber(years)} বছর আগে`;
 };
 
-// ৩. টেক্সট ছোট করা (Excerpt)
 const truncateText = (text, maxLength = 130) => {
     if (!text) return '';
     const stripped = text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -37,7 +36,6 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৪. কোশ্চেন কার্ড তৈরির HTML
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 130); 
@@ -60,47 +58,28 @@ const createQuestionCard = (question) => {
                         <span class="text-[13px] text-gray-500">দেখা</span>
                     </div>
                 </div>
-                
-                <time datetime="${question.created_at}" class="text-[12px] text-gray-400">
-                    ${timeAgo}
-                </time>
+                <time datetime="${question.created_at}" class="text-[12px] text-gray-400">${timeAgo}</time>
             </div>
-
             <div class="min-w-0">
                 <h3 class="text-lg font-medium mb-2 leading-snug">
-                    <a href="question.html?slug=${question.slug}" style="color: #0a95ff;" class="hover:underline">
-                        ${question.title}
-                    </a>
+                    <a href="question.html?slug=${question.slug}" style="color: #0a95ff;" class="hover:underline">${question.title}</a>
                 </h3>
-                
-                <p class="text-[14px] text-gray-600 dark:text-gray-400 mb-4 leading-relaxed line-clamp-2">
-                    ${excerpt}
-                </p>
-                
+                <p class="text-[14px] text-gray-600 dark:text-gray-400 mb-4 leading-relaxed line-clamp-2">${excerpt}</p>
                 <div class="flex flex-wrap gap-2">
-                    ${question.category ? `
-                        <span class="px-2 py-0.5 text-[11px] font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-500 border border-blue-100 dark:border-blue-900/30 rounded">
-                            ${question.category}
-                        </span>
-                    ` : ''}
-
-                    ${tag.map(t => `
-                        <span class="px-2 py-0.5 text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded">
-                            #${t}
-                        </span>
-                    `).join('')}
+                    ${question.category ? `<span class="px-2 py-0.5 text-[11px] font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-500 border border-blue-100 dark:border-blue-900/30 rounded">${question.category}</span>` : ''}
+                    ${tag.map(t => `<span class="px-2 py-0.5 text-[11px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded">#${t}</span>`).join('')}
                 </div>
             </div>
-        </article>
-    `;
+        </article>`;
 };
 
-// ৫. ডাটা লোড করার মেইন ফাংশন (প্যাগিনেশন সহ)
-const loadLatestQuestion = async (page = 0) => {
+// ৩. ডাটা লোড ফাংশন
+const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
-    const from = page * PAGE_SIZE;
+    // pagination ক্যালকুলেশন
+    const from = (currentPage - 1) * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
     try {
@@ -114,75 +93,54 @@ const loadLatestQuestion = async (page = 0) => {
 
         if (questionData && questionData.length > 0) {
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
-            updatePaginationControls(count, page);
+            renderPagination(count);
             
             const countEl = document.getElementById('question-count');
-            if (countEl) countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
+            if (countEl) countEl.textContent = `পৃষ্ঠা ${toBanglaNumber(currentPage)} (সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন)`;
         } else {
-            questionList.innerHTML = '<p class="p-8 text-center text-gray-500">এখনো কোনো প্রশ্ন পাওয়া যায়নি।</p>';
+            questionList.innerHTML = '<p class="p-8 text-center text-gray-500">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
-        console.error('Error fetching question:', err);
-        questionList.innerHTML = `<p class="p-8 text-center text-red-500">ত্রুটি: ${err.message}</p>`;
+        console.error('Error:', err);
+        questionList.innerHTML = `<p class="p-8 text-center text-red-500">ত্রুটি ঘটেছে।</p>`;
     }
 };
 
-// ৭. প্যাগিনেশন কন্ট্রোল আপডেট
-const updatePaginationControls = (totalCount, page) => {
-    let paginationContainer = document.getElementById('pagination-container');
-    
-    if (!paginationContainer) {
-        paginationContainer = document.createElement('div');
-        paginationContainer.id = 'pagination-container';
-        paginationContainer.className = 'flex justify-center gap-2 p-6';
-        document.getElementById('question-list').after(paginationContainer);
+// ৪. পেজ রিফ্রেশ সহ প্যাগিনেশন রেন্ডার
+const renderPagination = (totalCount) => {
+    let container = document.getElementById('pagination-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'pagination-container';
+        container.className = 'flex justify-center items-center gap-2 p-8';
+        document.getElementById('question-list').after(container);
     }
 
     const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-    let buttons = '';
+    let html = '';
 
     if (totalPages > 1) {
-        // আগের বাটন
-        buttons += `
-            <button ${page === 0 ? 'disabled' : ''} 
-                onclick="window.changePage(${page - 1})"
-                class="px-3 py-1 border rounded ${page === 0 ? 'text-gray-300' : 'hover:bg-gray-100'}">
-                আগের
-            </button>
-        `;
-
-        // পেজ নম্বর (সরলীকৃত)
-        for (let i = 0; i < totalPages; i++) {
-            if (i === page) {
-                buttons += `<span class="px-3 py-1 bg-blue-500 text-white rounded">${toBanglaNumber(i + 1)}</span>`;
-            } else {
-                buttons += `<button onclick="window.changePage(${i})" class="px-3 py-1 border rounded hover:bg-gray-100">${toBanglaNumber(i + 1)}</button>`;
-            }
+        // আগের পাতা লিঙ্ক
+        if (currentPage > 1) {
+            html += `<a href="?page=${currentPage - 1}" class="px-4 py-2 border rounded hover:bg-gray-50 text-sm">আগের পাতা</a>`;
         }
 
-        // পরের বাটন
-        buttons += `
-            <button ${page === totalPages - 1 ? 'disabled' : ''} 
-                onclick="window.changePage(${page + 1})"
-                class="px-3 py-1 border rounded ${page === totalPages - 1 ? 'text-gray-300' : 'hover:bg-gray-100'}">
-                পরের
-            </button>
-        `;
+        // পেজ নম্বর লিঙ্ক
+        for (let i = 1; i <= totalPages; i++) {
+            const activeClass = i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 hover:bg-gray-50';
+            html += `<a href="?page=${i}" class="px-4 py-2 border rounded text-sm font-medium ${activeClass}">${toBanglaNumber(i)}</a>`;
+        }
+
+        // পরের পাতা লিঙ্ক
+        if (currentPage < totalPages) {
+            html += `<a href="?page=${currentPage + 1}" class="px-4 py-2 border rounded hover:bg-gray-50 text-sm">পরের পাতা</a>`;
+        }
     }
-
-    paginationContainer.innerHTML = buttons;
+    container.innerHTML = html;
 };
 
-// গ্লোবাল ফাংশন যাতে HTML বাটন থেকে কল করা যায়
-window.changePage = (newPage) => {
-    currentPage = newPage;
-    loadLatestQuestion(currentPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-// ৬. ইনিশিয়ালাইজেশন ফাংশন
 export const initHomePage = () => {
-    loadLatestQuestion(currentPage);
+    loadLatestQuestion();
 };
 
 if (document.readyState === 'loading') {
@@ -190,5 +148,3 @@ if (document.readyState === 'loading') {
 } else {
     initHomePage();
 }
-
-export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
