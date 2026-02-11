@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>physflow - QnA and Research</title>
-<meta name="description" content="বাংলা ভাষায় পদার্থবিজ্ঞানের প্রশ্নোত্তর ও গবেষণার প্লাটফর্ম">
-<meta property="og:title" content="physflow - QnA and Research">
-<meta property="og:description" content="বাংলা ভাষায় পদার্থবিজ্ঞানের প্রশ্নোত্তর ও গবেষণার প্লাটফর্ম">
+    <meta name="description" content="বাংলা ভাষায় পদার্থবিজ্ঞানের প্রশ্নোত্তর ও গবেষণার প্লাটফর্ম">
+    <meta property="og:title" content="physflow - QnA and Research">
+    <meta property="og:description" content="বাংলা ভাষায় পদার্থবিজ্ঞানের প্রশ্নোত্তর ও গবেষণার প্লাটফর্ম">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
@@ -28,7 +28,6 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* সাইডবার লিঙ্ক স্টাইল */
         .sidebar-link {
             display: flex;
             align-items: center;
@@ -37,7 +36,6 @@
             border-right: 4px solid transparent;
         }
 
-        /* অ্যাক্টিভ সাইডবার লিঙ্কের রং ঠিক করা হয়েছে */
         .sidebar-active { 
             background-color: #e1f0ff; 
             border-right-color: #0a95ff;
@@ -98,91 +96,66 @@
     </div>
 </header>
 
-
-
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden"></div>
 
     <div class="container mx-auto flex flex-1 pt-14">
-
-
         <aside id="mobile-sidebar" class="fixed md:sticky top-14 left-0 w-64 h-[calc(100vh-3.5rem)] bg-white dark:bg-[#1a1a1b] border-r dark:border-gray-700 z-[150] md:z-40 -translate-x-full md:translate-x-0 overflow-y-auto transition-transform duration-300">
-    
-    <div class="px-5 py-4 border-b dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1b] z-10">
-        <div class="flex items-center gap-3">
-            <i id="theme-icon" class="fas fa-moon text-lg text-gray-500 dark:text-gray-400"></i>
-            <span class="text-[14px] font-semibold text-gray-700 dark:text-gray-200"></span>
-        </div>
-        
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="theme-toggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
-        </label>
-    </div>
+            <div class="px-5 py-4 border-b dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1b] z-10">
+                <div class="flex items-center gap-3">
+                    <i id="theme-icon" class="fas fa-moon text-lg text-gray-500 dark:text-gray-400"></i>
+                    <span class="text-[14px] font-semibold text-gray-700 dark:text-gray-200">ডার্ক মোড</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="theme-toggle" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+                </label>
+            </div>
+            <nav class="flex flex-col text-[13px] py-2">
+                <a href="index.html" class="sidebar-link sidebar-active">
+                    <i class="fas fa-home w-5 mr-2"></i>হোম
+                </a>
+                <a href="questions.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-magnifying-glass w-5 mr-2"></i>খুঁজুন
+                </a>
+                <a href="categories.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-folder w-5 mr-2"></i>বিভাগ
+                </a>
+                <a href="tags.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-tags w-5 mr-2"></i>ট্যাগ
+                </a>
+                <a href="blogs.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
+                    <i class="fas fa-blog w-5 mr-2"></i>ব্লগ
+                </a>
+            </nav>
+        </aside>
 
-    <nav class="flex flex-col text-[13px] py-2">
-        <a href="index.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-home w-5 mr-2"></i>হোম
-        </a>
-        <a href="questions.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-magnifying-glass w-5 mr-2"></i>খুঁজুন
-        </a>
-        <a href="categories.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-folder w-5 mr-2"></i>বিভাগ
-        </a>
-        <a href="tags.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-tags w-5 mr-2"></i>ট্যাগ
-        </a>
-        <a href="blogs.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-blog w-5 mr-2"></i>ব্লগ
-        </a>
-    </nav>
-</aside>
+        <main class="flex-1 p-4 md:p-6 min-h-[calc(100vh-3.5rem)]">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">সকল প্রশ্ন</h1>
+                    <p class="text-xs text-gray-500 mt-1" id="question-count">প্রশ্ন লোড হচ্ছে...</p>
+                </div>
+                <a href="ask.html" class="bg-brand-600 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium transition active:scale-95 shadow-md">
+                    প্রশ্ন করুন
+                </a>
+            </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <main class="flex-1 p-4 md:p-8 min-h-[calc(100vh-3.5rem)]">
-            <h1 class="text-3xl font-bold mb-6">পেজ টাইটেল</h1>
-            
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <p class="text-gray-600 dark:text-gray-300">
-                    এখানে আপনার content যোগ করুন...
-                </p>
+            <div id="question-list" class="grid grid-cols-1 gap-0">
+                <div class="animate-pulse space-y-4">
+                    <div class="h-32 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                    <div class="h-32 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                </div>
             </div>
         </main>
     </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <footer class="bg-[#232629] text-gray-400 py-6 mt-auto">
+    <footer class="bg-[#232629] text-gray-400 py-6 mt-auto border-t dark:border-gray-800">
         <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
             <div class="flex space-x-6 text-xs uppercase font-medium">
                 <a href="#" class="hover:text-gray-100 transition">সম্পর্কে</a>
-                 <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
-                 <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
-                 <a href="#" class="hover:text-gray-100 transition">গোপনীয়তা নীতি</a>
+                <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
+                <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
+                <a href="#" class="hover:text-gray-100 transition">গোপনীয়তা নীতি</a>
             </div>
             <div class="text-[11px]">
                 physflow – &copy; ২০২৬ সর্বস্বত্ব সংরক্ষিত
@@ -192,11 +165,14 @@
 
     <script type="module">
         import { setupLayout, initTheme, setupAuth } from './javascript/layout.js';
+        import { initHomePage } from './javascript/main.js';
         
         initTheme();
         setupLayout();
         setupAuth();
+        
+        // হোমপেজ ডাটা লোড শুরু করা
+        initHomePage();
     </script>
-
 </body>
 </html>
