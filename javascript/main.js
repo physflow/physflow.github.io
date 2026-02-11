@@ -1,7 +1,7 @@
 import { supabase } from './supabase-config.js';
 
-// ১. কনফিগারেশন (PAGE_SIZE লিমিট হিসেবে কাজ করবে)
-const PAGE_SIZE = 20;
+// ১. কনফিগারেশন
+const PAGE_SIZE = 12;
 
 // ২. বাংলা সংখ্যা কনভার্টার
 const toBanglaNumber = (num) => {
@@ -37,7 +37,7 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (ক্যাটাগরি ব্যাকগ্রাউন্ড গ্রে করা হয়েছে)
+// ৫. কোশ্চেন কার্ড তৈরির HTML
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
@@ -95,20 +95,13 @@ const createQuestionCard = (question) => {
     `;
 };
 
-
-
-// ৬. ডাটা লোড ফাংশন (প্যাগিনেশন ছাড়া)
+// ৬. ডাটা লোড ফাংশন
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
-    questionList.innerHTML = `
-        <div class="flex flex-col items-center justify-center p-16 text-gray-500">
-            <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600 mb-3"></div>
-            <p class="text-[13px]">লোড হচ্ছে...</p>
-        </div>
-    `;
-
+    // "লোড হচ্ছে" সেকশনটি সরিয়ে দেওয়া হয়েছে
+    
     try {
         const { data: questionData, error, count } = await supabase
             .from('question')
