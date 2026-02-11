@@ -1,7 +1,7 @@
 import { supabase } from './supabase-config.js';
 
 // ১. কনফিগারেশন ও স্টেট ম্যানেজমেন্ট
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 const urlParams = new URLSearchParams(window.location.search);
 const currentPage = parseInt(urlParams.get('page')) || 1;
 
@@ -96,7 +96,7 @@ const createQuestionCard = (question) => {
     `;
 };
 
-// ৬. প্যাগিনেশন রেন্ডার ফাংশন (পুরো পাতা লোড হওয়ার জন্য <a> ট্যাগ ব্যবহার)
+// ৬. প্যাগিনেশন রেন্ডার ফাংশন (শুধুমাত্র সংখ্যা)
 const renderPagination = (totalCount) => {
     let container = document.getElementById('pagination-container');
     if (!container) {
@@ -110,23 +110,12 @@ const renderPagination = (totalCount) => {
     let html = '';
 
     if (totalPages > 1) {
-        // আগের পাতা লিঙ্ক
-        if (currentPage > 1) {
-            html += `<a href="?page=${currentPage - 1}" class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-sm transition-colors">আগের পাতা</a>`;
-        }
-
-        // পেজ নম্বর লিঙ্ক
         for (let i = 1; i <= totalPages; i++) {
             const activeClass = i === currentPage 
                 ? 'bg-blue-600 text-white border-blue-600' 
                 : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800';
             
             html += `<a href="?page=${i}" class="px-4 py-2 border rounded text-sm font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
-        }
-
-        // পরের পাতা লিঙ্ক
-        if (currentPage < totalPages) {
-            html += `<a href="?page=${currentPage + 1}" class="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-sm transition-colors">পরের পাতা</a>`;
         }
     }
     container.innerHTML = html;
@@ -137,7 +126,7 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
-    // লোডিং অ্যানিমেশন দেখানো
+    // লোডিং অ্যানিমেশন
     questionList.innerHTML = `
         <div class="flex flex-col items-center justify-center p-20 text-gray-500">
             <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
@@ -149,7 +138,7 @@ const loadLatestQuestion = async () => {
     const to = from + PAGE_SIZE - 1;
 
     try {
-        // লোডিং ফিল দেওয়ার জন্য ৫০০ মিলিসেকেন্ড কৃত্রিম ডিলে
+        // লোডিং ফিল দেওয়ার জন্য কৃত্রিম ডিলে
         await new Promise(resolve => setTimeout(resolve, 500));
 
         const { data: questionData, error, count } = await supabase
