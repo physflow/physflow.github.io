@@ -38,55 +38,55 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (দুই পাশের প্যাডিং কমানো হয়েছে)
+// ৫. কোশ্চেন কার্ড তৈরির HTML (Category এবং Tag স্টাইল আপডেট করা হয়েছে)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="py-4 px-1 border-b border-gray-100 dark:border-gray-800 bg-transparent hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex gap-3">
-                    <div class="flex items-center gap-1">
-                        <span class="text-[15px] font-bold text-red-600">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-[12px] text-gray-500">ভোট</span>
+        <article class="py-2 px-1 border-b border-gray-100 dark:border-gray-800 bg-transparent hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all">
+            <div class="flex items-center justify-between mb-0.5">
+                <div class="flex gap-2.5">
+                    <div class="flex items-center gap-0.5">
+                        <span class="text-[14px] font-bold text-red-600">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-[11px] text-gray-500">ভোট</span>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-[15px] font-bold text-green-600">${toBanglaNumber(question.answers_count || 0)}</span>
-                        <span class="text-[12px] text-gray-500">উত্তর</span>
+                    <div class="flex items-center gap-0.5">
+                        <span class="text-[14px] font-bold text-green-600">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-[11px] text-gray-500">উত্তর</span>
                     </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-[15px] font-bold text-amber-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[12px] text-gray-500">দেখা</span>
+                    <div class="flex items-center gap-0.5">
+                        <span class="text-[14px] font-bold text-amber-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-[11px] text-gray-500">দেখা</span>
                     </div>
                 </div>
                 
-                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
+                <time datetime="${question.created_at}" class="text-[10px] text-gray-400">
                     ${timeAgo}
                 </time>
             </div>
 
             <div class="min-w-0">
-                <h3 class="text-[17px] font-medium mb-1.5 leading-snug">
+                <h3 class="text-[16px] font-medium mb-0.5 leading-tight">
                     <a href="question.html?slug=${question.slug}" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
                 
-                <p class="text-[13.5px] text-gray-600 dark:text-gray-400 mb-3 leading-relaxed line-clamp-2">
+                <p class="text-[13px] text-gray-600 dark:text-gray-400 mb-1.5 leading-snug line-clamp-2">
                     ${excerpt}
                 </p>
                 
-                <div class="flex flex-wrap gap-1.5">
+                <div class="flex flex-wrap gap-1">
                     ${question.category ? `
-                        <span class="px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-500 border border-blue-100 dark:border-blue-900/30 rounded">
+                        <span class="px-1.5 py-0 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-blue-600 border border-gray-200 dark:border-gray-700 rounded">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tag.map(t => `
-                        <span class="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded">
+                        <span class="px-1.5 py-0 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
                             #${t}
                         </span>
                     `).join('')}
@@ -102,7 +102,7 @@ const renderPagination = (totalCount) => {
     if (!container) {
         container = document.createElement('div');
         container.id = 'pagination-container';
-        container.className = 'flex justify-center items-center gap-2 p-8';
+        container.className = 'flex justify-center items-center gap-1.5 p-6';
         document.getElementById('question-list').after(container);
     }
 
@@ -115,7 +115,7 @@ const renderPagination = (totalCount) => {
                 ? 'bg-blue-600 text-white border-blue-600' 
                 : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800';
             
-            html += `<a href="?page=${i}" class="px-3 py-1.5 border rounded text-[13px] font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
+            html += `<a href="?page=${i}" class="px-2.5 py-1 border rounded text-[12px] font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
         }
     }
     container.innerHTML = html;
@@ -127,9 +127,9 @@ const loadLatestQuestion = async () => {
     if (!questionList) return;
     
     questionList.innerHTML = `
-        <div class="flex flex-col items-center justify-center p-20 text-gray-500">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p class="text-sm">লোড হচ্ছে...</p>
+        <div class="flex flex-col items-center justify-center p-16 text-gray-500">
+            <div class="animate-spin rounded-full h-7 w-7 border-b-2 border-blue-600 mb-3"></div>
+            <p class="text-[13px]">লোড হচ্ছে...</p>
         </div>
     `;
     
@@ -154,11 +154,11 @@ const loadLatestQuestion = async () => {
             const countEl = document.getElementById('question-count');
             if (countEl) countEl.textContent = `পৃষ্ঠা ${toBanglaNumber(currentPage)} (সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন)`;
         } else {
-            questionList.innerHTML = '<p class="p-8 text-center text-gray-500 text-sm">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
+            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
         console.error('Error:', err);
-        questionList.innerHTML = `<p class="p-8 text-center text-red-500 text-sm">ত্রুটি: ${err.message}</p>`;
+        questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
     }
 };
 
