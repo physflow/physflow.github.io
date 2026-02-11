@@ -45,7 +45,7 @@ const createQuestionCard = (question) => {
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="py-2 px-1 border-b border-gray-100 dark:border-gray-800 bg-transparent hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-all">
+        <article class="py-2 px-1 border-b border-gray-100 dark:border-gray-800 bg-transparent transition-all">
             <div class="flex items-center justify-between mb-0.5">
                 <div class="flex gap-2.5">
                     <div class="flex items-center gap-0.5">
@@ -113,7 +113,8 @@ const renderPagination = (totalCount) => {
         for (let i = 1; i <= totalPages; i++) {
             const activeClass = i === currentPage 
                 ? 'bg-blue-600 text-white border-blue-600' 
-                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50
+dark:hover:bg-gray-800';
             
             html += `<a href="?page=${i}" class="px-2.5 py-1 border rounded text-[12px] font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
         }
