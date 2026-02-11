@@ -37,7 +37,7 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (টাইটেল কালার ও আন্ডারলাইন আপডেট)
+// ৫. কোশ্চেন কার্ড তৈরির HTML (ক্যাটাগরি ব্যাকগ্রাউন্ড গ্রে করা হয়েছে)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
@@ -79,13 +79,13 @@ const createQuestionCard = (question) => {
                 
                 <div class="flex flex-wrap gap-1.5">
                     ${question.category ? `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-[#1e293b] text-[#3b82f6] border border-gray-700 rounded">
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tag.map(t => `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-[#2d3748] text-gray-300 border border-gray-700 rounded">
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
                             #${t}
                         </span>
                     `).join('')}
@@ -94,6 +94,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 
 // ৬. ডাটা লোড ফাংশন (প্যাগিনেশন ছাড়া)
