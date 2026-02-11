@@ -3,13 +3,13 @@ import { supabase } from './supabase-config.js';
 // State management
 const PAGE_SIZE = 20;
 
-// Bangla number converter
+// ১. বাংলা সংখ্যা কনভার্টার
 const toBanglaNumber = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     return String(num).split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
 };
 
-// Format time ago in Bangla
+// ২. সময়কে বাংলায় 'কতক্ষণ আগে' ফরম্যাট করা
 const formatTimeAgo = (date) => {
     const now = new Date();
     const then = new Date(date);
@@ -28,7 +28,7 @@ const formatTimeAgo = (date) => {
     return `${toBanglaNumber(years)} বছর আগে`;
 };
 
-// Truncate text
+// ৩. লেখার দৈর্ঘ্য সীমিত করা
 const truncateText = (text, maxLength = 130) => {
     if (!text) return '';
     const stripped = text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -36,39 +36,39 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML
+// ৪. প্রতিটি প্রশ্নের জন্য কার্ড (HTML) তৈরি
 const createQuestionCard = (question) => {
-    // tags -> tag এ পরিবর্তন
-    const tag = question.tag ? (Array.isArray(question.tag) ? question.tag : JSON.parse(question.tag)) : [];
+    // ডাটাবেস থেকে ট্যাগ সরাসরি অ্যারে হিসেবে আসে, তাই JSON.parse এর দরকার নেই
+    const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="p-4 border border-gray-200 dark:border-gray-700 bg-transparent shadow-none transition-none">
+        <article class="p-4 border border-gray-200 dark:border-gray-700 bg-transparent mb-4 transition-all hover:border-blue-300">
             <div class="flex items-center justify-between mb-3">
-                <div class="flex gap-4">
+                <div class="flex gap-4 text-sm">
                     <div class="flex items-center gap-1">
-                        <span class="text-base font-bold text-red-600">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-base font-bold text-red-600">ভোট</span>
+                        <span class="font-bold text-red-600">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-gray-500">ভোট</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-base font-bold text-green-600">${toBanglaNumber(question.answers_count || 0)}</span>
-                        <span class="text-base font-bold text-green-600">উত্তর</span>
+                        <span class="font-bold text-green-600">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-gray-500">উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-base font-bold text-amber-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-base font-bold text-amber-500">দেখা</span>
+                        <span class="font-bold text-amber-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-gray-500">দেখা</span>
                     </div>
                 </div>
                 
-                <time datetime="${question.created_at}" class="text-sm text-gray-400">
+                <time datetime="${question.created_at}" class="text-xs text-gray-400">
                     ${timeAgo}
                 </time>
             </div>
 
             <div class="min-w-0">
                 <h3 class="text-xl font-normal mb-2">
-                    <a href="question/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
+                    <a href="question.html?slug=${question.slug}" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
@@ -79,13 +79,13 @@ const createQuestionCard = (question) => {
                 
                 <div class="flex flex-wrap gap-2">
                     ${question.category ? `
-                        <span class="px-3 py-1 text-sm font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-500 border border-blue-100 dark:border-blue-900/30 rounded-md">
+                        <span class="px-2 py-1 text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-500 border border-blue-100 rounded">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tag.map(t => `
-                        <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md">
+                        <span class="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 rounded">
                             #${t}
                         </span>
                     `).join('')}
@@ -95,32 +95,47 @@ const createQuestionCard = (question) => {
     `;
 };
 
-// Fetch and Render Question (সব জায়গায় questions -> question)
+// ৫. ডাটাবেস থেকে প্রশ্ন নিয়ে আসা এবং রেন্ডার করা
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
+    // লোডিং অবস্থা দেখানো
+    questionList.innerHTML = '<div class="p-10 text-center text-gray-500">লোড হচ্ছে...</div>';
+    
     try {
-        const { data: questionData } = await supabase
+        const { data: questionData, error } = await supabase
             .from('question') 
             .select('*')
             .order('created_at', { ascending: false })
             .range(0, PAGE_SIZE - 1);
         
+        if (error) throw error;
+
         if (questionData && questionData.length > 0) {
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
             
             const countEl = document.getElementById('question-count');
             if (countEl) countEl.textContent = `সর্বশেষ ${toBanglaNumber(questionData.length)} টি প্রশ্ন`;
+        } else {
+            questionList.innerHTML = '<div class="p-10 text-center text-gray-500">এখনো কোনো প্রশ্ন জমা পড়েনি।</div>';
         }
     } catch (error) {
         console.error('Error fetching question:', error);
+        questionList.innerHTML = `<div class="p-10 text-center text-red-500">ত্রুটি: ${error.message}</div>`;
     }
 };
 
-// Initialize
+// ৬. পেজ ইনিশিয়ালাইজেশন
 export const initHomePage = () => {
     loadLatestQuestion();
 };
+
+// ৭. অটোমেটিক ফাংশন কল (যাতে পেজ লোড হলেই কাজ করে)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHomePage);
+} else {
+    initHomePage();
+}
 
 export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
