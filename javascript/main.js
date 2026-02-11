@@ -36,9 +36,10 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML (ভিউ কাউন্ট এখন হলুদ রঙে)
+// Create question card HTML (tags পরিবর্তন করে tag করা হয়েছে)
 const createQuestionCard = (question) => {
-    const tags = question.tags ? (Array.isArray(question.tags) ? question.tags : JSON.parse(question.tags)) : [];
+    // এখানে question.tags এর বদলে question.tag ব্যবহার করা হয়েছে
+    const tags = question.tag ? (Array.isArray(question.tag) ? question.tag : JSON.parse(question.tag)) : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
@@ -83,9 +84,9 @@ const createQuestionCard = (question) => {
                         </span>
                     ` : ''}
 
-                    ${tags.map(tag => `
+                    ${tags.map(t => `
                         <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md">
-                            #${tag}
+                            #${t}
                         </span>
                     `).join('')}
                 </div>
@@ -94,17 +95,14 @@ const createQuestionCard = (question) => {
     `;
 };
 
-
-
-
-// Fetch and Render Questions
+// Fetch and Render Questions (টেবিলের নাম question করা হয়েছে)
 const loadLatestQuestions = async () => {
     const questionsList = document.getElementById('questions-list');
     if (!questionsList) return;
     
     try {
         const { data: questions } = await supabase
-            .from('questions')
+            .from('question') // 'questions' থেকে 'question' করা হয়েছে
             .select('*')
             .order('created_at', { ascending: false })
             .range(0, PAGE_SIZE - 1);
