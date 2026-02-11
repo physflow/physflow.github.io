@@ -9,7 +9,7 @@ const categoryTags = {
     'waves-sound': ['তরঙ্গ', 'শব্দ', 'কম্পাঙ্ক', 'তরঙ্গদৈর্ঘ্য', 'ব্যতিচার', 'অপবর্তন']
 };
 
-let selectedTags = [];
+let selectedTag = [];
 const MAX_TAGS = 3;
 
 // DOM Elements
@@ -27,7 +27,7 @@ const messageDiv = document.getElementById('ask-message');
 // ২. ক্যাটাগরি চেঞ্জ লজিক
 categorySelect.addEventListener('change', () => {
     const category = categorySelect.value;
-    selectedTags = []; 
+    selectedTag = []; 
     updateSelectedTagsUI();
 
     if (category && categoryTags[category]) {
@@ -53,15 +53,15 @@ function renderSuggestedTags(tags) {
 
 // ৪. ট্যাগ সিলেক্ট/আন-সিলেক্ট
 function toggleTag(tag) {
-    const index = selectedTags.indexOf(tag);
+    const index = selectedTag.indexOf(tag);
     if (index > -1) {
-        selectedTags.splice(index, 1);
+        selectedTag.splice(index, 1);
     } else {
-        if (selectedTags.length >= MAX_TAGS) {
+        if (selectedTag.length >= MAX_TAGS) {
             alert(`তুমি সর্বোচ্চ ${MAX_TAGS}টি ট্যাগ নিতে পারবে।`);
             return;
         }
-        selectedTags.push(tag);
+        selectedTag.push(tag);
     }
     updateSelectedTagsUI();
 }
@@ -69,18 +69,18 @@ function toggleTag(tag) {
 // ৫. সিলেক্ট করা ট্যাগের UI আপডেট
 function updateSelectedTagsUI() {
     selectedTagsDiv.innerHTML = '';
-    if (selectedTags.length === 0) {
+    if (selectedTag.length === 0) {
         selectedTagsDiv.innerHTML = '<span class="text-xs text-gray-400">কোনো ট্যাগ সিলেক্ট করা হয়নি</span>';
         tagsHiddenInput.value = '';
     } else {
-        selectedTags.forEach(tag => {
+        selectedTag.forEach(tag => {
             const span = document.createElement('span');
             span.className = 'px-2 py-1 text-xs bg-brand-600 text-white rounded flex items-center gap-1 animate-in fade-in zoom-in duration-200';
             span.innerHTML = `${tag} <i class="fas fa-times cursor-pointer ml-1"></i>`;
             span.onclick = () => toggleTag(tag);
             selectedTagsDiv.appendChild(span);
         });
-        tagsHiddenInput.value = selectedTags.join(',');
+        tagsHiddenInput.value = selectedTag.join(',');
     }
 }
 
@@ -89,10 +89,10 @@ function generateSlug(text) {
     let slug = text
         .toLowerCase()
         .trim()
-        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '') // বাংলা বর্ণমালা, ইংরেজি ও নম্বর ছাড়া সব বাদ
-        .replace(/\s+/g, '-')                      // স্পেসকে হাইফেন করা
-        .replace(/-+/g, '-')                       // একাধিক হাইফেনকে একটি করা
-        .substring(0, 100);                        // দৈর্ঘ্য সীমাবদ্ধ করা
+        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 100);
 
     return slug;
 }
@@ -120,11 +120,11 @@ form.addEventListener('submit', async (e) => {
         const { data: { user } } = await supabase.auth.getUser();
         const slug = generateSlug(titleInput.value);
 
-        const { error } = await supabase.from('questions').insert([{
+        const { error } = await supabase.from('question').insert([{
             title: titleInput.value.trim(),
             body: bodyInput.value.trim(),
             category: categorySelect.value,
-            tags: selectedTags,
+            tag: selectedTag,
             slug: slug,
             author_id: user?.id || null,
             created_at: new Date().toISOString()
@@ -150,25 +150,28 @@ function saveDraft() {
         title: titleInput.value,
         body: bodyInput.value,
         category: categorySelect.value,
-        tags: selectedTags,
+        tag: selectedTag,
         timestamp: new Date().toISOString()
     }));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     const draft = JSON.parse(localStorage.getItem('question_draft'));
+    
+    // ২৪ ঘণ্টার কম সময়ের ড্রাফট থাকলে সরাসরি লোড হবে
     if (draft && (new Date() - new Date(draft.timestamp)) < 86400000) {
-        if (confirm('আপনার অসম্পূর্ণ ড্রাফটটি ফিরিয়ে আনতে চান?')) {
-            titleInput.value = draft.title || '';
-            bodyInput.value = draft.body || '';
-            categorySelect.value = draft.category || '';
-            if (categorySelect.value) {
-                tagsSection.classList.remove('hidden');
-                renderSuggestedTags(categoryTags[categorySelect.value]);
-                selectedTags = draft.tags || [];
-                updateSelectedTagsUI();
-            }
+        titleInput.value = draft.title || '';
+        bodyInput.value = draft.body || '';
+        categorySelect.value = draft.category || '';
+        
+        if (categorySelect.value) {
+            tagsSection.classList.remove('hidden');
+            renderSuggestedTags(categoryTags[categorySelect.value]);
+            selectedTag = draft.tag || [];
+            updateSelectedTagsUI();
         }
     }
+    
+    // প্রতি ১৫ সেকেন্ডে অটোমেটিক সেভ
     setInterval(saveDraft, 15000);
 });
