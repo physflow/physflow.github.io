@@ -58,7 +58,7 @@ const createQuestionCard = (question) => {
                     </div>
                     <div class="flex items-center gap-0.5">
                         <span class="text-[14px] font-bold text-amber-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[11px] text-gray-500">দেখা</span>
+                        <span class="text-[11px] text-gray-500">দেখেছে</span>
                     </div>
                 </div>
                 
@@ -113,7 +113,7 @@ const renderPagination = (totalCount) => {
         for (let i = 1; i <= totalPages; i++) {
             const activeClass = i === currentPage 
                 ? 'bg-blue-600 text-white border-blue-600' 
-                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800';
+                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
             
             html += `<a href="?page=${i}" class="px-2.5 py-1 border rounded text-[12px] font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
         }
