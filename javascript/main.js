@@ -1,7 +1,7 @@
 import { supabase } from './supabase-config.js';
 
 // ১. কনফিগারেশন ও স্টেট ম্যানেজমেন্ট
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 12;
 const urlParams = new URLSearchParams(window.location.search);
 const currentPage = parseInt(urlParams.get('page')) || 1;
 
