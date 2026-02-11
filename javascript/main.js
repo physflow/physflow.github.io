@@ -100,8 +100,30 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
-    // "লোড হচ্ছে" সেকশনটি সরিয়ে দেওয়া হয়েছে
-    
+    // ৪টি Skeleton কার্ডের স্ট্রাকচার
+    const skeletonHTML = `
+        <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex gap-3">
+                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
+                </div>
+                <div class="h-3 w-16 bg-gray-100 dark:bg-gray-800 rounded"></div>
+            </div>
+            <div class="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2"></div>
+            <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full mb-1"></div>
+            <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-2/3 mb-3"></div>
+            <div class="flex gap-2">
+                <div class="h-5 w-14 bg-gray-100 dark:bg-gray-800 rounded"></div>
+                <div class="h-5 w-14 bg-gray-100 dark:bg-gray-800 rounded"></div>
+            </div>
+        </div>
+    `;
+
+    // ডাটা আসার আগে ৪ বার রিপিট করে দেখানো হচ্ছে
+    questionList.innerHTML = skeletonHTML.repeat(4);
+
     try {
         const { data: questionData, error, count } = await supabase
             .from('question')
