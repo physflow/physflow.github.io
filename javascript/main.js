@@ -13,6 +13,7 @@ const toBanglaNumber = (num) => {
 
 // ৩. সময় ফরম্যাট
 const formatTimeAgo = (date) => {
+    if (!date) return '';
     const now = new Date();
     const then = new Date(date);
     const seconds = Math.floor((now - then) / 1000);
@@ -33,14 +34,16 @@ const formatTimeAgo = (date) => {
 // ৪. টেক্সট ছোট করা
 const truncateText = (text, maxLength = 130) => {
     if (!text) return '';
+    // HTML ট্যাগ রিমুভ করে ক্লিন টেক্সট নেওয়া
     const stripped = text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
     if (stripped.length <= maxLength) return stripped;
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (Category এবং Tag স্টাইল আপডেট করা হয়েছে)
+// ৫. কোশ্চেন কার্ড তৈরির HTML
 const createQuestionCard = (question) => {
-    const tag = Array.isArray(question.tag) ? question.tag : [];
+    // tag যদি string হিসেবে থাকে তবে array তে কনভার্ট করা (নিরাপত্তার জন্য)
+    const tag = Array.isArray(question.tag) ? question.tag : (question.tag ? JSON.parse(question.tag) : []);
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
@@ -103,21 +106,23 @@ const renderPagination = (totalCount) => {
         container = document.createElement('div');
         container.id = 'pagination-container';
         container.className = 'flex justify-center items-center gap-1.5 p-6';
-        document.getElementById('question-list').after(container);
+        const list = document.getElementById('question-list');
+        if (list) list.after(container);
     }
 
     const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-    let html = '';
+    if (totalPages <= 1) {
+        if (container) container.innerHTML = '';
+        return;
+    }
 
-    if (totalPages > 1) {
-        for (let i = 1; i <= totalPages; i++) {
-            const activeClass = i === currentPage 
-                ? 'bg-blue-600 text-white border-blue-600' 
-                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50
-dark:hover:bg-gray-800';
-            
-            html += `<a href="?page=${i}" class="px-2.5 py-1 border rounded text-[12px] font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
-        }
+    let html = '';
+    for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === currentPage 
+            ? 'bg-blue-600 text-white border-blue-600' 
+            : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800';
+        
+        html += `<a href="?page=${i}" class="px-2.5 py-1 border rounded text-[12px] font-medium transition-colors ${activeClass}">${toBanglaNumber(i)}</a>`;
     }
     container.innerHTML = html;
 };
@@ -138,11 +143,10 @@ const loadLatestQuestion = async () => {
     const to = from + PAGE_SIZE - 1;
 
     try {
-        await new Promise(resolve => setTimeout(resolve, 500));
-
+        // Supabase থেকে ডেটা আনা
         const { data: questionData, error, count } = await supabase
             .from('question')
-            .select('*', { count: 'exact' })
+            .select('*', { count: 'exact' }) // count: 'exact' সঠিক আছে
             .order('created_at', { ascending: false })
             .range(from, to);
         
@@ -153,7 +157,9 @@ const loadLatestQuestion = async () => {
             renderPagination(count);
             
             const countEl = document.getElementById('question-count');
-            if (countEl) countEl.textContent = `পৃষ্ঠা ${toBanglaNumber(currentPage)} (সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন)`;
+            if (countEl) {
+                countEl.textContent = `পৃষ্ঠা ${toBanglaNumber(currentPage)} (সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন)`;
+            }
         } else {
             questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
@@ -168,6 +174,7 @@ export const initHomePage = () => {
     loadLatestQuestion();
 };
 
+// DOM ready check
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initHomePage);
 } else {
