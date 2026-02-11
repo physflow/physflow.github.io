@@ -36,10 +36,10 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// Create question card HTML (tags পরিবর্তন করে tag করা হয়েছে)
+// Create question card HTML
 const createQuestionCard = (question) => {
-    // এখানে question.tags এর বদলে question.tag ব্যবহার করা হয়েছে
-    const tags = question.tag ? (Array.isArray(question.tag) ? question.tag : JSON.parse(question.tag)) : [];
+    // tags -> tag এ পরিবর্তন
+    const tag = question.tag ? (Array.isArray(question.tag) ? question.tag : JSON.parse(question.tag)) : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
@@ -68,7 +68,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-xl font-normal mb-2">
-                    <a href="questions/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
+                    <a href="question/${question.slug}.html" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
@@ -84,7 +84,7 @@ const createQuestionCard = (question) => {
                         </span>
                     ` : ''}
 
-                    ${tags.map(t => `
+                    ${tag.map(t => `
                         <span class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-md">
                             #${t}
                         </span>
@@ -95,32 +95,32 @@ const createQuestionCard = (question) => {
     `;
 };
 
-// Fetch and Render Questions (টেবিলের নাম question করা হয়েছে)
-const loadLatestQuestions = async () => {
-    const questionsList = document.getElementById('questions-list');
-    if (!questionsList) return;
+// Fetch and Render Question (সব জায়গায় questions -> question)
+const loadLatestQuestion = async () => {
+    const questionList = document.getElementById('question-list');
+    if (!questionList) return;
     
     try {
-        const { data: questions } = await supabase
-            .from('question') // 'questions' থেকে 'question' করা হয়েছে
+        const { data: questionData } = await supabase
+            .from('question') 
             .select('*')
             .order('created_at', { ascending: false })
             .range(0, PAGE_SIZE - 1);
         
-        if (questions && questions.length > 0) {
-            questionsList.innerHTML = questions.map(q => createQuestionCard(q)).join('');
+        if (questionData && questionData.length > 0) {
+            questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
             
             const countEl = document.getElementById('question-count');
-            if (countEl) countEl.textContent = `সর্বশেষ ${toBanglaNumber(questions.length)} টি প্রশ্ন`;
+            if (countEl) countEl.textContent = `সর্বশেষ ${toBanglaNumber(questionData.length)} টি প্রশ্ন`;
         }
     } catch (error) {
-        console.error('Error fetching questions:', error);
+        console.error('Error fetching question:', error);
     }
 };
 
 // Initialize
 export const initHomePage = () => {
-    loadLatestQuestions();
+    loadLatestQuestion();
 };
 
-export { loadLatestQuestions, formatTimeAgo, toBanglaNumber };
+export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
