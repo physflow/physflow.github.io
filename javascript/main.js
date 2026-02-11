@@ -56,8 +56,8 @@ const createQuestionCard = (question) => {
                         <span class="text-[11px] text-gray-500">উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-gray-400">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[11px] text-yellow-500">দেখেছে</span>
+                        <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-[11px] text-gray-500">দেখেছে</span>
                     </div>
                 </div>
                 
