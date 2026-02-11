@@ -40,10 +40,9 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML
+// ৫. কোশ্চেন কার্ড তৈরির HTML (Category এর টেক্সট কালার আপডেট করা হয়েছে)
 const createQuestionCard = (question) => {
-    // tag যদি string হিসেবে থাকে তবে array তে কনভার্ট করা (নিরাপত্তার জন্য)
-    const tag = Array.isArray(question.tag) ? question.tag : (question.tag ? JSON.parse(question.tag) : []);
+    const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 130); 
     const timeAgo = formatTimeAgo(question.created_at);
     
@@ -72,7 +71,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-medium mb-0.5 leading-tight">
-                    <a href="question.html?slug=${question.slug}" style="color: #0a95ff;" class="hover:underline">
+                    <a href="/question/${question.slug}" style="color: #0a95ff;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
@@ -83,7 +82,7 @@ const createQuestionCard = (question) => {
                 
                 <div class="flex flex-wrap gap-1">
                     ${question.category ? `
-                        <span class="px-1.5 py-0 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-blue-600 border border-gray-200 dark:border-gray-700 rounded">
+                        <span class="px-1.5 py-0 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded" style="color: #0056b3;">
                             ${question.category}
                         </span>
                     ` : ''}
@@ -98,6 +97,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 // ৬. প্যাগিনেশন রেন্ডার
 const renderPagination = (totalCount) => {
