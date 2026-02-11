@@ -134,7 +134,7 @@ form.addEventListener('submit', async (e) => {
 
         localStorage.removeItem('question_draft');
         showMessage('প্রশ্ন সফলভাবে জমা হয়েছে!');
-        setTimeout(() => window.location.href = `question.html?slug=${encodeURIComponent(slug)}`, 1500);
+        setTimeout(() => window.location.href = `/question/${encodeURIComponent(slug)}`, 1500);
 
     } catch (err) {
         console.error(err);
