@@ -37,55 +37,55 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (ছবির ডিজাইন অনুযায়ী আপডেট করা হয়েছে)
+// ৫. কোশ্চেন কার্ড তৈরির HTML (টাইটেল কালার ও আন্ডারলাইন আপডেট)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
-    const excerpt = truncateText(question.body, 130); 
+    const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="mx-3 my-3 p-4 border border-gray-200 dark:border-gray-800 rounded-lg bg-white dark:bg-transparent shadow-sm hover:shadow-md transition-all">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex gap-4">
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent">
+            <div class="flex items-center justify-between mb-0.5">
+                <div class="flex gap-3">
                     <div class="flex items-center gap-1">
-                        <span class="text-[15px] font-bold text-red-500">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-[12px] text-gray-400">ভোট</span>
+                        <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-[11px] text-gray-500">ভোট</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[15px] font-bold text-green-500">${toBanglaNumber(question.answers_count || 0)}</span>
-                        <span class="text-[12px] text-gray-400">উত্তর</span>
+                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-[11px] text-gray-500">উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[15px] font-bold text-gray-400">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[12px] text-gray-400">দেখা</span>
+                        <span class="text-[14px] font-medium text-gray-400">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-[11px] text-gray-500">দেখা</span>
                     </div>
                 </div>
                 
-                <time datetime="${question.created_at}" class="text-[12px] text-gray-400">
+                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
                     ${timeAgo}
                 </time>
             </div>
 
             <div class="min-w-0">
-                <h3 class="text-[18px] font-semibold mb-2 leading-snug">
-                    <a href="/question/${question.slug}" class="text-blue-500 hover:text-blue-600 transition-colors">
+                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
+                    <a href="/question/${question.slug}" style="color: #0056b3;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
                 
-                <p class="text-[14px] text-gray-500 dark:text-gray-400 mb-4 leading-relaxed line-clamp-2">
+                <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
                     ${excerpt}
                 </p>
                 
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap gap-1.5">
                     ${question.category ? `
-                        <span class="px-3 py-1 text-[12px] font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-md border border-blue-100 dark:border-blue-800">
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-[#1e293b] text-[#3b82f6] border border-gray-700 rounded">
                             ${question.category}
                         </span>
                     ` : ''}
 
                     ${tag.map(t => `
-                        <span class="px-3 py-1 text-[12px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-md border border-gray-200 dark:border-gray-700">
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-[#2d3748] text-gray-300 border border-gray-700 rounded">
                             #${t}
                         </span>
                     `).join('')}
@@ -94,6 +94,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 // ৬. ডাটা লোড ফাংশন (প্যাগিনেশন ছাড়া)
 const loadLatestQuestion = async () => {
