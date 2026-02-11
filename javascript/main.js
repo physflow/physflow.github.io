@@ -40,7 +40,7 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (Category এর টেক্সট কালার আপডেট করা হয়েছে)
+// ৫. কোশ্চেন কার্ড তৈরির HTML (Title এবং Category এর রঙ আপডেট করা হয়েছে)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 130); 
@@ -71,7 +71,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-medium mb-0.5 leading-tight">
-                    <a href="/question/${question.slug}" style="color: #0a95ff;" class="hover:underline">
+                    <a href="/question/${question.slug}" style="color: #0056b3;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
@@ -97,6 +97,7 @@ const createQuestionCard = (question) => {
         </article>
     `;
 };
+
 
 
 // ৬. প্যাগিনেশন রেন্ডার
