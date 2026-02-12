@@ -37,21 +37,29 @@ function getQuestionParams() {
     const params = new URLSearchParams(window.location.search);
     
     // Try path-based routing first: /question/123/slug
-    const pathMatch = path.match(/\/question\/(\d+)\/?([^\/]*)?/);
-    if (pathMatch) {
-        return {
-            id: pathMatch[1],
-            slug: pathMatch[2] || ''
-        };
-    }
+    // সংশোধিত লজিক
+const pathMatch = path.match(/\/question\/([^\/]+)/);
+
+if (pathMatch) {
+    const value = decodeURIComponent(pathMatch[1]);
     
-    // Fallback to query parameter: ?id=123
-    const id = params.get('id');
-    if (id) {
-        return { id, slug: '' };
-    }
-    
-    return null;
+    // চেক করা হচ্ছে এটা কি আইডি (সংখ্যা) নাকি স্লাগ (টেক্সট)
+    const isId = /^\d+$/.test(value);
+
+    return {
+        id: isId ? value : null,
+        slug: isId ? '' : value
+    };
+}
+
+// Fallback to query parameter: ?id=123
+const id = params.get('id');
+if (id) {
+    return { id, slug: '' };
+}
+
+return null;
+
 }
 
 /**
