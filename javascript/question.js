@@ -234,18 +234,25 @@ function updateStructuredData(question, answers) {
 // =============================================
 
 /**
- * Fetch question by ID
+ * Fetch question by ID or Slug
  */
-async function fetchQuestion(questionId) {
+async function fetchQuestion(params) {
     try {
-        const { data, error } = await supabase
+        let query = supabase
             .from('questions')
             .select(`
                 *,
                 author:profiles(id, name, avatar)
-            `)
-            .eq('id', questionId)
-            .single();
+            `);
+
+        // যদি আইডি থাকে তবে আইডি দিয়ে খোঁজো, না থাকলে স্লাগ দিয়ে
+        if (params.id) {
+            query = query.eq('id', params.id);
+        } else {
+            query = query.eq('slug', params.slug);
+        }
+
+        const { data, error } = await query.single();
         
         if (error) throw error;
         return data;
@@ -254,6 +261,7 @@ async function fetchQuestion(questionId) {
         return null;
     }
 }
+
 
 /**
  * Fetch answers for question
@@ -860,30 +868,24 @@ function setupEventListeners() {
 /**
  * Load question data
  */
-async function loadQuestionData() {
-    const params = getQuestionParams();
-    if (!params) {
-        showError();
-        return;
-    }
-    
-    const questionId = params.id;
-    
-    // Show loading
+    // লোডিং অ্যানিমেশন দেখানো শুরু
     document.getElementById('loading-skeleton').classList.remove('hidden');
     document.getElementById('question-container').classList.add('hidden');
     document.getElementById('error-container').classList.add('hidden');
-    
+
     try {
-        // Fetch question
-        const question = await fetchQuestion(questionId);
+        // আইডি-র বদলে পুরো params অবজেক্ট পাঠানো হচ্ছে
+        const question = await fetchQuestion(params); 
         
         if (!question) {
             showError();
             return;
         }
-        
+
         currentQuestion = question;
+        // ডাটাবেস থেকে প্রাপ্ত আসল আইডিটি সেভ করে রাখা হচ্ছে
+        const actualId = question.id; 
+
         
         // Fetch answers
         const answers = await fetchAnswers(questionId);
