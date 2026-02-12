@@ -199,10 +199,10 @@ function injectStructuredData(question, answers) {
 async function fetchQuestion(questionId) {
     try {
         const { data, error } = await supabase
-            .from('questions')
+            .from('question')
             .select(`
                 *,
-                author:profiles(name, avatar_url)
+                author:profile(name, avatar_url)
             `)
             .eq('id', questionId)
             .single();
@@ -232,10 +232,10 @@ async function fetchQuestion(questionId) {
 async function fetchAnswers(questionId, sort = 'votes', offset = 0, limit = CONFIG.ANSWERS_PER_PAGE) {
     try {
         let query = supabase
-            .from('answers')
+            .from('answer')
             .select(`
                 *,
-                author:profiles(name, avatar_url)
+                author:profile(name, avatar_url)
             `, { count: 'exact' })
             .eq('question_id', questionId)
             .range(offset, offset + limit - 1);
@@ -275,14 +275,14 @@ async function fetchAnswers(questionId, sort = 'votes', offset = 0, limit = CONF
 /**
  * Fetch related questions based on tags and title similarity
  */
-async function fetchRelatedQuestions(questionId, tags, title) {
+async function fetchRelatedQuestions(questionId, tag, title) {
     try {
         // First try to get questions with same tags
         let { data, error } = await supabase
-            .from('questions')
+            .from('question')
             .select('id, title, slug, votes, answers_count')
             .neq('id', questionId)
-            .contains('tags', tags || [])
+            .contains('tag', tag || [])
             .order('votes', { ascending: false })
             .limit(5);
         
@@ -291,7 +291,7 @@ async function fetchRelatedQuestions(questionId, tags, title) {
         // If not enough results, get popular questions
         if (!data || data.length < 3) {
             const { data: popularData, error: popularError } = await supabase
-                .from('questions')
+                .from('question')
                 .select('id, title, slug, votes, answers_count')
                 .neq('id', questionId)
                 .order('votes', { ascending: false })
@@ -505,14 +505,14 @@ async function toggleAcceptAnswer(answerId) {
         // If accepting this answer, unaccept all others
         if (newAcceptedState) {
             await supabase
-                .from('answers')
+                .from('answer')
                 .update({ is_accepted: false })
                 .eq('question_id', state.questionId);
         }
         
         // Toggle this answer
         const { error } = await supabase
-            .from('answers')
+            .from('answer')
             .update({ is_accepted: newAcceptedState })
             .eq('id', answerId);
         
@@ -564,7 +564,7 @@ async function submitAnswer() {
     try {
         // Insert answer
         const { data, error } = await supabase
-            .from('answers')
+            .from('answer')
             .insert({
                 question_id: state.questionId,
                 body: answerBody,
@@ -574,7 +574,7 @@ async function submitAnswer() {
             })
             .select(`
                 *,
-                author:profiles(name, avatar_url)
+                author:profile(name, avatar_url)
             `)
             .single();
         
@@ -690,8 +690,8 @@ function renderQuestion() {
     // Tags
     const tagsContainer = document.getElementById('question-tags');
     tagsContainer.innerHTML = '';
-    if (state.question.tags && state.question.tags.length > 0) {
-        state.question.tags.forEach(tag => {
+    if (state.question.tag && state.question.tag.length > 0) {
+        state.question.tag.forEach(tag => {
             const tagEl = document.createElement('a');
             tagEl.href = `/tags/${tag}`;
             tagEl.className = 'px-3 py-1 bg-gray-100 dark:bg-gray-800 text-sm rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition';
@@ -1077,7 +1077,7 @@ export async function initQuestionPage() {
     injectStructuredData(question, answers);
     
     // Fetch related questions
-    const relatedQuestions = await fetchRelatedQuestions(id, question.tags, question.title);
+    const relatedQuestions = await fetchRelatedQuestions(id, question.tag, question.title);
     
     // Increment view count
     incrementViewCount(id);
