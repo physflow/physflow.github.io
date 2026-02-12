@@ -24,6 +24,16 @@ const tagsHiddenInput = document.getElementById('question-tags');
 const submitBtn = document.getElementById('submit-btn');
 const messageDiv = document.getElementById('ask-message');
 
+// --- নতুন ফাংশন: ৪ ডিজিটের আইডি জেনারেটর ---
+function generateShortId(length = 4) {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 // ২. ক্যাটাগরি চেঞ্জ লজিক
 categorySelect.addEventListener('change', () => {
     const category = categorySelect.value;
@@ -102,7 +112,7 @@ function showMessage(msg, type = 'success') {
     messageDiv.classList.remove('hidden');
 }
 
-// ৮. ফর্ম সাবমিশন (সংশোধিত রিডাইরেক্ট লজিক)
+// ৮. ফর্ম সাবমিশন
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -117,11 +127,12 @@ form.addEventListener('submit', async (e) => {
     try {
         const { data: { user } } = await supabase.auth.getUser();
         const slug = generateSlug(titleInput.value);
+        const customId = generateShortId(); // ৪ ডিজিটের আইডি তৈরি
 
-        // ইনসার্ট করার পর আইডি পাওয়ার জন্য .select('id') যোগ করা হয়েছে
-        const { data: insertedData, error } = await supabase
+        const { error } = await supabase
             .from('question')
             .insert([{
+                id: customId, // ম্যানুয়ালি আইডি পাঠানো হচ্ছে
                 title: titleInput.value.trim(),
                 body: bodyInput.value.trim(),
                 category: categorySelect.value,
@@ -129,18 +140,21 @@ form.addEventListener('submit', async (e) => {
                 slug: slug,
                 author_id: user?.id || null,
                 created_at: new Date().toISOString()
-            }])
-            .select('id')
-            .single();
+            }]);
 
-        if (error) throw error;
+        if (error) {
+            // যদি আইডি ডুপ্লিকেট হয়, তবে আরেকবার ট্রাই করার লজিক এখানে রাখা যায়
+            if (error.code === '23505') {
+                throw new Error('আইডি কলিশন হয়েছে, দয়া করে আবার চেষ্টা করুন।');
+            }
+            throw error;
+        }
 
         localStorage.removeItem('question_draft');
         showMessage('প্রশ্ন সফলভাবে জমা হয়েছে!');
         
-        // রিডাইরেক্ট ফরম্যাট: /question/id/slug
         setTimeout(() => {
-            window.location.href = `/question/${insertedData.id}/${encodeURIComponent(slug)}`;
+            window.location.href = `/question/${customId}/${encodeURIComponent(slug)}`;
         }, 1500);
 
     } catch (err) {
