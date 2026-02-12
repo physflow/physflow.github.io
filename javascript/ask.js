@@ -84,22 +84,15 @@ function updateSelectedTagsUI() {
     }
 }
 
-// ৬. সংশোধিত Slug Generation (Unique Number + Text)
+// ৬. Slug Generation
 function generateSlug(text) {
-    // ৫ ডিজিটের একটি র‍্যান্ডম নম্বর তৈরি
-    const uniqueNumber = Math.floor(10000 + Math.random() * 90000);
-    
-    // টাইটেল থেকে সিম্বল রিমুভ করে ক্লিন টেক্সট তৈরি
-    let cleanText = text
+    return text
         .toLowerCase()
         .trim()
-        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '') // বাংলা ও ইংরেজি অক্ষরের বাইরে সব রিমুভ
-        .replace(/\s+/g, '-')                      // স্পেসের বদলে হাইফেন
-        .replace(/-+/g, '-')                       // ডাবল হাইফেন সিঙ্গেল করা
-        .substring(0, 60);                         // স্লাগ খুব বেশি বড় না করা
-
-    // unique-number-slug-text ফরম্যাটে রিটার্ন
-    return `${uniqueNumber}-${cleanText}`;
+        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 60);
 }
 
 // ৭. মেসেজ প্রদর্শন
@@ -109,12 +102,12 @@ function showMessage(msg, type = 'success') {
     messageDiv.classList.remove('hidden');
 }
 
-// ৮. ফর্ম সাবমিশন (সংশোধিত)
+// ৮. ফর্ম সাবমিশন (সংশোধিত রিডাইরেক্ট লজিক)
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
     if (titleInput.value.length < 10 || bodyInput.value.length < 20 || !categorySelect.value) {
-        showMessage('সবগুলো ঘর সঠিকভাবে পূরণ করো (শিরোনাম ১০ ও বিস্তারিত ২০ অক্ষরের বেশি)', 'error');
+        showMessage('সবগুলো ঘর সঠিকভাবে পূরণ করো', 'error');
         return;
     }
 
@@ -125,7 +118,7 @@ form.addEventListener('submit', async (e) => {
         const { data: { user } } = await supabase.auth.getUser();
         const slug = generateSlug(titleInput.value);
 
-        // ইনসার্ট করার পর ডাটা (id) পাওয়ার জন্য .select() যোগ করা হয়েছে
+        // ইনসার্ট করার পর আইডি পাওয়ার জন্য .select('id') যোগ করা হয়েছে
         const { data: insertedData, error } = await supabase
             .from('question')
             .insert([{
@@ -137,7 +130,7 @@ form.addEventListener('submit', async (e) => {
                 author_id: user?.id || null,
                 created_at: new Date().toISOString()
             }])
-            .select('id') 
+            .select('id')
             .single();
 
         if (error) throw error;
@@ -145,7 +138,7 @@ form.addEventListener('submit', async (e) => {
         localStorage.removeItem('question_draft');
         showMessage('প্রশ্ন সফলভাবে জমা হয়েছে!');
         
-        // রিডাইরেক্ট হবে: /question/id/slug আকারে
+        // রিডাইরেক্ট ফরম্যাট: /question/id/slug
         setTimeout(() => {
             window.location.href = `/question/${insertedData.id}/${encodeURIComponent(slug)}`;
         }, 1500);
@@ -157,7 +150,6 @@ form.addEventListener('submit', async (e) => {
         submitBtn.textContent = 'প্রশ্ন জমা দিন';
     }
 });
-
 
 // ৯. ড্রাফট সিস্টেম
 function saveDraft() {
@@ -172,12 +164,10 @@ function saveDraft() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const draft = JSON.parse(localStorage.getItem('question_draft'));
-    
     if (draft && (new Date() - new Date(draft.timestamp)) < 86400000) {
         titleInput.value = draft.title || '';
         bodyInput.value = draft.body || '';
         categorySelect.value = draft.category || '';
-        
         if (categorySelect.value) {
             tagsSection.classList.remove('hidden');
             renderSuggestedTags(categoryTags[categorySelect.value]);
@@ -185,6 +175,5 @@ document.addEventListener('DOMContentLoaded', () => {
             updateSelectedTagsUI();
         }
     }
-    
     setInterval(saveDraft, 15000);
 });
