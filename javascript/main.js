@@ -37,17 +37,18 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (লিংক ফরম্যাট পরিবর্তন করা হয়েছে)
+// ৫. কোশ্চেন কার্ড তৈরির HTML (সংশোধিত আইডি ও স্ল্যাগ লিংক)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
     
     // রিডাইরেক্ট ফরম্যাট: /question/id/slug
+    // এখানে question.id হলো তোমার তৈরি করা সেই ৪ ডিজিটের আইডি
     const questionLink = `/question/${question.id}/${encodeURIComponent(question.slug)}`;
     
     return `
-        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent">
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
             <div class="flex items-center justify-between mb-0.5">
                 <div class="flex gap-3">
                     <div class="flex items-center gap-1">
@@ -103,6 +104,7 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
+    // Skeleton লোডার
     const skeletonHTML = `
         <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
             <div class="flex justify-between items-center mb-2">
@@ -116,10 +118,6 @@ const loadLatestQuestion = async () => {
             <div class="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2"></div>
             <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full mb-1"></div>
             <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-2/3 mb-3"></div>
-            <div class="flex gap-2">
-                <div class="h-5 w-14 bg-gray-100 dark:bg-gray-800 rounded"></div>
-                <div class="h-5 w-14 bg-gray-100 dark:bg-gray-800 rounded"></div>
-            </div>
         </div>
     `;
 
@@ -135,8 +133,10 @@ const loadLatestQuestion = async () => {
         if (error) throw error;
 
         if (questionData && questionData.length > 0) {
+            // কার্ড রেন্ডার
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
             
+            // মোট প্রশ্নের সংখ্যা আপডেট
             const countEl = document.getElementById('question-count');
             if (countEl) {
                 countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
