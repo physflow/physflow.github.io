@@ -109,7 +109,7 @@ function showMessage(msg, type = 'success') {
     messageDiv.classList.remove('hidden');
 }
 
-// ৮. ফর্ম সাবমিশন
+// ৮. ফর্ম সাবমিশন (সংশোধিত)
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     
@@ -125,23 +125,30 @@ form.addEventListener('submit', async (e) => {
         const { data: { user } } = await supabase.auth.getUser();
         const slug = generateSlug(titleInput.value);
 
-        const { error } = await supabase.from('question').insert([{
-            title: titleInput.value.trim(),
-            body: bodyInput.value.trim(),
-            category: categorySelect.value,
-            tag: selectedTag,
-            slug: slug,
-            author_id: user?.id || null,
-            created_at: new Date().toISOString()
-        }]);
+        // ইনসার্ট করার পর ডাটা (id) পাওয়ার জন্য .select() যোগ করা হয়েছে
+        const { data: insertedData, error } = await supabase
+            .from('question')
+            .insert([{
+                title: titleInput.value.trim(),
+                body: bodyInput.value.trim(),
+                category: categorySelect.value,
+                tag: selectedTag,
+                slug: slug,
+                author_id: user?.id || null,
+                created_at: new Date().toISOString()
+            }])
+            .select('id') 
+            .single();
 
         if (error) throw error;
 
         localStorage.removeItem('question_draft');
         showMessage('প্রশ্ন সফলভাবে জমা হয়েছে!');
         
-        // রিডাইরেক্ট করার সময় স্লাগটি ইউআরএল এ পাঠিয়ে দেওয়া
-        setTimeout(() => window.location.href = `/question/${encodeURIComponent(slug)}`, 1500);
+        // রিডাইরেক্ট হবে: /question/id/slug আকারে
+        setTimeout(() => {
+            window.location.href = `/question/${insertedData.id}/${encodeURIComponent(slug)}`;
+        }, 1500);
 
     } catch (err) {
         console.error(err);
@@ -150,6 +157,7 @@ form.addEventListener('submit', async (e) => {
         submitBtn.textContent = 'প্রশ্ন জমা দিন';
     }
 });
+
 
 // ৯. ড্রাফট সিস্টেম
 function saveDraft() {
