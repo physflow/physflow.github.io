@@ -1,25 +1,24 @@
 import { supabase } from './supabase-config.js';
 
 async function loadQuestion() {
-    // ১. এলিমেন্টগুলো সিলেক্ট করা
+    const path = window.location.pathname;
+    const parts = path.split('/').filter(p => p.length > 0);
+    const qId = parts[1]; // /question/ID/slug
+
+    // কন্টেন্ট এলিমেন্টগুলো ধরছি
     const skeleton = document.getElementById('loading-skeleton');
     const content = document.getElementById('question-content');
     const errorState = document.getElementById('error-state');
 
+    // ডিবাগ অ্যালার্ট (শুধু চেক করার জন্য)
+    if (!qId) {
+        alert("ইউআরএল এ কোনো আইডি পাওয়া যায়নি! পাথ হলো: " + path);
+        if(errorState) errorState.classList.remove('hidden');
+        return;
+    }
+
     try {
-        // ২. URL থেকে ID বের করা (physflow.pages.dev/question/ID/SLUG)
-        const path = window.location.pathname;
-        const parts = path.split('/').filter(p => p.length > 0);
-        
-        // parts[0] = question, parts[1] = uuid
-        const qId = parts[1];
-
-        if (!qId || qId === 'question') {
-            console.error("No ID found");
-            throw new Error("Invalid ID");
-        }
-
-        // ৩. সরাসরি Supabase থেকে ডাটা আনা (কোনো জটিল রিলেশন নেই)
+        // সরাসরি আইডি দিয়ে কুয়েরি
         const { data: question, error } = await supabase
             .from('question')
             .select('*')
@@ -27,31 +26,26 @@ async function loadQuestion() {
             .single();
 
         if (error || !question) {
-            console.error("Supabase error:", error);
-            throw new Error("Question not found");
+            alert("সুপাবেস ডাটা পায়নি। এরর: " + (error ? error.message : "Not found"));
+            throw new Error("No data");
         }
 
-        // ৪. UI-তে ডাটা বসানো
-        document.title = question.title;
+        // ডাটা রেন্ডার
+        document.getElementById('q-title').innerText = question.title;
+        document.getElementById('q-body').innerHTML = question.body;
         
-        const titleEl = document.getElementById('q-title');
-        const bodyEl = document.getElementById('q-body');
+        // তারিখ (যদি এলিমেন্ট থাকে)
         const dateEl = document.getElementById('q-date');
+        if(dateEl) dateEl.innerText = new Date(question.created_at).toLocaleDateString('bn-BD');
 
-        if (titleEl) titleEl.textContent = question.title;
-        if (bodyEl) bodyEl.innerHTML = question.body; // মার্কডাউন থাকলে পরে অ্যাড করা যাবে
-        if (dateEl) dateEl.textContent = new Date(question.created_at).toLocaleDateString('bn-BD');
-
-        // ৫. লোডিং বন্ধ করে কন্টেন্ট দেখানো
-        if (skeleton) skeleton.classList.add('hidden');
-        if (content) content.classList.remove('hidden');
+        // লোডিং বন্ধ
+        if(skeleton) skeleton.classList.add('hidden');
+        if(content) content.classList.remove('hidden');
 
     } catch (err) {
-        console.error("Final Error:", err);
-        if (skeleton) skeleton.classList.add('hidden');
-        if (errorState) errorState.classList.remove('hidden');
+        if(skeleton) skeleton.classList.add('hidden');
+        if(errorState) errorState.classList.remove('hidden');
     }
 }
 
-// পেজ লোড হলে ফাংশনটি চালু করো
 document.addEventListener('DOMContentLoaded', loadQuestion);
