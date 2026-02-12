@@ -66,63 +66,42 @@ function extractSlugFromURL() {
  */
 async function loadQuestion(slug) {
     try {
-        // Show loading skeleton
         showLoading();
+        console.log("Checking Slug:", slug); // ডিবাগ করার জন্য
 
-        // স্লাগ থেকে আইডি আলাদা করা (যদি ফরম্যাট 12345-slug-text হয়)
-        // আমরা .split('-')[0] ব্যবহার করছি না কারণ স্লাগ কলামে পুরো টেক্সটটাই আছে
-        
-        // Fetch question with author info
+        // রিলেশনশিপ ছাড়াই প্রথমে ডাটা চেক করার চেষ্টা করি
         const { data: question, error } = await supabase
-            .from('question') // টেবিল নাম 'question' নিশ্চিত করা হলো
+            .from('question') // টেবিল নাম একবচনে
             .select(`
                 *,
-                author:profiles!question_author_id_fkey(
+                author:profiles(
                     id,
                     username,
                     avatar_url
                 )
-            `)
-            .eq('slug', slug) // ডাটাবেসের 'slug' কলামের সাথে ইউআরএল এর স্লাগ ম্যাচ করা
+            `) // এখানে ফরেন কি নাম বাদ দিয়ে শুধু টেবিল রিলেশন দিলাম
+            .eq('slug', slug)
             .single();
 
-        if (error || !question) {
-            console.error('Supabase Error:', error);
-            throw new Error('Question not found');
+        if (error) {
+            console.error('Supabase Query Error:', error.message);
+            throw error;
+        }
+
+        if (!question) {
+            throw new Error('No question found in DB');
         }
 
         currentQuestion = question;
-        // ... বাকি কোড একই থাকবে
-
-
-        // Update view count
-        await incrementViewCount(question.id);
-
-        // Load user votes if logged in
-        if (currentUser) {
-            await loadUserVotes(question.id);
-        }
-
-        // Display question
         displayQuestion(question);
-
-        // Load answers
-        await loadAnswers(question.id);
-
-        // Load related question
-        await loadRelatedQuestion(question.tags);
-
-        // Update SEO
-        updateSEO(question);
-
-        // Hide loading, show content
         hideLoading();
 
     } catch (error) {
-        console.error('Error loading question:', error);
+        console.error('Final Error Logic:', error);
         showError();
     }
 }
+
 
 /**
  * Increment view count for question
