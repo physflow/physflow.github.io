@@ -37,15 +37,21 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (সংশোধিত আইডি ও স্ল্যাগ লিংক)
+// ৫. কোশ্চেন কার্ড তৈরির HTML (সঠিক লিংক ফরম্যাট নিশ্চিত করা হয়েছে)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
     
-    // রিডাইরেক্ট ফরম্যাট: /question/id/slug
-    // এখানে question.id হলো তোমার তৈরি করা সেই ৪ ডিজিটের আইডি
-    const questionLink = `/question/${question.id}/${encodeURIComponent(question.slug)}`;
+    // ডাটাবেস থেকে পাওয়া আইডি এবং স্ল্যাগ
+    const qId = question.id; 
+    const qSlug = question.slug;
+
+    // ডিবাগ করার জন্য (লিংক না আসলে কনসোলে চেক করো)
+    // console.log(`Question ID: ${qId}, Slug: ${qSlug}`);
+
+    // কাঙ্ক্ষিত রিডাইরেক্ট ফরম্যাট: /question/id/slug
+    const questionLink = `/question/${qId}/${encodeURIComponent(qSlug)}`;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
@@ -107,17 +113,9 @@ const loadLatestQuestion = async () => {
     // Skeleton লোডার
     const skeletonHTML = `
         <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex gap-3">
-                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
-                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
-                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-800 rounded"></div>
-                </div>
-                <div class="h-3 w-16 bg-gray-100 dark:bg-gray-800 rounded"></div>
-            </div>
-            <div class="h-5 bg-gray-200 dark:bg-gray-800 rounded w-3/4 mb-2"></div>
-            <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-full mb-1"></div>
-            <div class="h-3 bg-gray-100 dark:bg-gray-800 rounded w-2/3 mb-3"></div>
+            <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+            <div class="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+            <div class="h-4 w-full bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
         </div>
     `;
 
@@ -133,10 +131,8 @@ const loadLatestQuestion = async () => {
         if (error) throw error;
 
         if (questionData && questionData.length > 0) {
-            // কার্ড রেন্ডার
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
             
-            // মোট প্রশ্নের সংখ্যা আপডেট
             const countEl = document.getElementById('question-count');
             if (countEl) {
                 countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
@@ -155,10 +151,6 @@ export const initHomePage = () => {
     loadLatestQuestion();
 };
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initHomePage);
-} else {
-    initHomePage();
-}
+document.addEventListener('DOMContentLoaded', initHomePage);
 
 export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
