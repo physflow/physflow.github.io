@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - PhysFlow</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: monospace; }
+        .debug-box { 
+            background: #1a1a1a; 
+            color: #00ff00; 
+            padding: 1rem; 
+            border-radius: 0.5rem; 
+            margin: 0.5rem 0;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ffaa00; }
+        .info { color: #00aaff; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-4">
+    <h1 class="text-2xl font-bold mb-4">🔍 PhysFlow Debug Panel</h1>
+    
+    <div id="debug-output"></div>
+    
+    <div class="mt-6 p-4 bg-gray-800 rounded">
+        <h2 class="text-lg font-bold mb-2">Test URL:</h2>
+        <input type="text" id="test-url" 
+               class="w-full p-2 bg-gray-700 rounded mb-2" 
+               placeholder="/question.html#/question/1/test-slug"
+               value="/question.html#/question/1/আলো-কি">
+        <button onclick="testURL()" 
+                class="w-full bg-blue-600 p-2 rounded">
+            Test This URL
+        </button>
+    </div>
+
+    <script type="module">
+        import { supabase } from './javascript/supabase-config.js';
+        
+        const output = document.getElementById('debug-output');
+        
+        function log(message, type = 'info') {
+            const colors = {
+                success: 'success',
+                error: 'error',
+                warning: 'warning',
+                info: 'info'
+            };
+            
+            const div = document.createElement('div');
+            div.className = `debug-box ${colors[type]}`;
+            div.textContent = message;
+            output.appendChild(div);
+            
+            // Auto scroll
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+        
+        function parseURL(url) {
+            log('=== URL PARSING TEST ===', 'info');
+            log('Testing URL: ' + url, 'info');
+            
+            // Create a temporary URL object
+            const testURL = new URL(url, window.location.origin);
+            
+            log('Pathname: ' + testURL.pathname, 'info');
+            log('Hash: ' + testURL.hash, 'info');
+            
+            // Test hash patterns
+            const hash = testURL.hash;
+            
+            if (!hash) {
+                log('❌ No hash found', 'error');
+                return null;
+            }
+            
+            log('✓ Hash detected: ' + hash, 'success');
+            
+            // Try patterns
+            const patterns = [
+                { regex: /#\/question\/(\d+)\/([^\/\?]+)/, name: 'Pattern 1: #/question/ID/SLUG' },
+                { regex: /#question\/(\d+)\/([^\/\?]+)/, name: 'Pattern 2: #question/ID/SLUG' },
+                { regex: /question\/(\d+)\/([^\/\?]+)/, name: 'Pattern 3: question/ID/SLUG' }
+            ];
+            
+            for (let i = 0; i < patterns.length; i++) {
+                const match = hash.match(patterns[i].regex);
+                if (match) {
+                    log(`✓ ${patterns[i].name} MATCHED!`, 'success');
+                    log(`  ID: ${match[1]}`, 'success');
+                    log(`  Slug: ${match[2]}`, 'success');
+                    
+                    return {
+                        id: parseInt(match[1], 10),
+                        slug: decodeURIComponent(match[2])
+                    };
+                } else {
+                    log(`✗ ${patterns[i].name} - No match`, 'warning');
+                }
+            }
+            
+            log('❌ No pattern matched!', 'error');
+            return null;
+        }
+        
+        async function testDatabaseFetch(id) {
+            log('\n=== DATABASE TEST ===', 'info');
+            log('Fetching question ID: ' + id, 'info');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('question')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                
+                if (error) {
+                    log('❌ Database Error: ' + error.message, 'error');
+                    log('Error details: ' + JSON.stringify(error, null, 2), 'error');
+                    return null;
+                }
+                
+                if (!data) {
+                    log('❌ No data returned', 'error');
+                    return null;
+                }
+                
+                log('✓ Question found!', 'success');
+                log('  Title: ' + data.title, 'success');
+                log('  Slug: ' + data.slug, 'success');
+                log('  Views: ' + (data.views || 0), 'success');
+                log('  Votes: ' + (data.votes || 0), 'success');
+                
+                return data;
+            } catch (err) {
+                log('❌ Exception: ' + err.message, 'error');
+                return null;
+            }
+        }
+        
+        window.testURL = async function() {
+            output.innerHTML = '';
+            
+            const testUrlInput = document.getElementById('test-url').value;
+            
+            log('🚀 STARTING DEBUG TEST', 'info');
+            log('Current actual URL: ' + window.location.href, 'info');
+            log('Test URL: ' + testUrlInput, 'info');
+            
+            // Parse URL
+            const params = parseURL(testUrlInput);
+            
+            if (!params) {
+                log('\n❌ URL PARSING FAILED', 'error');
+                return;
+            }
+            
+            log('\n✓ URL PARSING SUCCESS', 'success');
+            log('  Extracted ID: ' + params.id, 'success');
+            log('  Extracted Slug: ' + params.slug, 'success');
+            
+            // Test database
+            const question = await testDatabaseFetch(params.id);
+            
+            if (!question) {
+                log('\n❌ DATABASE FETCH FAILED', 'error');
+                return;
+            }
+            
+            log('\n=== SLUG VALIDATION ===', 'info');
+            if (params.slug === question.slug) {
+                log('✓ Slug matches!', 'success');
+            } else {
+                log('✗ Slug mismatch!', 'warning');
+                log('  URL Slug: ' + params.slug, 'warning');
+                log('  DB Slug: ' + question.slug, 'warning');
+            }
+            
+            log('\n✓✓✓ ALL TESTS PASSED! ✓✓✓', 'success');
+        };
+        
+        // Auto-run on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                log('📱 Debug panel ready!', 'info');
+                log('Click "Test This URL" button to start', 'info');
+            }, 500);
+        });
+        
+        // Also test current URL
+        if (window.location.hash.includes('question')) {
+            setTimeout(() => {
+                log('\n🔍 Auto-testing current URL...', 'info');
+                const params = parseURL(window.location.href);
+                if (params) {
+                    testDatabaseFetch(params.id);
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
