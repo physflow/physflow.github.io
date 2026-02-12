@@ -1,8 +1,0 @@
-# Cloudflare Pages Redirects Configuration
-# This file handles dynamic routing for the question detail pages
-
-# Redirect all /question/{id}/{slug} URLs to question.html
-/question/:id/:slug  /question.html  200
-
-# Optional: Redirect /question/:id to /question.html (in case slug is missing)
-/question/:id  /question.html  200
