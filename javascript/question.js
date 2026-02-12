@@ -38,13 +38,24 @@ let state = {
 // ============================================
 
 /**
- * Extract question ID and slug from URL pathname
- * Expected format: /question/{id}/{slug}
+ * Extract question ID and slug from URL pathname or hash
+ * Expected format: /question/{id}/{slug} OR question.html#/question/{id}/{slug}
  */
 function parseURLParams() {
-    const path = window.location.pathname;
+    // First check hash
+    const hash = window.location.hash;
+    if (hash) {
+        const match = hash.match(/#\/question\/(\d+)\/([^\/]+)/);
+        if (match) {
+            return {
+                id: parseInt(match[1], 10),
+                slug: match[2]
+            };
+        }
+    }
     
-    // Match pattern: /question/123/some-slug-here
+    // Fallback to pathname
+    const path = window.location.pathname;
     const match = path.match(/\/question\/(\d+)\/([^\/]+)/);
     
     if (!match) {
@@ -62,7 +73,7 @@ function parseURLParams() {
  */
 function validateAndRedirectSlug(correctSlug) {
     if (state.questionSlug !== correctSlug) {
-        const canonicalURL = `${CONFIG.SITE_URL}/question/${state.questionId}/${correctSlug}`;
+        const canonicalURL = `/question.html#/question/${state.questionId}/${correctSlug}`;
         window.location.replace(canonicalURL);
         return true;
     }
