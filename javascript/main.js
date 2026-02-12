@@ -119,7 +119,7 @@ const loadLatestQuestion = async () => {
         </div>
     `;
 
-    questionList.innerHTML = skeletonHTML.repeat(4);
+    questionList.innerHTML = skeletonHTML.repeat(20);
 
     try {
         const { data: questionData, error, count } = await supabase
