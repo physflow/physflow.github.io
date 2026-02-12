@@ -1,7 +1,7 @@
 import { supabase } from './supabase-config.js';
 
 // ১. কনফিগারেশন
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 20;
 
 // ২. বাংলা সংখ্যা কনভার্টার
 const toBanglaNumber = (num) => {
