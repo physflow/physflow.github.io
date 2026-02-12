@@ -1,123 +1,99 @@
 import { supabase } from './supabase-config.js';
 
 /**
- * ইউআরএল থেকে আইডি এবং স্লাগ আলাদা করা
- * URL: /question/uuid-here/slug-text
+ * মোবাইল ব্রাউজারের জন্য বিশেষ URL হ্যান্ডলার
  */
 function getQuestionParams() {
     const path = window.location.pathname;
+    // স্ল্যাশ দিয়ে পাথ ভেঙে ফেলা
     const parts = path.split('/').filter(p => p.length > 0);
     
-    // কনসোলে চেক করার জন্য - এটি তোমাকে দেখাবে ইউআরএল থেকে সে কি কি পাচ্ছে
-    console.log("URL Path Parts:", parts);
-
+    // /question/uuid/slug ফরম্যাটে parts[1] হবে ID
     return {
-        // parts[0] = 'question'
-        id: parts[1] || null, // দ্বিতীয় অংশটি তোমার UUID
-        slug: parts[2] || null // তৃতীয় অংশটি তোমার স্লাগ
+        id: parts[1] || null,
+        slug: parts[2] || null
     };
 }
 
 /**
- * ডাটাবেস থেকে প্রশ্ন লোড করার মূল ফাংশন
+ * প্রশ্ন লোড করার মূল ফাংশন
  */
 async function loadQuestion() {
-    const { id, slug } = getQuestionParams();
+    const params = getQuestionParams();
+    const qId = params.id;
     
     const skeleton = document.getElementById('loading-skeleton');
     const content = document.getElementById('question-content');
     const errorState = document.getElementById('error-state');
 
-    // যদি আইডি না পাওয়া যায়
-    if (!id || id === 'question') {
-        console.error("Error: URL-এ কোনো ভ্যালিড ID পাওয়া যায়নি!");
+    // যদি আইডি না থাকে
+    if (!qId || qId === 'question') {
         if(skeleton) skeleton.classList.add('hidden');
         if(errorState) errorState.classList.remove('hidden');
         return;
     }
 
     try {
-        console.log("Fetching data for ID:", id);
-
-        // সুপাবেস থেকে শুধু আইডি দিয়ে প্রশ্ন লোড করা হচ্ছে
+        // সরাসরি আইডি দিয়ে কুয়েরি
         const { data: question, error } = await supabase
             .from('question')
             .select(`
                 *,
                 author:profiles(username, avatar_url)
             `)
-            .eq('id', id)
+            .eq('id', qId)
             .single();
 
-        if (error) {
-            console.error("Supabase Query Error:", error.message);
-            throw error;
-        }
+        if (error || !question) throw new Error('Data not found');
 
-        if (!question) {
-            console.error("Error: ডাটাবেসে এই আইডি দিয়ে কোনো প্রশ্ন নেই!");
-            throw new Error('No data found');
-        }
-
-        // যদি ইউআরএল এর স্লাগ ডাটাবেসের স্লাগের সাথে না মিলে, তবে সঠিক স্লাগ দিয়ে ইউআরএল ঠিক করা
-        if (slug !== question.slug) {
-            window.history.replaceState(null, '', `/question/${question.id}/${question.slug}`);
-        }
-
-        // পেজে ডাটা দেখানো
-        renderQuestionUI(question);
+        // ইউআই আপডেট
+        renderUI(question);
         
-        // UI আপডেট
         if(skeleton) skeleton.classList.add('hidden');
         if(content) content.classList.remove('hidden');
-        console.log("Question loaded successfully!");
 
     } catch (err) {
-        console.error('Final Load Error:', err);
+        console.error(err);
         if(skeleton) skeleton.classList.add('hidden');
         if(errorState) errorState.classList.remove('hidden');
     }
 }
 
-/**
- * HTML এলিমেন্টগুলোতে ডাটা বসানো
- */
-function renderQuestionUI(question) {
-    // শিরোনাম
-    document.title = `${question.title} - physflow`;
-    const titleEl = document.getElementById('q-title');
-    if(titleEl) titleEl.textContent = question.title;
+function renderUI(question) {
+    document.title = question.title;
+    
+    // টাইটেল
+    const t = document.getElementById('q-title');
+    if(t) t.textContent = question.title;
 
-    // বডি (marked.js ব্যবহার করলে সেটি কাজ করবে, নাহলে সরাসরি টেক্সট)
-    const bodyEl = document.getElementById('q-body');
-    if(bodyEl) {
-        bodyEl.innerHTML = (typeof marked !== 'undefined') ? marked.parse(question.body) : question.body;
+    // বডি
+    const b = document.getElementById('q-body');
+    if(b) {
+        // Marked লাইব্রেরি থাকলে ব্যবহার করবে, নাহলে নরমাল টেক্সট
+        b.innerHTML = (typeof marked !== 'undefined') ? marked.parse(question.body) : question.body;
     }
 
-    // তারিখ
-    const dateEl = document.getElementById('q-date');
-    if(dateEl) dateEl.textContent = new Date(question.created_at).toLocaleDateString('bn-BD');
+    // লেখক ও তারিখ
+    const authName = document.getElementById('q-author-name');
+    const authImg = document.getElementById('q-author-img');
+    const date = document.getElementById('q-date');
 
-    // লেখক
-    const author = question.author || { username: 'অজানা লেখক', avatar_url: 'https://via.placeholder.com/40' };
-    const nameEl = document.getElementById('q-author-name');
-    const imgEl = document.getElementById('q-author-img');
-    if(nameEl) nameEl.textContent = author.username;
-    if(imgEl) imgEl.src = author.avatar_url;
+    if(authName) authName.textContent = question.author?.username || 'অজানা';
+    if(authImg) authImg.src = question.author?.avatar_url || '';
+    if(date) date.textContent = new Date(question.created_at).toLocaleDateString('bn-BD');
 
     // ট্যাগ
-    const tagsDiv = document.getElementById('q-tags');
-    if(tagsDiv && question.tag) {
-        tagsDiv.innerHTML = '';
-        const tagsArray = Array.isArray(question.tag) ? question.tag : question.tag.split(',');
-        tagsArray.forEach(t => {
-            const span = document.createElement('span');
-            span.className = "bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-medium dark:bg-blue-900/30 dark:text-blue-300";
-            span.textContent = `#${t.trim()}`;
-            tagsDiv.appendChild(span);
+    const tagsContainer = document.getElementById('q-tags');
+    if(tagsContainer && question.tag) {
+        tagsContainer.innerHTML = '';
+        const tags = Array.isArray(question.tag) ? question.tag : [];
+        tags.forEach(tag => {
+            const s = document.createElement('span');
+            s.className = "bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs mr-2";
+            s.textContent = '#' + tag;
+            tagsContainer.appendChild(s);
         });
     }
 }
 
-// পেজ লোড হওয়া মাত্র ফাংশনটি চালু করো
 document.addEventListener('DOMContentLoaded', loadQuestion);
