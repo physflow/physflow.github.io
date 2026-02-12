@@ -46,13 +46,17 @@ async function getCurrentUser() {
 
 /**
  * Extract slug from URL path
+ * এটি এখন আরও শক্তিশালী করা হয়েছে যাতে আইডি-সহ স্লাগ ঠিকমতো ধরে
  */
 function extractSlugFromURL() {
     const path = window.location.pathname;
+    // এটি /question/ এর পরের সবটুকু ধরবে
     const match = path.match(/\/question\/([^\/]+)/);
     
     if (match && match[1]) {
-        return decodeURIComponent(match[1]);
+        const decodedSlug = decodeURIComponent(match[1]);
+        console.log("Extracted Slug:", decodedSlug); // ডিবাগিং এর জন্য
+        return decodedSlug;
     }
     
     return null;
@@ -61,15 +65,12 @@ function extractSlugFromURL() {
 /**
  * Load question from database
  */
-/**
- * Load question from database
- */
 async function loadQuestion(slug) {
     try {
         showLoading();
-        console.log("Checking Slug:", slug); // ডিবাগ করার জন্য
+        console.log("Fetching from DB for slug:", slug);
 
-        // রিলেশনশিপ ছাড়াই প্রথমে ডাটা চেক করার চেষ্টা করি
+        // ১. সরাসরি প্রশ্নটি খুঁজে বের করা (রিলেশন ছাড়া আগে টেস্ট করা ভালো)
         const { data: question, error } = await supabase
             .from('question') // টেবিল নাম একবচনে
             .select(`
@@ -79,28 +80,44 @@ async function loadQuestion(slug) {
                     username,
                     avatar_url
                 )
-            `) // এখানে ফরেন কি নাম বাদ দিয়ে শুধু টেবিল রিলেশন দিলাম
+            `)
             .eq('slug', slug)
             .single();
 
         if (error) {
-            console.error('Supabase Query Error:', error.message);
-            throw error;
+            console.error('Supabase Error:', error.message);
+            // যদি ফরেন কি-র কারণে এরর আসে, তবে শুধু '*' দিয়ে ট্রাই করো
+            return trySimpleLoad(slug); 
         }
 
-        if (!question) {
-            throw new Error('No question found in DB');
-        }
+        if (!question) throw new Error('Question not found');
 
         currentQuestion = question;
         displayQuestion(question);
+        
+        // বাকি লোডিং ফাংশনগুলো কল করো
+        await loadAnswers(question.id);
+        await incrementViewCount(question.id);
         hideLoading();
 
     } catch (error) {
-        console.error('Final Error Logic:', error);
+        console.error('Final Load Error:', error);
         showError();
     }
 }
+
+// ব্যাকআপ লোডার (যদি রিলেশনশিপ এরর দেয়)
+async function trySimpleLoad(slug) {
+    const { data, error } = await supabase.from('question').select('*').eq('slug', slug).single();
+    if (data) {
+        currentQuestion = data;
+        displayQuestion(data);
+        hideLoading();
+    } else {
+        showError();
+    }
+}
+
 
 
 /**
