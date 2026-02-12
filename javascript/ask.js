@@ -84,17 +84,22 @@ function updateSelectedTagsUI() {
     }
 }
 
-// ৬. Utility: সরাসরি বাংলা সাপোর্টসহ Slug Generation
+// ৬. সংশোধিত Slug Generation (Unique Number + Text)
 function generateSlug(text) {
-    let slug = text
+    // ৫ ডিজিটের একটি র‍্যান্ডম নম্বর তৈরি
+    const uniqueNumber = Math.floor(10000 + Math.random() * 90000);
+    
+    // টাইটেল থেকে সিম্বল রিমুভ করে ক্লিন টেক্সট তৈরি
+    let cleanText = text
         .toLowerCase()
         .trim()
-        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .substring(0, 100);
+        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '') // বাংলা ও ইংরেজি অক্ষরের বাইরে সব রিমুভ
+        .replace(/\s+/g, '-')                      // স্পেসের বদলে হাইফেন
+        .replace(/-+/g, '-')                       // ডাবল হাইফেন সিঙ্গেল করা
+        .substring(0, 60);                         // স্লাগ খুব বেশি বড় না করা
 
-    return slug;
+    // unique-number-slug-text ফরম্যাটে রিটার্ন
+    return `${uniqueNumber}-${cleanText}`;
 }
 
 // ৭. মেসেজ প্রদর্শন
@@ -134,6 +139,8 @@ form.addEventListener('submit', async (e) => {
 
         localStorage.removeItem('question_draft');
         showMessage('প্রশ্ন সফলভাবে জমা হয়েছে!');
+        
+        // রিডাইরেক্ট করার সময় স্লাগটি ইউআরএল এ পাঠিয়ে দেওয়া
         setTimeout(() => window.location.href = `/question/${encodeURIComponent(slug)}`, 1500);
 
     } catch (err) {
@@ -158,7 +165,6 @@ function saveDraft() {
 document.addEventListener('DOMContentLoaded', () => {
     const draft = JSON.parse(localStorage.getItem('question_draft'));
     
-    // ২৪ ঘণ্টার কম সময়ের ড্রাফট থাকলে সরাসরি লোড হবে
     if (draft && (new Date() - new Date(draft.timestamp)) < 86400000) {
         titleInput.value = draft.title || '';
         bodyInput.value = draft.body || '';
@@ -172,6 +178,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // প্রতি ১৫ সেকেন্ডে অটোমেটিক সেভ
     setInterval(saveDraft, 15000);
 });
