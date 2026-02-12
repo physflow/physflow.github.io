@@ -169,3 +169,4 @@ export const initHomePage = () => {
 document.addEventListener('DOMContentLoaded', initHomePage);
 
 export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
+ 
