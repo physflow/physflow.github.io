@@ -1,7 +1,7 @@
 // javascript/question.js
 // Production-ready Question Detail Page Module for PhysFlow
 
-import { supabase } from './supabase-config.js';
+import { supabase } from 'javascript/supabase-config.js';
 
 // ============================================
 // CONFIGURATION
