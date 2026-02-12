@@ -1,4 +1,0 @@
-
-/question/:id/:slug  /question.html  200
-/question/:id       /question.html  200
-
