@@ -68,10 +68,10 @@ async function loadQuestion(slug) {
 
         // Fetch question with author info
         const { data: question, error } = await supabase
-            .from('questions')
+            .from('question')
             .select(`
                 *,
-                author:profiles!questions_author_id_fkey(
+                author:profiles!question_author_id_fkey(
                     id,
                     username,
                     avatar_url
@@ -100,8 +100,8 @@ async function loadQuestion(slug) {
         // Load answers
         await loadAnswers(question.id);
 
-        // Load related questions
-        await loadRelatedQuestions(question.tags);
+        // Load related question
+        await loadRelatedQuestion(question.tags);
 
         // Update SEO
         updateSEO(question);
@@ -121,14 +121,14 @@ async function loadQuestion(slug) {
 async function incrementViewCount(questionId) {
     try {
         const { data: question } = await supabase
-            .from('questions')
+            .from('question')
             .select('views')
             .eq('id', questionId)
             .single();
 
         if (question) {
             await supabase
-                .from('questions')
+                .from('question')
                 .update({ views: (question.views || 0) + 1 })
                 .eq('id', questionId);
         }
@@ -321,7 +321,7 @@ async function handleQuestionVote(questionId, voteType) {
         const newVotes = currentVotes + voteDelta;
         
         await supabase
-            .from('questions')
+            .from('question')
             .update({ votes: newVotes })
             .eq('id', questionId);
 
@@ -691,14 +691,14 @@ async function submitAnswer(questionId) {
 }
 
 /**
- * Load related questions
+ * Load related question
  */
-async function loadRelatedQuestions(tags) {
+async function loadRelatedQuestion(tags) {
     if (!tags || tags.length === 0) return;
 
     try {
         const { data: related, error } = await supabase
-            .from('questions')
+            .from('question')
             .select('id, title, slug, views')
             .contains('tags', tags)
             .neq('id', currentQuestion.id)
@@ -721,10 +721,10 @@ async function loadRelatedQuestions(tags) {
             relatedList.appendChild(link);
         });
 
-        document.getElementById('related-questions').classList.remove('hidden');
+        document.getElementById('related-question').classList.remove('hidden');
 
     } catch (error) {
-        console.error('Error loading related questions:', error);
+        console.error('Error loading related question:', error);
     }
 }
 
