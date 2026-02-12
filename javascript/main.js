@@ -9,7 +9,7 @@ const toBanglaNumber = (num) => {
     return String(num).split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
 };
 
-// ৩. সময় ফরম্যাট
+// ৩. সময় ফরম্যাট
 const formatTimeAgo = (date) => {
     if (!date) return '';
     const now = new Date();
@@ -37,21 +37,34 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML (সঠিক লিংক ফরম্যাট নিশ্চিত করা হয়েছে)
+// 🆕 Slug Generator (যদি database এ slug না থাকে)
+const generateSlug = (title) => {
+    if (!title) return 'untitled';
+    return title
+        .toLowerCase()
+        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '') // Bengali + English + numbers
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 100);
+};
+
+// ৫. প্রশ্ন কার্ড তৈরির HTML (✅ সংশোধিত)
 const createQuestionCard = (question) => {
-    const tag = Array.isArray(question.tag) ? question.tag : [];
+    // ✅ সঠিক field name: tags (plural)
+    const tags = Array.isArray(question.tags) ? question.tags : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
     
-    // ডাটাবেস থেকে পাওয়া আইডি এবং স্ল্যাগ
+    // ✅ ID এবং slug নিশ্চিত করা
     const qId = question.id; 
-    const qSlug = question.slug;
+    const qSlug = question.slug || generateSlug(question.title);
 
-    // ডিবাগ করার জন্য (লিংক না আসলে কনসোলে চেক করো)
-    // console.log(`Question ID: ${qId}, Slug: ${qSlug}`);
-
-    // কাঙ্ক্ষিত রিডাইরেক্ট ফরম্যাট: /question/id/slug
+    // ✅ সঠিক URL ফরম্যাট: /question/{id}/{slug}
     const questionLink = `/question/${qId}/${encodeURIComponent(qSlug)}`;
+    
+    // Debug (development এ রাখতে পারেন)
+    // console.log(`Question: ${question.title} → ${questionLink}`);
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
@@ -94,7 +107,7 @@ const createQuestionCard = (question) => {
                         </span>
                     ` : ''}
 
-                    ${tag.map(t => `
+                    ${tags.map(t => `
                         <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
                             #${t}
                         </span>
@@ -105,7 +118,7 @@ const createQuestionCard = (question) => {
     `;
 };
 
-// ৬. ডাটা লোড ফাংশন
+// ৬. ডাটা লোড ফাংশন (✅ সংশোধিত)
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
@@ -122,9 +135,11 @@ const loadLatestQuestion = async () => {
     questionList.innerHTML = skeletonHTML.repeat(20);
 
     try {
+        // ✅ সঠিক table name: 'questions' (plural)
+        // ✅ slug field select করা হয়েছে
         const { data: questionData, error, count } = await supabase
-            .from('question')
-            .select('*', { count: 'exact' })
+            .from('questions')  // ✅ 'questions' না 'question'
+            .select('id, title, slug, body, votes, answers_count, views, category, tags, created_at', { count: 'exact' })
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
@@ -138,15 +153,15 @@ const loadLatestQuestion = async () => {
                 countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
             }
         } else {
-            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
+            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
-        console.error('Error:', err);
+        console.error('Error loading questions:', err);
         questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
     }
 };
 
-// ৭. ইনিশিয়ালাইজেশন
+// ৭. ইনিশিয়ালাইজেশন
 export const initHomePage = () => {
     loadLatestQuestion();
 };
