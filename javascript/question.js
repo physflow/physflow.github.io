@@ -61,14 +61,20 @@ function extractSlugFromURL() {
 /**
  * Load question from database
  */
+/**
+ * Load question from database
+ */
 async function loadQuestion(slug) {
     try {
         // Show loading skeleton
         showLoading();
 
+        // স্লাগ থেকে আইডি আলাদা করা (যদি ফরম্যাট 12345-slug-text হয়)
+        // আমরা .split('-')[0] ব্যবহার করছি না কারণ স্লাগ কলামে পুরো টেক্সটটাই আছে
+        
         // Fetch question with author info
         const { data: question, error } = await supabase
-            .from('question')
+            .from('question') // টেবিল নাম 'question' নিশ্চিত করা হলো
             .select(`
                 *,
                 author:profiles!question_author_id_fkey(
@@ -77,14 +83,17 @@ async function loadQuestion(slug) {
                     avatar_url
                 )
             `)
-            .eq('slug', slug)
+            .eq('slug', slug) // ডাটাবেসের 'slug' কলামের সাথে ইউআরএল এর স্লাগ ম্যাচ করা
             .single();
 
         if (error || !question) {
+            console.error('Supabase Error:', error);
             throw new Error('Question not found');
         }
 
         currentQuestion = question;
+        // ... বাকি কোড একই থাকবে
+
 
         // Update view count
         await incrementViewCount(question.id);
