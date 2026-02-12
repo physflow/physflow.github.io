@@ -45,26 +45,32 @@ function parseURLParams() {
     // First check hash
     const hash = window.location.hash;
     if (hash) {
-        const match = hash.match(/#\/question\/(\d+)\/([^\/]+)/);
+        // Flexible pattern that matches any characters after /question/ID/
+        const match = hash.match(/#\/?question\/([^\/]+)\/(.+)$/);
         if (match) {
+            // Decode URL-encoded slug (handles Bengali and special chars)
+            const decodedSlug = decodeURIComponent(match[2]);
+            // Parse ID - could be number or UUID
+            const parsedId = isNaN(match[1]) ? match[1] : parseInt(match[1], 10);
+            
             return {
-                id: parseInt(match[1], 10),
-                slug: match[2]
+                id: parsedId,
+                slug: decodedSlug
             };
         }
     }
     
     // Fallback to pathname
     const path = window.location.pathname;
-    const match = path.match(/\/question\/(\d+)\/([^\/]+)/);
+    const match = path.match(/\/question\/([^\/]+)\/(.+)/);
     
     if (!match) {
         return { id: null, slug: null };
     }
     
     return {
-        id: parseInt(match[1], 10),
-        slug: match[2]
+        id: isNaN(match[1]) ? match[1] : parseInt(match[1], 10),
+        slug: decodeURIComponent(match[2])
     };
 }
 
