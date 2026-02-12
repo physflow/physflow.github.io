@@ -7,6 +7,8 @@
  * - Handles voting, bookmarking, answer submission
  * - Implements SEO meta tags and structured data
  * - Manages related questions
+ * 
+ * UPDATED: Now supports Bengali slugs in URLs
  */
 
 import { supabase } from './supabase-config.js';
@@ -30,26 +32,37 @@ let userVotes = {
 
 /**
  * Get question ID and slug from URL
- * Supports: /question/123/slug-here, /question/bengali-slug, or question.html?id=123
+ * Supports: 
+ *   - /question/123/optional-slug (numeric ID with optional slug)
+ *   - /question/বাংলা-স্লাগ (Bengali slug)
+ *   - /question/english-slug (English slug)
+ *   - question.html?id=123 (query parameter ID)
+ *   - question.html?slug=বাংলা-স্লাগ (query parameter slug)
+ * 
+ * @returns {Object|null} { id: string|null, slug: string|null }
  */
 function getQuestionParams() {
+    // Decode the pathname to handle Bengali characters
     const path = decodeURIComponent(window.location.pathname);
     const params = new URLSearchParams(window.location.search);
     
-    // Try path-based routing: /question/{id-or-slug}/{optional-slug}
+    // Match anything after /question/
+    // Pattern: /question/{anything}/{optional-anything}
     const pathMatch = path.match(/\/question\/([^\/]+)\/?([^\/]*)?/);
+    
     if (pathMatch) {
-        const firstParam = pathMatch[1];
-        const secondParam = pathMatch[2] || '';
+        const firstParam = pathMatch[1];  // First segment after /question/
+        const secondParam = pathMatch[2] || '';  // Second segment (optional)
         
-        // Check if first parameter is numeric ID
+        // Check if first parameter is a numeric ID
         if (/^\d+$/.test(firstParam)) {
+            // It's a numeric ID: /question/123 or /question/123/slug
             return {
                 id: firstParam,
-                slug: secondParam
+                slug: secondParam || null
             };
         } else {
-            // First parameter is a slug (Bengali or English)
+            // It's a slug (Bengali or English): /question/বাংলা-স্লাগ
             return {
                 id: null,
                 slug: firstParam
@@ -57,18 +70,19 @@ function getQuestionParams() {
         }
     }
     
-    // Fallback to query parameter: ?id=123 or ?slug=bengali-slug
-    const id = params.get('id');
-    const slug = params.get('slug');
+    // Fallback to query parameters
+    const queryId = params.get('id');
+    const querySlug = params.get('slug');
     
-    if (id) {
-        return { id, slug: slug || '' };
+    if (queryId) {
+        return { id: queryId, slug: querySlug || null };
     }
     
-    if (slug) {
-        return { id: null, slug };
+    if (querySlug) {
+        return { id: null, slug: decodeURIComponent(querySlug) };
     }
     
+    // No valid parameters found
     return null;
 }
 
@@ -242,11 +256,15 @@ function updateStructuredData(question, answers) {
 
 /**
  * Fetch question by ID or Slug
- * @param {Object} params - Object containing id and/or slug
- * @returns {Object|null} Question data or null
+ * 
+ * @param {Object} params - Object containing { id: string|null, slug: string|null }
+ * @returns {Object|null} Question data or null if not found
+ * 
+ * IMPORTANT: Uses 'question' (singular) table name as per ask.js
  */
 async function fetchQuestion(params) {
     try {
+        // Start building query
         let query = supabase
             .from('question')  // Using singular 'question' as per ask.js
             .select(`
@@ -254,18 +272,24 @@ async function fetchQuestion(params) {
                 author:profiles(id, name, avatar)
             `);
         
-        // Search by ID if available (more efficient)
+        // Determine search method
         if (params.id) {
+            // Search by numeric ID (most efficient)
+            console.log('Fetching question by ID:', params.id);
             query = query.eq('id', params.id);
         } 
-        // Otherwise search by slug
         else if (params.slug) {
+            // Search by slug (Bengali or English)
+            console.log('Fetching question by slug:', params.slug);
             query = query.eq('slug', params.slug);
         } 
         else {
-            throw new Error('No ID or slug provided');
+            // No valid parameter provided
+            console.error('No ID or slug provided to fetchQuestion');
+            return null;
         }
         
+        // Execute query
         const { data, error } = await query.single();
         
         if (error) {
@@ -273,7 +297,9 @@ async function fetchQuestion(params) {
             return null;
         }
         
+        console.log('Question fetched successfully:', data);
         return data;
+        
     } catch (error) {
         console.error('Error fetching question:', error);
         return null;
@@ -884,15 +910,25 @@ function setupEventListeners() {
 
 /**
  * Load question data
+ * 
+ * UPDATED: Now properly handles Bengali slugs
+ * 1. Gets params from URL (ID or slug)
+ * 2. Fetches question using params object
+ * 3. Uses the actual question.id from database for all subsequent operations
  */
 async function loadQuestionData() {
+    // Get URL parameters (ID or slug)
     const params = getQuestionParams();
+    
     if (!params) {
+        console.error('No valid question parameters found in URL');
         showError();
         return;
     }
     
-    // Show loading
+    console.log('Loading question with params:', params);
+    
+    // Show loading state
     document.getElementById('loading-skeleton').classList.remove('hidden');
     document.getElementById('question-container').classList.add('hidden');
     document.getElementById('error-container').classList.add('hidden');
@@ -902,13 +938,17 @@ async function loadQuestionData() {
         const question = await fetchQuestion(params);
         
         if (!question) {
+            console.error('Question not found');
             showError();
             return;
         }
         
+        console.log('Question loaded successfully:', question);
+        
+        // Store question globally
         currentQuestion = question;
         
-        // Use the actual question ID from database for all subsequent operations
+        // IMPORTANT: Use the actual question ID from database for all subsequent operations
         const questionId = question.id;
         
         // Fetch answers using the actual question ID
