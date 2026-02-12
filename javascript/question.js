@@ -1,48 +1,51 @@
 import { supabase } from './supabase-config.js';
 
 async function loadQuestion() {
-    const path = window.location.pathname;
+    // ১. ইউআরএল থেকে আইডি বের করার সবচেয়ে নিরাপদ উপায়
+    const path = window.location.pathname; // উদা: /question/033c6c73.../slug
     const parts = path.split('/').filter(p => p.length > 0);
-    const qId = parts[1]; // /question/ID/slug
+    
+    // parts[0] = 'question', parts[1] = 'uuid'
+    const qId = parts[1]; 
 
-    // কন্টেন্ট এলিমেন্টগুলো ধরছি
+    // এলিমেন্ট ধরা
     const skeleton = document.getElementById('loading-skeleton');
     const content = document.getElementById('question-content');
     const errorState = document.getElementById('error-state');
 
-    // ডিবাগ অ্যালার্ট (শুধু চেক করার জন্য)
-    if (!qId) {
-        alert("ইউআরএল এ কোনো আইডি পাওয়া যায়নি! পাথ হলো: " + path);
-        if(errorState) errorState.classList.remove('hidden');
+    // যদি আইডি না থাকে (মানে আইডি গায়েব হয়ে গেছে)
+    if (!qId || qId === 'question') {
+        console.error("ID missing from path: " + path);
+        // মোবাইল ইউজারদের জন্য সরাসরি মেসেজ
+        document.body.innerHTML = `<div style="padding:20px; text-align:center;">
+            <h2>আইডি পাওয়া যায়নি</h2>
+            <p>পাথ: ${path}</p>
+            <a href="/">ফিরে যান</a>
+        </div>`;
         return;
     }
 
     try {
-        // সরাসরি আইডি দিয়ে কুয়েরি
+        // ২. সুপাবেস থেকে শুধু আইডি দিয়ে ডাটা আনা
         const { data: question, error } = await supabase
             .from('question')
             .select('*')
             .eq('id', qId)
             .single();
 
-        if (error || !question) {
-            alert("সুপাবেস ডাটা পায়নি। এরর: " + (error ? error.message : "Not found"));
-            throw new Error("No data");
-        }
+        if (error || !question) throw new Error("Data not found");
 
-        // ডাটা রেন্ডার
+        // ৩. ডাটা দেখানো
+        document.title = question.title;
         document.getElementById('q-title').innerText = question.title;
         document.getElementById('q-body').innerHTML = question.body;
         
-        // তারিখ (যদি এলিমেন্ট থাকে)
-        const dateEl = document.getElementById('q-date');
-        if(dateEl) dateEl.innerText = new Date(question.created_at).toLocaleDateString('bn-BD');
-
-        // লোডিং বন্ধ
+        // ৪. ইউআই আপডেট
         if(skeleton) skeleton.classList.add('hidden');
         if(content) content.classList.remove('hidden');
 
     } catch (err) {
+        console.error(err);
         if(skeleton) skeleton.classList.add('hidden');
         if(errorState) errorState.classList.remove('hidden');
     }
