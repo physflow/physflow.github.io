@@ -29,41 +29,48 @@ let userVotes = {
 // =============================================
 
 /**
- * URL থেকে প্রশ্নের ID অথবা Slug সংগ্রহ করার ফাংশন।
- * সাপোর্ট করে: /question/123, /question/বাংলা-স্লাগ, অথবা ?id=123
+ * Get question ID and slug from URL
+ * Supports: /question/123/slug-here, /question/bengali-slug, or question.html?id=123
  */
 function getQuestionParams() {
-    const path = window.location.pathname;
+    const path = decodeURIComponent(window.location.pathname);
     const params = new URLSearchParams(window.location.search);
     
-    // ১. পাথ-বেসড রাউটিং চেক (যেমন: /question/xyz)
-    const pathMatch = path.match(/\/question\/([^\/]+)/);
-    
+    // Try path-based routing: /question/{id-or-slug}/{optional-slug}
+    const pathMatch = path.match(/\/question\/([^\/]+)\/?([^\/]*)?/);
     if (pathMatch) {
-        // URL এনকোডেড থাকলে সেটাকে স্বাভাবিক টেক্সটে রূপান্তর (বাংলার জন্য জরুরি)
-        const value = decodeURIComponent(pathMatch[1]);
+        const firstParam = pathMatch[1];
+        const secondParam = pathMatch[2] || '';
         
-        // চেক করা হচ্ছে এটা কি কেবল সংখ্যা (ID) নাকি টেক্সট (Slug)
-        const isNumericId = /^\d+$/.test(value);
-
-        return {
-            id: isNumericId ? value : null,
-            slug: isNumericId ? '' : value
-        };
+        // Check if first parameter is numeric ID
+        if (/^\d+$/.test(firstParam)) {
+            return {
+                id: firstParam,
+                slug: secondParam
+            };
+        } else {
+            // First parameter is a slug (Bengali or English)
+            return {
+                id: null,
+                slug: firstParam
+            };
+        }
     }
     
-    // ২. কুয়েরি প্যারামিটার চেক (Fallback: ?id=123)
-    const idParam = params.get('id');
-    if (idParam) {
-        return { 
-            id: idParam, 
-            slug: '' 
-        };
+    // Fallback to query parameter: ?id=123 or ?slug=bengali-slug
+    const id = params.get('id');
+    const slug = params.get('slug');
+    
+    if (id) {
+        return { id, slug: slug || '' };
+    }
+    
+    if (slug) {
+        return { id: null, slug };
     }
     
     return null;
 }
-
 
 /**
  * Format date to Bengali
@@ -235,33 +242,43 @@ function updateStructuredData(question, answers) {
 
 /**
  * Fetch question by ID or Slug
+ * @param {Object} params - Object containing id and/or slug
+ * @returns {Object|null} Question data or null
  */
 async function fetchQuestion(params) {
     try {
         let query = supabase
-            .from('questions')
+            .from('question')  // Using singular 'question' as per ask.js
             .select(`
                 *,
                 author:profiles(id, name, avatar)
             `);
-
-        // যদি আইডি থাকে তবে আইডি দিয়ে খোঁজো, না থাকলে স্লাগ দিয়ে
+        
+        // Search by ID if available (more efficient)
         if (params.id) {
             query = query.eq('id', params.id);
-        } else {
+        } 
+        // Otherwise search by slug
+        else if (params.slug) {
             query = query.eq('slug', params.slug);
+        } 
+        else {
+            throw new Error('No ID or slug provided');
         }
-
+        
         const { data, error } = await query.single();
         
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase error:', error);
+            return null;
+        }
+        
         return data;
     } catch (error) {
         console.error('Error fetching question:', error);
         return null;
     }
 }
-
 
 /**
  * Fetch answers for question
@@ -294,7 +311,7 @@ async function fetchRelatedQuestions(questionId, tags) {
         // Simple approach: fetch questions with similar tags
         // In production, you might want more sophisticated matching
         const { data, error } = await supabase
-            .from('questions')
+            .from('question')  // Using singular 'question' as per ask.js
             .select('id, title, slug, votes, views')
             .neq('id', questionId)
             .limit(5);
@@ -868,26 +885,33 @@ function setupEventListeners() {
 /**
  * Load question data
  */
-    // লোডিং অ্যানিমেশন দেখানো শুরু
+async function loadQuestionData() {
+    const params = getQuestionParams();
+    if (!params) {
+        showError();
+        return;
+    }
+    
+    // Show loading
     document.getElementById('loading-skeleton').classList.remove('hidden');
     document.getElementById('question-container').classList.add('hidden');
     document.getElementById('error-container').classList.add('hidden');
-
+    
     try {
-        // আইডি-র বদলে পুরো params অবজেক্ট পাঠানো হচ্ছে
-        const question = await fetchQuestion(params); 
+        // Fetch question by ID or slug
+        const question = await fetchQuestion(params);
         
         if (!question) {
             showError();
             return;
         }
-
-        currentQuestion = question;
-        // ডাটাবেস থেকে প্রাপ্ত আসল আইডিটি সেভ করে রাখা হচ্ছে
-        const actualId = question.id; 
-
         
-        // Fetch answers
+        currentQuestion = question;
+        
+        // Use the actual question ID from database for all subsequent operations
+        const questionId = question.id;
+        
+        // Fetch answers using the actual question ID
         const answers = await fetchAnswers(questionId);
         currentAnswers = answers;
         sortAnswers();
@@ -913,7 +937,7 @@ function setupEventListeners() {
         updateSEO(question);
         updateStructuredData(question, answers);
         
-        // Increment view count
+        // Increment view count using the actual question ID
         incrementViewCount(questionId);
         
         // Show content
