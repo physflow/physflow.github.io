@@ -29,38 +29,41 @@ let userVotes = {
 // =============================================
 
 /**
- * Get question ID and slug from URL
- * Supports: /question/123/slug-here or question.html?id=123
+ * URL থেকে প্রশ্নের ID অথবা Slug সংগ্রহ করার ফাংশন।
+ * সাপোর্ট করে: /question/123, /question/বাংলা-স্লাগ, অথবা ?id=123
  */
 function getQuestionParams() {
     const path = window.location.pathname;
     const params = new URLSearchParams(window.location.search);
     
-    // Try path-based routing first: /question/123/slug
-    // সংশোধিত লজিক
-const pathMatch = path.match(/\/question\/([^\/]+)/);
-
-if (pathMatch) {
-    const value = decodeURIComponent(pathMatch[1]);
+    // ১. পাথ-বেসড রাউটিং চেক (যেমন: /question/xyz)
+    const pathMatch = path.match(/\/question\/([^\/]+)/);
     
-    // চেক করা হচ্ছে এটা কি আইডি (সংখ্যা) নাকি স্লাগ (টেক্সট)
-    const isId = /^\d+$/.test(value);
+    if (pathMatch) {
+        // URL এনকোডেড থাকলে সেটাকে স্বাভাবিক টেক্সটে রূপান্তর (বাংলার জন্য জরুরি)
+        const value = decodeURIComponent(pathMatch[1]);
+        
+        // চেক করা হচ্ছে এটা কি কেবল সংখ্যা (ID) নাকি টেক্সট (Slug)
+        const isNumericId = /^\d+$/.test(value);
 
-    return {
-        id: isId ? value : null,
-        slug: isId ? '' : value
-    };
+        return {
+            id: isNumericId ? value : null,
+            slug: isNumericId ? '' : value
+        };
+    }
+    
+    // ২. কুয়েরি প্যারামিটার চেক (Fallback: ?id=123)
+    const idParam = params.get('id');
+    if (idParam) {
+        return { 
+            id: idParam, 
+            slug: '' 
+        };
+    }
+    
+    return null;
 }
 
-// Fallback to query parameter: ?id=123
-const id = params.get('id');
-if (id) {
-    return { id, slug: '' };
-}
-
-return null;
-
-}
 
 /**
  * Format date to Bengali
