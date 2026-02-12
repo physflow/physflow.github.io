@@ -81,23 +81,30 @@
             
             log('✓ Hash detected: ' + hash, 'success');
             
-            // Try patterns
+            // Try patterns with more flexible matching
             const patterns = [
-                { regex: /#\/question\/(\d+)\/([^\/\?]+)/, name: 'Pattern 1: #/question/ID/SLUG' },
-                { regex: /#question\/(\d+)\/([^\/\?]+)/, name: 'Pattern 2: #question/ID/SLUG' },
-                { regex: /question\/(\d+)\/([^\/\?]+)/, name: 'Pattern 3: question/ID/SLUG' }
+                { regex: /#\/question\/([^\/]+)\/(.+)$/, name: 'Pattern 1: #/question/ID/SLUG' },
+                { regex: /#question\/([^\/]+)\/(.+)$/, name: 'Pattern 2: #question/ID/SLUG' },
+                { regex: /question\/([^\/]+)\/(.+)$/, name: 'Pattern 3: question/ID/SLUG' }
             ];
             
             for (let i = 0; i < patterns.length; i++) {
                 const match = hash.match(patterns[i].regex);
                 if (match) {
                     log(`✓ ${patterns[i].name} MATCHED!`, 'success');
-                    log(`  ID: ${match[1]}`, 'success');
-                    log(`  Slug: ${match[2]}`, 'success');
+                    log(`  ID (raw): ${match[1]}`, 'success');
+                    log(`  Slug (raw): ${match[2]}`, 'success');
+                    
+                    // Decode the slug if it's URL encoded
+                    const decodedSlug = decodeURIComponent(match[2]);
+                    log(`  Slug (decoded): ${decodedSlug}`, 'success');
+                    
+                    // Try to parse ID as number, if fails keep as string (UUID case)
+                    const parsedId = isNaN(match[1]) ? match[1] : parseInt(match[1], 10);
                     
                     return {
-                        id: parseInt(match[1], 10),
-                        slug: decodeURIComponent(match[2])
+                        id: parsedId,
+                        slug: decodedSlug
                     };
                 } else {
                     log(`✗ ${patterns[i].name} - No match`, 'warning');
