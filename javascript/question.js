@@ -1,62 +1,808 @@
-/**
- * question.js
- * * Question Page Logic for PhysFlow
- * UPDATED: Optimized for Bengali slugs and robust data fetching
- */
+// question.js - Question Detail Page Logic
 
 import { supabase } from './supabase-config.js';
 
-// =============================================
-// GLOBAL STATE
-// =============================================
-
+// Global state
 let currentQuestion = null;
-let currentAnswers = [];
-let currentSort = 'votes';
-let currentUserId = null;
+let currentUser = null;
+let allAnswers = [];
+let displayedAnswers = 5;
 let userVotes = {
     question: null,
     answers: {}
 };
 
-// =============================================
-// UTILITY FUNCTIONS
-// =============================================
+/**
+ * Initialize the question page
+ */
+export async function initQuestionPage() {
+    // Get current user
+    currentUser = await getCurrentUser();
+    
+    // Extract slug from URL
+    const slug = extractSlugFromURL();
+    
+    if (!slug) {
+        showError();
+        return;
+    }
+
+    // Fetch and display question
+    await loadQuestion(slug);
+}
 
 /**
- * Get question ID and slug from URL
- * Supports: /question/slug-name or /question/123
+ * Get current user from Supabase
  */
-function getQuestionParams() {
-    // বর্তমান পাথ থেকে স্লাগ নেওয়া হচ্ছে
-    const path = window.location.pathname;
-    const pathSegments = path.split('/').filter(segment => segment !== "");
-    
-    // পাথ চেক: ["question", "slug-name"]
-    if (pathSegments.length >= 2 && pathSegments[0] === 'question') {
-        const lastSegment = pathSegments[pathSegments.length - 1];
-        
-        // যদি এটি একটি সংখ্যা হয় তবে আইডি হিসেবে ধরবে, নয়তো স্লাগ
-        if (/^\d+$/.test(lastSegment)) {
-            return { id: lastSegment, slug: null };
-        } else {
-            return { id: null, slug: decodeURIComponent(lastSegment) };
-        }
+async function getCurrentUser() {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        return user;
+    } catch (error) {
+        console.error('Error getting user:', error);
+        return null;
     }
+}
+
+/**
+ * Extract slug from URL path
+ */
+function extractSlugFromURL() {
+    const path = window.location.pathname;
+    const match = path.match(/\/question\/([^\/]+)/);
     
-    // কুয়েরি প্যারামিটার ব্যাকআপ
-    const params = new URLSearchParams(window.location.search);
-    const queryId = params.get('id');
-    const querySlug = params.get('slug');
-    
-    if (queryId) return { id: queryId, slug: null };
-    if (querySlug) return { id: null, slug: decodeURIComponent(querySlug) };
+    if (match && match[1]) {
+        return decodeURIComponent(match[1]);
+    }
     
     return null;
 }
 
 /**
- * Format date to Bengali
+ * Load question from database
+ */
+async function loadQuestion(slug) {
+    try {
+        // Show loading skeleton
+        showLoading();
+
+        // Fetch question with author info
+        const { data: question, error } = await supabase
+            .from('questions')
+            .select(`
+                *,
+                author:profiles!questions_author_id_fkey(
+                    id,
+                    username,
+                    avatar_url
+                )
+            `)
+            .eq('slug', slug)
+            .single();
+
+        if (error || !question) {
+            throw new Error('Question not found');
+        }
+
+        currentQuestion = question;
+
+        // Update view count
+        await incrementViewCount(question.id);
+
+        // Load user votes if logged in
+        if (currentUser) {
+            await loadUserVotes(question.id);
+        }
+
+        // Display question
+        displayQuestion(question);
+
+        // Load answers
+        await loadAnswers(question.id);
+
+        // Load related questions
+        await loadRelatedQuestions(question.tags);
+
+        // Update SEO
+        updateSEO(question);
+
+        // Hide loading, show content
+        hideLoading();
+
+    } catch (error) {
+        console.error('Error loading question:', error);
+        showError();
+    }
+}
+
+/**
+ * Increment view count for question
+ */
+async function incrementViewCount(questionId) {
+    try {
+        const { data: question } = await supabase
+            .from('questions')
+            .select('views')
+            .eq('id', questionId)
+            .single();
+
+        if (question) {
+            await supabase
+                .from('questions')
+                .update({ views: (question.views || 0) + 1 })
+                .eq('id', questionId);
+        }
+    } catch (error) {
+        console.error('Error incrementing view count:', error);
+    }
+}
+
+/**
+ * Load user's votes
+ */
+async function loadUserVotes(questionId) {
+    try {
+        // Load question vote
+        const { data: questionVote } = await supabase
+            .from('question_votes')
+            .select('vote_type')
+            .eq('question_id', questionId)
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (questionVote) {
+            userVotes.question = questionVote.vote_type;
+        }
+
+        // Load answer votes
+        const { data: answerVotes } = await supabase
+            .from('answer_votes')
+            .select('answer_id, vote_type')
+            .eq('user_id', currentUser.id);
+
+        if (answerVotes) {
+            answerVotes.forEach(vote => {
+                userVotes.answers[vote.answer_id] = vote.vote_type;
+            });
+        }
+
+    } catch (error) {
+        console.error('Error loading user votes:', error);
+    }
+}
+
+/**
+ * Display question on page
+ */
+function displayQuestion(question) {
+    // Title
+    document.getElementById('question-title').textContent = question.title;
+
+    // Author info
+    const authorAvatar = document.getElementById('author-avatar');
+    const authorName = document.getElementById('author-name');
+    
+    if (question.author) {
+        authorAvatar.src = question.author.avatar_url || 'https://via.placeholder.com/40';
+        authorName.textContent = question.author.username || 'অজ্ঞাত ব্যবহারকারী';
+    }
+
+    // Date
+    document.getElementById('question-date').textContent = formatDate(question.created_at);
+
+    // View count
+    document.getElementById('view-count').textContent = formatNumber(question.views || 0);
+
+    // Tags
+    displayTags(question.tags);
+
+    // Body (render markdown)
+    const bodyHTML = renderMarkdown(question.body);
+    document.getElementById('question-body').innerHTML = bodyHTML;
+
+    // Votes
+    document.getElementById('question-votes').textContent = question.votes || 0;
+    
+    // Update vote button states
+    if (userVotes.question === 'up') {
+        document.getElementById('upvote-question').classList.add('voted', 'text-green-500');
+    } else if (userVotes.question === 'down') {
+        document.getElementById('downvote-question').classList.add('voted', 'text-red-500');
+    }
+
+    // Breadcrumb
+    document.getElementById('breadcrumb-title').textContent = question.title.substring(0, 50) + '...';
+    document.getElementById('breadcrumb').classList.remove('hidden');
+
+    // Setup event listeners
+    setupQuestionEventListeners(question.id);
+}
+
+/**
+ * Display tags
+ */
+function displayTags(tags) {
+    const tagsContainer = document.getElementById('question-tags');
+    tagsContainer.innerHTML = '';
+
+    if (!tags || tags.length === 0) return;
+
+    tags.forEach(tag => {
+        const tagEl = document.createElement('a');
+        tagEl.href = `tags.html?tag=${encodeURIComponent(tag)}`;
+        tagEl.className = 'tag';
+        tagEl.textContent = tag;
+        tagsContainer.appendChild(tagEl);
+    });
+}
+
+/**
+ * Setup question event listeners
+ */
+function setupQuestionEventListeners(questionId) {
+    // Upvote
+    document.getElementById('upvote-question').addEventListener('click', () => {
+        handleQuestionVote(questionId, 'up');
+    });
+
+    // Downvote
+    document.getElementById('downvote-question').addEventListener('click', () => {
+        handleQuestionVote(questionId, 'down');
+    });
+
+    // Share
+    document.getElementById('share-btn').addEventListener('click', () => {
+        shareQuestion();
+    });
+
+    // Submit answer
+    document.getElementById('submit-answer').addEventListener('click', () => {
+        submitAnswer(questionId);
+    });
+
+    // Show/hide answer editor based on auth
+    if (currentUser) {
+        document.getElementById('answer-editor').classList.remove('hidden');
+        document.getElementById('login-prompt').classList.add('hidden');
+    } else {
+        document.getElementById('answer-editor').classList.add('hidden');
+        document.getElementById('login-prompt').classList.remove('hidden');
+    }
+}
+
+/**
+ * Handle question voting
+ */
+async function handleQuestionVote(questionId, voteType) {
+    if (!currentUser) {
+        showToast('ভোট দিতে লগ ইন করুন', 'error');
+        return;
+    }
+
+    try {
+        const currentVote = userVotes.question;
+        let newVote = voteType;
+
+        // If clicking same vote, remove it
+        if (currentVote === voteType) {
+            newVote = null;
+        }
+
+        // Update in database
+        if (newVote === null) {
+            // Delete vote
+            await supabase
+                .from('question_votes')
+                .delete()
+                .eq('question_id', questionId)
+                .eq('user_id', currentUser.id);
+        } else {
+            // Upsert vote
+            await supabase
+                .from('question_votes')
+                .upsert({
+                    question_id: questionId,
+                    user_id: currentUser.id,
+                    vote_type: newVote
+                });
+        }
+
+        // Calculate vote delta
+        let voteDelta = 0;
+        if (currentVote === 'up' && newVote === 'down') voteDelta = -2;
+        else if (currentVote === 'down' && newVote === 'up') voteDelta = 2;
+        else if (currentVote === 'up' && newVote === null) voteDelta = -1;
+        else if (currentVote === 'down' && newVote === null) voteDelta = 1;
+        else if (currentVote === null && newVote === 'up') voteDelta = 1;
+        else if (currentVote === null && newVote === 'down') voteDelta = -1;
+
+        // Update question votes
+        const currentVotes = parseInt(document.getElementById('question-votes').textContent);
+        const newVotes = currentVotes + voteDelta;
+        
+        await supabase
+            .from('questions')
+            .update({ votes: newVotes })
+            .eq('id', questionId);
+
+        // Update UI
+        document.getElementById('question-votes').textContent = newVotes;
+        userVotes.question = newVote;
+
+        // Update button states
+        const upBtn = document.getElementById('upvote-question');
+        const downBtn = document.getElementById('downvote-question');
+        
+        upBtn.classList.remove('voted', 'text-green-500');
+        downBtn.classList.remove('voted', 'text-red-500');
+
+        if (newVote === 'up') {
+            upBtn.classList.add('voted', 'text-green-500');
+        } else if (newVote === 'down') {
+            downBtn.classList.add('voted', 'text-red-500');
+        }
+
+    } catch (error) {
+        console.error('Error voting:', error);
+        showToast('ভোট দিতে সমস্যা হয়েছে', 'error');
+    }
+}
+
+/**
+ * Share question
+ */
+function shareQuestion() {
+    const url = window.location.href;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: currentQuestion.title,
+            url: url
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(url);
+        showToast('লিংক কপি হয়েছে', 'success');
+    }
+}
+
+/**
+ * Load answers for question
+ */
+async function loadAnswers(questionId) {
+    try {
+        const { data: answers, error } = await supabase
+            .from('answers')
+            .select(`
+                *,
+                author:profiles!answers_user_id_fkey(
+                    id,
+                    username,
+                    avatar_url
+                )
+            `)
+            .eq('question_id', questionId)
+            .order('is_accepted', { ascending: false })
+            .order('votes', { ascending: false })
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        allAnswers = answers || [];
+        
+        // Update answer count
+        document.getElementById('answer-count').textContent = allAnswers.length;
+
+        // Display first batch
+        displayAnswers();
+
+    } catch (error) {
+        console.error('Error loading answers:', error);
+    }
+}
+
+/**
+ * Display answers
+ */
+function displayAnswers() {
+    const answersList = document.getElementById('answers-list');
+    answersList.innerHTML = '';
+
+    const answersToShow = allAnswers.slice(0, displayedAnswers);
+
+    answersToShow.forEach(answer => {
+        const answerCard = createAnswerCard(answer);
+        answersList.appendChild(answerCard);
+    });
+
+    // Show/hide load more button
+    const loadMoreBtn = document.getElementById('load-more-answers');
+    if (allAnswers.length > displayedAnswers) {
+        loadMoreBtn.classList.remove('hidden');
+        loadMoreBtn.onclick = () => {
+            displayedAnswers += 5;
+            displayAnswers();
+        };
+    } else {
+        loadMoreBtn.classList.add('hidden');
+    }
+}
+
+/**
+ * Create answer card element
+ */
+function createAnswerCard(answer) {
+    const card = document.createElement('div');
+    card.className = `answer-card bg-white dark:bg-[#1a1a1b] border border-gray-200 dark:border-gray-700 rounded-lg p-6 ${answer.is_accepted ? 'answer-accepted' : ''}`;
+    
+    const bodyHTML = renderMarkdown(answer.body);
+    const isCollapsible = answer.body.length > 1000;
+    
+    card.innerHTML = `
+        <div class="flex gap-4">
+            <!-- Vote Section -->
+            <div class="flex flex-col items-center gap-2 shrink-0">
+                <button class="vote-btn upvote-answer text-2xl text-gray-400 hover:text-green-500 ${userVotes.answers[answer.id] === 'up' ? 'voted text-green-500' : ''}" data-answer-id="${answer.id}">
+                    <i class="fas fa-chevron-up"></i>
+                </button>
+                <span class="answer-votes text-xl font-bold">${answer.votes || 0}</span>
+                <button class="vote-btn downvote-answer text-2xl text-gray-400 hover:text-red-500 ${userVotes.answers[answer.id] === 'down' ? 'voted text-red-500' : ''}" data-answer-id="${answer.id}">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                ${answer.is_accepted ? '<i class="fas fa-check-circle text-2xl text-green-500 mt-2" title="গৃহীত উত্তর"></i>' : ''}
+                ${currentUser && currentQuestion.author_id === currentUser.id && !answer.is_accepted ? 
+                    `<button class="accept-answer text-gray-400 hover:text-green-500 mt-2" data-answer-id="${answer.id}" title="উত্তর গ্রহণ করুন">
+                        <i class="far fa-check-circle text-2xl"></i>
+                    </button>` : ''
+                }
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1">
+                <div class="answer-body prose dark:prose-invert max-w-none ${isCollapsible ? 'answer-collapsed' : ''}" data-answer-id="${answer.id}">
+                    ${bodyHTML}
+                </div>
+                
+                ${isCollapsible ? `
+                    <button class="expand-answer text-sm text-brand-600 hover:text-brand-700 mt-2" data-answer-id="${answer.id}">
+                        আরো দেখুন
+                    </button>
+                ` : ''}
+
+                <!-- Author & Date -->
+                <div class="flex items-center gap-4 mt-6 pt-4 border-t dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="flex items-center gap-2">
+                        <img src="${answer.author?.avatar_url || 'https://via.placeholder.com/32'}" class="w-8 h-8 rounded-full" alt="">
+                        <span class="font-medium">${answer.author?.username || 'অজ্ঞাত'}</span>
+                    </div>
+                    <span>•</span>
+                    <span>${formatDate(answer.created_at)}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Setup event listeners
+    setupAnswerEventListeners(card, answer);
+
+    return card;
+}
+
+/**
+ * Setup answer event listeners
+ */
+function setupAnswerEventListeners(card, answer) {
+    // Upvote
+    const upvoteBtn = card.querySelector('.upvote-answer');
+    upvoteBtn?.addEventListener('click', () => handleAnswerVote(answer.id, 'up'));
+
+    // Downvote
+    const downvoteBtn = card.querySelector('.downvote-answer');
+    downvoteBtn?.addEventListener('click', () => handleAnswerVote(answer.id, 'down'));
+
+    // Accept answer
+    const acceptBtn = card.querySelector('.accept-answer');
+    acceptBtn?.addEventListener('click', () => acceptAnswer(answer.id));
+
+    // Expand/collapse
+    const expandBtn = card.querySelector('.expand-answer');
+    const answerBody = card.querySelector('.answer-body');
+    
+    if (expandBtn && answerBody) {
+        expandBtn.addEventListener('click', () => {
+            answerBody.classList.toggle('answer-collapsed');
+            expandBtn.textContent = answerBody.classList.contains('answer-collapsed') ? 'আরো দেখুন' : 'কম দেখুন';
+        });
+    }
+}
+
+/**
+ * Handle answer voting
+ */
+async function handleAnswerVote(answerId, voteType) {
+    if (!currentUser) {
+        showToast('ভোট দিতে লগ ইন করুন', 'error');
+        return;
+    }
+
+    try {
+        const currentVote = userVotes.answers[answerId];
+        let newVote = voteType;
+
+        // If clicking same vote, remove it
+        if (currentVote === voteType) {
+            newVote = null;
+        }
+
+        // Update in database
+        if (newVote === null) {
+            await supabase
+                .from('answer_votes')
+                .delete()
+                .eq('answer_id', answerId)
+                .eq('user_id', currentUser.id);
+        } else {
+            await supabase
+                .from('answer_votes')
+                .upsert({
+                    answer_id: answerId,
+                    user_id: currentUser.id,
+                    vote_type: newVote
+                });
+        }
+
+        // Calculate vote delta
+        let voteDelta = 0;
+        if (currentVote === 'up' && newVote === 'down') voteDelta = -2;
+        else if (currentVote === 'down' && newVote === 'up') voteDelta = 2;
+        else if (currentVote === 'up' && newVote === null) voteDelta = -1;
+        else if (currentVote === 'down' && newVote === null) voteDelta = 1;
+        else if (currentVote === null && newVote === 'up') voteDelta = 1;
+        else if (currentVote === null && newVote === 'down') voteDelta = -1;
+
+        // Find answer in array
+        const answerIndex = allAnswers.findIndex(a => a.id === answerId);
+        if (answerIndex !== -1) {
+            allAnswers[answerIndex].votes = (allAnswers[answerIndex].votes || 0) + voteDelta;
+        }
+
+        // Update answer votes in database
+        await supabase
+            .from('answers')
+            .update({ votes: allAnswers[answerIndex].votes })
+            .eq('id', answerId);
+
+        // Update UI
+        userVotes.answers[answerId] = newVote;
+        
+        // Re-render answers
+        displayAnswers();
+
+    } catch (error) {
+        console.error('Error voting:', error);
+        showToast('ভোট দিতে সমস্যা হয়েছে', 'error');
+    }
+}
+
+/**
+ * Accept answer
+ */
+async function acceptAnswer(answerId) {
+    if (!currentUser || currentQuestion.author_id !== currentUser.id) {
+        showToast('শুধুমাত্র প্রশ্নকর্তা উত্তর গ্রহণ করতে পারেন', 'error');
+        return;
+    }
+
+    try {
+        // Unaccept all other answers first
+        await supabase
+            .from('answers')
+            .update({ is_accepted: false })
+            .eq('question_id', currentQuestion.id);
+
+        // Accept this answer
+        await supabase
+            .from('answers')
+            .update({ is_accepted: true })
+            .eq('id', answerId);
+
+        // Update local state
+        allAnswers.forEach(a => {
+            a.is_accepted = a.id === answerId;
+        });
+
+        // Re-render
+        displayAnswers();
+
+        showToast('উত্তর গৃহীত হয়েছে', 'success');
+
+    } catch (error) {
+        console.error('Error accepting answer:', error);
+        showToast('সমস্যা হয়েছে', 'error');
+    }
+}
+
+/**
+ * Submit new answer
+ */
+async function submitAnswer(questionId) {
+    if (!currentUser) {
+        showToast('উত্তর দিতে লগ ইন করুন', 'error');
+        return;
+    }
+
+    const textarea = document.getElementById('answer-textarea');
+    const body = textarea.value.trim();
+
+    if (body.length < 30) {
+        showToast('উত্তর কমপক্ষে ৩০ অক্ষরের হতে হবে', 'error');
+        return;
+    }
+
+    try {
+        const submitBtn = document.getElementById('submit-answer');
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'পোস্ট হচ্ছে...';
+
+        // Insert answer
+        const { data: newAnswer, error } = await supabase
+            .from('answers')
+            .insert({
+                question_id: questionId,
+                user_id: currentUser.id,
+                body: body,
+                votes: 0,
+                is_accepted: false
+            })
+            .select(`
+                *,
+                author:profiles!answers_user_id_fkey(
+                    id,
+                    username,
+                    avatar_url
+                )
+            `)
+            .single();
+
+        if (error) throw error;
+
+        // Add to local array
+        allAnswers.push(newAnswer);
+
+        // Clear textarea
+        textarea.value = '';
+
+        // Re-render
+        displayAnswers();
+
+        // Update count
+        document.getElementById('answer-count').textContent = allAnswers.length;
+
+        showToast('উত্তর পোস্ট হয়েছে', 'success');
+
+    } catch (error) {
+        console.error('Error submitting answer:', error);
+        showToast('উত্তর পোস্ট করতে সমস্যা হয়েছে', 'error');
+    } finally {
+        const submitBtn = document.getElementById('submit-answer');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'উত্তর পোস্ট করুন';
+    }
+}
+
+/**
+ * Load related questions
+ */
+async function loadRelatedQuestions(tags) {
+    if (!tags || tags.length === 0) return;
+
+    try {
+        const { data: related, error } = await supabase
+            .from('questions')
+            .select('id, title, slug, views')
+            .contains('tags', tags)
+            .neq('id', currentQuestion.id)
+            .order('views', { ascending: false })
+            .limit(5);
+
+        if (error || !related || related.length === 0) return;
+
+        const relatedList = document.getElementById('related-list');
+        relatedList.innerHTML = '';
+
+        related.forEach(q => {
+            const link = document.createElement('a');
+            link.href = `/question/${q.slug}`;
+            link.className = 'block p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded transition';
+            link.innerHTML = `
+                <div class="text-sm font-medium text-gray-800 dark:text-gray-200">${q.title}</div>
+                <div class="text-xs text-gray-500 mt-1">${formatNumber(q.views || 0)} বার দেখা হয়েছে</div>
+            `;
+            relatedList.appendChild(link);
+        });
+
+        document.getElementById('related-questions').classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Error loading related questions:', error);
+    }
+}
+
+/**
+ * Update SEO meta tags
+ */
+function updateSEO(question) {
+    // Title
+    document.getElementById('page-title').textContent = `${question.title} - physflow`;
+    
+    // Description
+    const description = question.body.substring(0, 150).replace(/[#*`]/g, '') + '...';
+    document.getElementById('page-description').content = description;
+    
+    // OG tags
+    document.getElementById('og-title').content = question.title;
+    document.getElementById('og-description').content = description;
+    
+    const url = window.location.href;
+    document.getElementById('og-url').content = url;
+    document.getElementById('canonical-url').href = url;
+
+    // Schema.org markup
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "QAPage",
+        "mainEntity": {
+            "@type": "Question",
+            "name": question.title,
+            "text": question.body,
+            "answerCount": allAnswers.length,
+            "dateCreated": question.created_at,
+            "author": {
+                "@type": "Person",
+                "name": question.author?.username || "Anonymous"
+            }
+        }
+    };
+
+    if (allAnswers.length > 0) {
+        const acceptedAnswer = allAnswers.find(a => a.is_accepted);
+        if (acceptedAnswer) {
+            schema.mainEntity.acceptedAnswer = {
+                "@type": "Answer",
+                "text": acceptedAnswer.body,
+                "dateCreated": acceptedAnswer.created_at,
+                "upvoteCount": acceptedAnswer.votes || 0,
+                "author": {
+                    "@type": "Person",
+                    "name": acceptedAnswer.author?.username || "Anonymous"
+                }
+            };
+        }
+    }
+
+    document.getElementById('schema-markup').textContent = JSON.stringify(schema);
+}
+
+/**
+ * Render markdown to HTML
+ */
+function renderMarkdown(text) {
+    if (typeof marked !== 'undefined') {
+        marked.setOptions({
+            breaks: true,
+            gfm: true
+        });
+        return marked.parse(text);
+    }
+    
+    // Fallback: simple conversion
+    return text
+        .replace(/\n/g, '<br>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+/**
+ * Format date
  */
 function formatDate(dateString) {
     const date = new Date(dateString);
@@ -65,319 +811,63 @@ function formatDate(dateString) {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
-    
+
     if (diffMins < 1) return 'এইমাত্র';
     if (diffMins < 60) return `${diffMins} মিনিট আগে`;
-    if (diffHours < 24) return `${diffHours} ঘণ্টা আগে`;
+    if (diffHours < 24) return `${diffHours} ঘন্টা আগে`;
     if (diffDays < 7) return `${diffDays} দিন আগে`;
-    
-    return date.toLocaleDateString('bn-BD', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+
+    return date.toLocaleDateString('bn-BD', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
 }
 
 /**
- * Render Markdown with LaTeX support
+ * Format number (Bangla)
  */
-function renderMarkdown(text) {
-    if (!text) return '';
-    marked.setOptions({
-        breaks: true,
-        gfm: true,
-        headerIds: false,
-        mangle: false
-    });
-    return marked.parse(text);
+function formatNumber(num) {
+    return num.toLocaleString('bn-BD');
 }
 
 /**
- * Render LaTeX in element
+ * Show loading state
  */
-function renderLaTeX(element) {
-    if (typeof renderMathInElement !== 'undefined') {
-        renderMathInElement(element, {
-            delimiters: [
-                {left: '$$', right: '$$', display: true},
-                {left: '$', right: '$', display: false}
-            ],
-            throwOnError: false
-        });
-    }
-}
-
-/**
- * Generate slug from title
- */
-function generateSlug(title) {
-    return title
-        .toLowerCase()
-        .replace(/[^\u0980-\u09FF\w\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .substring(0, 100);
-}
-
-/**
- * Update SEO meta tags
- */
-function updateSEO(question) {
-    document.title = `${question.title} - physflow`;
-    const description = question.body.substring(0, 150).replace(/[#*`]/g, '');
-    
-    const metaDesc = document.querySelector('meta[name="description"]');
-    if (metaDesc) metaDesc.content = description;
-    
-    const ogTitle = document.querySelector('meta[property="og:title"]');
-    if (ogTitle) ogTitle.content = `${question.title} - physflow`;
-    
-    const ogUrl = document.querySelector('meta[property="og:url"]');
-    const canonicalUrl = `${window.location.origin}/question/${question.slug || question.id}`;
-    if (ogUrl) ogUrl.content = canonicalUrl;
-    
-    let canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-        canonical = document.createElement('link');
-        canonical.rel = 'canonical';
-        document.head.appendChild(canonical);
-    }
-    canonical.href = canonicalUrl;
-}
-
-/**
- * Update structured data (JSON-LD)
- */
-function updateStructuredData(question, answers) {
-    const structuredData = {
-        "@context": "https://schema.org",
-        "@type": "QAPage",
-        "mainEntity": {
-            "@type": "Question",
-            "name": question.title,
-            "text": question.body,
-            "answerCount": answers.length,
-            "upvoteCount": question.votes || 0,
-            "dateCreated": question.created_at,
-            "author": {
-                "@type": "Person",
-                "name": question.author?.name || "Anonymous"
-            }
-        }
-    };
-    
-    const script = document.getElementById('structured-data');
-    if (script) {
-        script.textContent = JSON.stringify(structuredData, null, 2);
-    }
-}
-
-// =============================================
-// DATA FETCHING
-// =============================================
-
-async function fetchQuestion(params) {
-    try {
-        let query = supabase.from('question').select(`*, author:profiles(id, name, avatar)`);
-        
-        if (params.id) {
-            query = query.eq('id', params.id);
-        } else if (params.slug) {
-            query = query.eq('slug', params.slug);
-        } else {
-            return null;
-        }
-        
-        const { data, error } = await query.single();
-        if (error) throw error;
-        return data;
-    } catch (error) {
-        console.error('Error fetching question:', error);
-        return null;
-    }
-}
-
-async function fetchAnswers(questionId) {
-    try {
-        const { data, error } = await supabase
-            .from('answers')
-            .select(`*, author:profiles(id, name, avatar)`)
-            .eq('question_id', questionId)
-            .order('is_accepted', { ascending: false })
-            .order('votes', { ascending: false });
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        console.error('Error fetching answers:', error);
-        return [];
-    }
-}
-
-async function fetchRelatedQuestions(questionId, tags) {
-    try {
-        const { data, error } = await supabase
-            .from('question')
-            .select('id, title, slug, votes, views')
-            .neq('id', questionId)
-            .limit(5);
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        return [];
-    }
-}
-
-async function incrementViewCount(questionId) {
-    const viewKey = `viewed_${questionId}`;
-    if (sessionStorage.getItem(viewKey)) return;
-    
-    try {
-        const { error } = await supabase.rpc('increment_question_views', { question_id: questionId });
-        if (!error) sessionStorage.setItem(viewKey, 'true');
-    } catch (error) {
-        console.error('Error incrementing views:', error);
-    }
-}
-
-async function fetchUserVotes(questionId) {
-    if (!currentUserId) return;
-    try {
-        const { data: qVote } = await supabase.from('votes').select('vote_type').eq('user_id', currentUserId).eq('question_id', questionId).is('answer_id', null).single();
-        if (qVote) userVotes.question = qVote.vote_type;
-
-        const { data: aVotes } = await supabase.from('votes').select('answer_id, vote_type').eq('user_id', currentUserId).eq('question_id', questionId).not('answer_id', 'is', null);
-        if (aVotes) aVotes.forEach(v => userVotes.answers[v.answer_id] = v.vote_type);
-    } catch (error) {
-        console.error('Error fetching user votes:', error);
-    }
-}
-
-// =============================================
-// RENDERING FUNCTIONS
-// =============================================
-
-function renderQuestion(question) {
-    document.getElementById('question-title').textContent = question.title;
-    document.getElementById('question-date').textContent = formatDate(question.created_at);
-    document.getElementById('question-views').textContent = question.views || 0;
-    document.getElementById('question-author').textContent = question.author?.name || 'Anonymous';
-    
-    const tagsContainer = document.getElementById('question-tags');
-    tagsContainer.innerHTML = '';
-    if (question.tags) {
-        question.tags.forEach(tag => {
-            const tagEl = document.createElement('a');
-            tagEl.href = `/tags.html?tag=${encodeURIComponent(tag)}`;
-            tagEl.className = 'tag';
-            tagEl.textContent = tag;
-            tagsContainer.appendChild(tagEl);
-        });
-    }
-    
-    const bodyEl = document.getElementById('question-body');
-    bodyEl.innerHTML = renderMarkdown(question.body);
-    renderLaTeX(bodyEl);
-    
-    document.getElementById('question-vote-count').textContent = question.votes || 0;
-    if (userVotes.question === 'up') document.querySelector('.vote-btn.upvote').classList.add('active');
-    if (userVotes.question === 'down') document.querySelector('.vote-btn.downvote').classList.add('active');
-}
-
-function renderAnswers(answers) {
-    document.getElementById('answer-count').textContent = answers.length;
-    const answersList = document.getElementById('answers-list');
-    answersList.innerHTML = answers.length === 0 ? '<div class="text-center py-8 text-gray-500">এখনও কোনো উত্তর নেই।</div>' : '';
-    answers.forEach(answer => answersList.appendChild(createAnswerElement(answer)));
-}
-
-function createAnswerElement(answer) {
-    const div = document.createElement('div');
-    div.className = `border-b dark:border-gray-700 pb-6 ${answer.is_accepted ? 'accepted-answer' : ''}`;
-    const isAuthor = currentUserId && currentUserId === currentQuestion.author_id;
-    const userVote = userVotes.answers[answer.id];
-    
-    div.innerHTML = `
-        <div class="flex gap-4">
-            <div class="vote-panel flex-shrink-0">
-                <button class="vote-btn upvote ${userVote === 'up' ? 'active' : ''}" data-type="answer" data-id="${answer.id}" data-vote="up"><i class="fas fa-chevron-up text-2xl"></i></button>
-                <div class="vote-count">${answer.votes || 0}</div>
-                <button class="vote-btn downvote ${userVote === 'down' ? 'active' : ''}" data-type="answer" data-id="${answer.id}" data-vote="down"><i class="fas fa-chevron-down text-2xl"></i></button>
-                ${answer.is_accepted ? '<div class="mt-4 text-green-500"><i class="fas fa-check-circle text-2xl"></i></div>' : isAuthor ? `<button class="vote-btn accept-btn mt-4" data-id="${answer.id}"><i class="far fa-check-circle text-xl"></i></button>` : ''}
-            </div>
-            <div class="flex-1">
-                <div class="answer-body content-body prose dark:prose-invert max-w-none">${renderMarkdown(answer.body)}</div>
-                <div class="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700 text-sm text-gray-500">
-                    <span>${answer.author?.name || 'Anonymous'} • ${formatDate(answer.created_at)}</span>
-                </div>
-            </div>
-        </div>
-    `;
-    renderLaTeX(div.querySelector('.answer-body'));
-    return div;
-}
-
-function renderRelatedQuestions(questions) {
-    const container = document.getElementById('related-questions');
-    container.innerHTML = questions.length === 0 ? '<p>কোনো সম্পর্কিত প্রশ্ন নেই।</p>' : '';
-    questions.forEach(q => {
-        const div = document.createElement('div');
-        div.className = 'border-l-2 border-brand-600 pl-3 py-2';
-        div.innerHTML = `<a href="/question/${q.slug || q.id}" class="text-brand-600 font-medium">${q.title}</a>`;
-        container.appendChild(div);
-    });
-}
-
-// =============================================
-// MAIN LOAD FUNCTION
-// =============================================
-
-async function loadQuestionData() {
-    const params = getQuestionParams();
-    if (!params) { showError(); return; }
-    
+function showLoading() {
     document.getElementById('loading-skeleton').classList.remove('hidden');
-    document.getElementById('question-container').classList.add('hidden');
-    
-    try {
-        const question = await fetchQuestion(params);
-        if (!question) { showError(); return; }
-        
-        currentQuestion = question;
-        const qId = question.id;
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        currentUserId = user?.id || null;
-
-        await fetchUserVotes(qId);
-        const answers = await fetchAnswers(qId);
-        currentAnswers = answers;
-        
-        renderQuestion(question);
-        renderAnswers(currentAnswers);
-        renderRelatedQuestions(await fetchRelatedQuestions(qId, question.tags));
-        
-        updateSEO(question);
-        incrementViewCount(qId);
-        
-        document.getElementById('loading-skeleton').classList.add('hidden');
-        document.getElementById('question-container').classList.remove('hidden');
-    } catch (error) {
-        showError();
-    }
+    document.getElementById('error-state').classList.add('hidden');
+    document.getElementById('question-content').classList.add('hidden');
 }
 
+/**
+ * Hide loading state
+ */
+function hideLoading() {
+    document.getElementById('loading-skeleton').classList.add('hidden');
+    document.getElementById('question-content').classList.remove('hidden');
+}
+
+/**
+ * Show error state
+ */
 function showError() {
     document.getElementById('loading-skeleton').classList.add('hidden');
-    document.getElementById('error-container').classList.remove('hidden');
+    document.getElementById('question-content').classList.add('hidden');
+    document.getElementById('error-state').classList.remove('hidden');
 }
 
-// =============================================
-// INITIALIZATION
-// =============================================
-
-export function initQuestionPage() {
-    loadQuestionData();
-    // এখানে তোমার setupAnswerEditor, setupSorting ইত্যাদি আগের ফাংশনগুলো কল করো
+/**
+ * Show toast notification
+ */
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
 }
-
-initQuestionPage();
