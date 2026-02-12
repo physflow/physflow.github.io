@@ -37,11 +37,14 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. কোশ্চেন কার্ড তৈরির HTML
+// ৫. কোশ্চেন কার্ড তৈরির HTML (লিংক ফরম্যাট পরিবর্তন করা হয়েছে)
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
+    
+    // রিডাইরেক্ট ফরম্যাট: /question/id/slug
+    const questionLink = `/question/${question.id}/${encodeURIComponent(question.slug)}`;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent">
@@ -68,7 +71,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
-                    <a href="/question/${question.slug}" style="color: #0056b3;" class="hover:underline">
+                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
@@ -100,7 +103,6 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
-    // ৪টি Skeleton কার্ডের স্ট্রাকচার
     const skeletonHTML = `
         <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
             <div class="flex justify-between items-center mb-2">
@@ -121,7 +123,6 @@ const loadLatestQuestion = async () => {
         </div>
     `;
 
-    // ডাটা আসার আগে ৪ বার রিপিট করে দেখানো হচ্ছে
     questionList.innerHTML = skeletonHTML.repeat(4);
 
     try {
