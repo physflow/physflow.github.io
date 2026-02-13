@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags (dynamically updated by JS) -->
+    <title>প্রশ্ন লোড হচ্ছে... - PhysFlow</title>
+    <meta name="description" content="PhysFlow - বাংলা ভাষায় পদার্থবিজ্ঞানের প্রশ্নোত্তর ও গবেষণার প্লাটফর্ম">
+
+    <!-- Open Graph (dynamically updated) -->
+    <meta property="og:title" content="PhysFlow">
+    <meta property="og:description" content="">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="">
+
+    <!-- Canonical (dynamically updated) -->
+    <link id="canonical-link" rel="canonical" href="">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Quill.js -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+
+    <!-- MathJax Configuration -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                packages: { '[+]': ['ams'] }
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                typeset: false // We'll manually trigger typesetting
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+
+    <!-- DOMPurify for XSS protection -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#e1f0ff',
+                            600: '#0056b3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+        /* Sidebar styles (matching homepage) */
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.2s ease;
+            border-right: 4px solid transparent;
+        }
+        .sidebar-active {
+            background-color: #e1f0ff;
+            border-right-color: #0056b3;
+            color: #0056b3 !important;
+            font-weight: 500;
+        }
+        .dark .sidebar-active {
+            background-color: #2d2d2d;
+            color: #0056b3 !important;
+            border-right-color: #0056b3;
+        }
+
+        /* Question body content styling */
+        .question-body img,
+        .answer-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 0.5rem 0;
+        }
+        .question-body pre,
+        .answer-body pre {
+            background: #f6f8fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            font-size: 0.85em;
+            line-height: 1.6;
+        }
+        .dark .question-body pre,
+        .dark .answer-body pre {
+            background: #161b22;
+            border-color: #30363d;
+            color: #e6edf3;
+        }
+        .question-body p,
+        .answer-body p {
+            margin-bottom: 0.9rem;
+            line-height: 1.75;
+        }
+        .question-body code,
+        .answer-body code {
+            background: #f0f0f0;
+            padding: 0.15em 0.4em;
+            border-radius: 3px;
+            font-size: 0.875em;
+        }
+        .dark .question-body code,
+        .dark .answer-body code {
+            background: #2d2d2d;
+            color: #e6edf3;
+        }
+        .question-body blockquote,
+        .answer-body blockquote {
+            border-left: 4px solid #0056b3;
+            margin: 1rem 0;
+            padding: 0.5rem 1rem;
+            color: #555;
+            background: #f9f9f9;
+        }
+        .dark .question-body blockquote,
+        .dark .answer-body blockquote {
+            background: #2a2a2a;
+            color: #bbb;
+        }
+
+        /* Vote button styles */
+        .vote-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: transparent;
+            color: #6b7280;
+            font-size: 18px;
+        }
+        .vote-btn:hover { border-color: #0056b3; color: #0056b3; background: #e1f0ff; }
+        .vote-btn.active-up { border-color: #16a34a; color: #16a34a; background: #dcfce7; }
+        .vote-btn.active-down { border-color: #dc2626; color: #dc2626; background: #fee2e2; }
+        .dark .vote-btn { border-color: #4b5563; color: #9ca3af; }
+        .dark .vote-btn:hover { border-color: #0056b3; color: #60a5fa; background: #1e3a5f; }
+
+        /* Accepted answer highlight */
+        .answer-accepted {
+            border-left: 4px solid #16a34a !important;
+        }
+        .dark .answer-accepted {
+            border-left-color: #22c55e !important;
+        }
+
+        /* Quill editor custom styles */
+        #answer-editor .ql-container {
+            min-height: 200px;
+            font-size: 14px;
+        }
+        .dark #answer-editor .ql-container {
+            background: #1e1e1e;
+            color: #e5e5e5;
+            border-color: #444;
+        }
+        .dark #answer-editor .ql-toolbar {
+            background: #2d2d2d;
+            border-color: #444;
+        }
+
+        /* Tag styles */
+        .tag-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            background: #e1f0ff;
+            color: #0056b3;
+            border: 1px solid #b3d4ff;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .tag-badge:hover { background: #c8e2ff; }
+        .dark .tag-badge { background: #1a3050; color: #60a5fa; border-color: #1e4070; }
+
+        /* Loading skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+        .dark .skeleton {
+            background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+            background-size: 200% 100%;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* Avatar fallback (when no image) */
+        .author-avatar {
+            background: linear-gradient(135deg, #e1f0ff, #b3d4ff);
+            color: #0056b3;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Inline reply box */
+        .reply-box {
+            border-left: 3px solid #0056b3;
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8fafd;
+            border-radius: 0 6px 6px 0;
+        }
+        .dark .reply-box {
+            background: #1a2535;
+            border-left-color: #2563eb;
+        }
+        .reply-box .ql-container { min-height: 100px; font-size: 13px; }
+        .dark .reply-box .ql-container { background: #161616; color: #e5e5e5; border-color: #374151; }
+        .dark .reply-box .ql-toolbar { background: #202020; border-color: #374151; }
+
+        /* FAB button */
+        #fab-answer-btn {
+            box-shadow: 0 4px 20px rgba(0, 86, 179, 0.45);
+        }
+        #fab-answer-btn:hover {
+            box-shadow: 0 6px 24px rgba(0, 86, 179, 0.6);
+            transform: scale(1.06);
+        }
+
+        /* Modal slide animation */
+        #answer-modal {
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+        }
+        #answer-modal.modal-open {
+            transform: translateY(0) !important;
+            opacity: 1 !important;
+        }
+        @media (max-width: 767px) {
+            #answer-modal {
+                transform: translateY(100%);
+                border-radius: 16px 16px 0 0;
+            }
+        }
+
+        /* Quill editor inside modal */
+        #answer-modal #answer-editor .ql-container {
+            min-height: 180px;
+            font-size: 14px;
+        }
+        .dark #answer-modal #answer-editor .ql-container {
+            background: #161616;
+            color: #e5e5e5;
+            border-color: #444;
+        }
+        .dark #answer-modal #answer-editor .ql-toolbar {
+            background: #252525;
+            border-color: #444;
+        }
+
+        /* Share/bookmark button */
+        .action-btn {
+            font-size: 12px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: all 0.15s;
+            border: none;
+            background: transparent;
+        }
+        .action-btn:hover { background: #f3f4f6; color: #374151; }
+        .dark .action-btn:hover { background: #374151; color: #d1d5db; }
+    </style>
+</head>
+<body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
+
+<!-- ===================== HEADER (matching homepage) ===================== -->
+<header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-14 z-[100] border-b dark:border-gray-700">
+    <div class="container mx-auto px-4 h-full flex items-center gap-4">
+        <div class="flex items-center space-x-4 shrink-0">
+            <button id="hamburger-btn" class="md:hidden p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <i class="fas fa-bars"></i>
+            </button>
+            <a href="index.html" class="text-2xl font-extrabold tracking-tighter hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors duration-200">
+                phys<span class="font-light text-gray-500">flow</span>
+            </a>
+        </div>
+
+        <form action="questions.html" method="GET" class="hidden md:flex flex-1 max-w-2xl relative group">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-600"></i>
+            <input type="text" name="q" placeholder="খুঁজুন..." class="w-full bg-white dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded py-1.5 pl-10 pr-4 text-sm focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all">
+        </form>
+
+        <div class="flex items-center space-x-2 ml-auto shrink-0">
+            <button id="mobile-search-btn" class="md:hidden p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition" title="খুঁজুন">
+                <i class="fas fa-search text-xl"></i>
+            </button>
+            <a href="ask.html" class="text-brand-600 hover:text-brand-500 transition-all flex items-center p-2 active:scale-90" title="প্রশ্ন করুন">
+                <i class="fa fa-question-circle text-3xl"></i>
+            </a>
+            <div id="auth-section">
+                <button id="login-btn" class="bg-[#e1f0ff] text-[#0056b3] px-4 py-1.5 rounded text-sm font-medium dark:bg-blue-900/30 hover:bg-[#d0e7ff] dark:hover:bg-blue-900/50 transition">
+                    লগ ইন
+                </button>
+                <div id="user-menu" class="hidden flex items-center space-x-3">
+                    <img id="user-avatar" class="w-9 h-9 rounded-lg border-2 border-gray-300 dark:border-gray-600 object-cover shadow-sm hover:opacity-80 transition-opacity" src="" alt="Profile">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile search bar -->
+    <div id="mobile-search-bar" class="absolute top-14 left-0 w-full bg-white dark:bg-[#1a1a1b] border-b dark:border-gray-700 p-2 hidden shadow-lg">
+        <form action="questions.html" method="GET" class="relative">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" name="q" placeholder="এখানে খুঁজুন..." class="w-full bg-gray-50 dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
+        </form>
+    </div>
+</header>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden"></div>
+
+<div class="container mx-auto flex flex-1 pt-14">
+
+    <!-- ===================== SIDEBAR (matching homepage) ===================== -->
+    <aside id="mobile-sidebar"
+        class="fixed md:sticky top-14 left-0 w-60 h-[calc(100vh-3.5rem)]
+               bg-white dark:bg-[#1a1a1b]
+               border-r border-gray-200 dark:border-gray-700
+               z-[150] md:z-40
+               -translate-x-full md:translate-x-0
+               overflow-y-auto transition-transform duration-300">
+
+        <!-- Dark mode toggle -->
+        <div class="px-4 py-3 border-b dark:border-gray-700 flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-200">ডার্ক মোড</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="theme-toggle" class="sr-only peer">
+                <div class="w-9 h-5 bg-gray-200 rounded-full peer dark:bg-gray-700
+                            peer-checked:after:translate-x-full
+                            after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                            after:bg-white after:rounded-full after:h-4 after:w-4
+                            after:transition-all peer-checked:bg-blue-500"></div>
+            </label>
+        </div>
+
+        <!-- Nav links -->
+        <nav class="flex flex-col py-2 text-[14px]">
+            <a href="index.html" class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                প্রধান পাতা
+            </a>
+            <a href="questions.html" class="px-4 py-2 rounded-md mx-2 text-blue-600 bg-blue-50 dark:bg-gray-800">
+                সকল প্রশ্ন
+            </a>
+            <a href="categories.html" class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                বিভাগগুলো
+            </a>
+            <a href="tags.html" class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                ট্যাগ সমূহ
+            </a>
+            <a href="blogs.html" class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+                ব্লগ পোস্ট
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <main class="flex-1 p-4 md:p-6 min-h-[calc(100vh-3.5rem)] max-w-4xl">
+
+        <!-- Loading skeleton -->
+        <div id="loading-skeleton" class="space-y-4">
+            <div class="skeleton h-8 w-3/4"></div>
+            <div class="skeleton h-4 w-1/2"></div>
+            <div class="skeleton h-40 w-full mt-4"></div>
+        </div>
+
+        <!-- 404 / Not Found UI (hidden by default) -->
+        <div id="not-found-ui" class="hidden text-center py-20">
+            <div class="text-6xl text-gray-300 dark:text-gray-600 mb-4">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">প্রশ্নটি পাওয়া যায়নি</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">আপনি যে প্রশ্নটি খুঁজছেন সেটি মুছে ফেলা হয়েছে বা আইডি ভুল।</p>
+            <a href="index.html" class="inline-block bg-[#0056b3] text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                প্রধান পাতায় ফিরুন
+            </a>
+        </div>
+
+        <!-- Question Content (hidden until loaded) -->
+        <div id="question-content" class="hidden">
+
+            <!-- ---- Question Header ---- -->
+            <div class="border-b border-gray-200 dark:border-gray-700 pb-4 mb-4">
+                <h1 id="question-title" class="text-xl md:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-tight mb-4"></h1>
+
+                <!-- Author card -->
+                <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+                    <div class="flex items-center gap-2.5">
+                        <!-- Avatar -->
+                        <a id="question-author-link" href="#" class="shrink-0">
+                            <img id="question-author-avatar"
+                                src=""
+                                alt="প্রশ্নকারী"
+                                class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
+                        </a>
+                        <div class="flex flex-col leading-tight">
+                            <a id="question-author-name" href="#"
+                               class="text-[13px] font-medium text-[#0056b3] hover:underline"></a>
+                            <span id="question-timeago"
+                                  class="text-[11px] text-gray-400 dark:text-gray-500"></span>
+                        </div>
+                    </div>
+                    <!-- Views -->
+                    <span id="question-views"
+                          class="text-[12px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+                        <i class="far fa-eye"></i>
+                    </span>
+                </div>
+
+                <!-- Tags -->
+                <div id="question-tags" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <!-- ---- Question Body with Vote Panel ---- -->
+            <div class="flex gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+
+                <!-- Left: Vertical Vote Panel -->
+                <div class="flex flex-col items-center gap-1.5 pt-1 shrink-0">
+                    <button id="q-vote-up" class="vote-btn" title="উপভোট">
+                        <i class="fas fa-chevron-up text-sm"></i>
+                    </button>
+                    <span id="q-vote-count" class="text-lg font-semibold text-gray-700 dark:text-gray-300 min-w-[28px] text-center">0</span>
+                    <button id="q-vote-down" class="vote-btn" title="ডাউনভোট">
+                        <i class="fas fa-chevron-down text-sm"></i>
+                    </button>
+
+                    <!-- Bookmark -->
+                    <button id="q-bookmark" class="mt-2 vote-btn" title="বুকমার্ক">
+                        <i class="far fa-bookmark text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Right: Question Body -->
+                <div class="flex-1 min-w-0">
+                    <div id="question-body" class="question-body prose prose-sm max-w-none text-gray-800 dark:text-gray-200 leading-relaxed"></div>
+
+                    <!-- Action buttons below body -->
+                    <div class="flex flex-wrap items-center gap-2 mt-4">
+                        <button id="q-share-btn" class="action-btn flex items-center gap-1">
+                            <i class="fas fa-share-alt"></i> শেয়ার
+                        </button>
+                        <button id="q-edit-btn" class="action-btn hidden flex items-center gap-1">
+                            <i class="fas fa-pen"></i> সম্পাদনা
+                        </button>
+                        <!-- Share tooltip -->
+                        <span id="share-copied" class="hidden text-xs text-green-600 dark:text-green-400">লিংক কপি হয়েছে!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---- Answer Section Header ---- -->
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="answer-count-heading" class="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    <span id="answer-count-num">0</span> টি উত্তর
+                </h2>
+
+                <!-- Sort dropdown -->
+                <div class="flex items-center gap-2 text-sm">
+                    <label class="text-gray-500 dark:text-gray-400 text-xs">সাজান:</label>
+                    <select id="answer-sort" class="bg-white dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-[#0056b3]">
+                        <option value="votes">ভোট (সেরা)</option>
+                        <option value="newest">নতুন</option>
+                        <option value="oldest">পুরনো</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- ---- Answer List ---- -->
+            <div id="answer-list" class="space-y-6 mb-6"></div>
+
+            <!-- Load More -->
+            <div id="load-more-container" class="text-center mb-8 hidden">
+                <button id="load-more-btn" class="px-6 py-2 border border-[#0056b3] text-[#0056b3] text-sm rounded hover:bg-[#e1f0ff] dark:hover:bg-blue-900/20 transition">
+                    আরও উত্তর লোড করুন
+                </button>
+            </div>
+
+            <!-- ---- Related Questions ---- -->
+            <div id="related-questions-section" class="mb-8 hidden">
+                <h3 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3 border-b dark:border-gray-700 pb-2">
+                    সম্পর্কিত প্রশ্নসমূহ
+                </h3>
+                <ul id="related-questions-list" class="space-y-2 text-sm"></ul>
+            </div>
+
+        </div><!-- end #question-content -->
+
+    </main>
+
+</div><!-- end container -->
+
+<!-- ===================== FAB — উত্তর লিখুন ===================== -->
+<button id="fab-answer-btn"
+    title="উত্তর লিখুন"
+    class="hidden fixed bottom-6 right-6 z-[200]
+           w-14 h-14 rounded-full
+           bg-[#0056b3] hover:bg-[#004494]
+           text-white shadow-lg
+           flex items-center justify-center
+           transition-all duration-200 active:scale-95
+           focus:outline-none focus:ring-4 focus:ring-[#0056b3]/40">
+    <i class="fas fa-plus text-xl"></i>
+</button>
+
+<!-- ===================== ANSWER MODAL ===================== -->
+<div id="answer-modal-overlay"
+    class="hidden fixed inset-0 z-[210] bg-black/50 backdrop-blur-[2px] flex items-end md:items-center justify-center p-0 md:p-4">
+
+    <div id="answer-modal"
+        class="w-full md:max-w-3xl md:rounded-xl
+               bg-white dark:bg-[#1e1e1e]
+               border-t md:border border-gray-200 dark:border-gray-700
+               shadow-2xl
+               flex flex-col
+               max-h-[92vh] md:max-h-[88vh]
+               translate-y-full md:translate-y-0 md:opacity-0
+               transition-all duration-300 ease-out">
+
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+            <div>
+                <h3 class="text-[15px] font-semibold text-gray-800 dark:text-gray-200">উত্তর লিখুন</h3>
+                <p id="modal-question-title-preview" class="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-1 max-w-sm"></p>
+            </div>
+            <button id="answer-modal-close"
+                class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-200 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Modal Body (scrollable) -->
+        <div class="flex-1 overflow-y-auto px-5 py-4">
+
+            <!-- Login required notice -->
+            <div id="login-required-notice"
+                class="hidden p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300 text-center">
+                <i class="fas fa-info-circle mr-1"></i>
+                উত্তর দিতে <a href="login.html" class="font-medium underline">লগ ইন করুন</a>।
+            </div>
+
+            <!-- Quill Editor -->
+            <div id="answer-editor"
+                class="rounded border border-gray-300 dark:border-gray-600 overflow-hidden mb-3">
+                <!-- Quill injects here -->
+            </div>
+
+            <!-- Preview Panel -->
+            <div id="answer-preview"
+                class="hidden p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-[#2a2a2a] answer-body prose prose-sm max-w-none text-gray-800 dark:text-gray-200 mb-3">
+            </div>
+
+            <!-- Validation message -->
+            <span id="answer-validation-msg" class="hidden text-red-500 text-xs">
+                উত্তরটি কমপক্ষে ৩০ অক্ষরের হতে হবে।
+            </span>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="shrink-0 px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3 bg-white dark:bg-[#1e1e1e] md:rounded-b-xl">
+            <button id="preview-toggle-btn"
+                class="border border-gray-300 dark:border-gray-600 px-4 py-1.5 rounded text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-1.5">
+                <i class="fas fa-eye text-xs"></i> প্রিভিউ
+            </button>
+
+            <div class="flex items-center gap-2">
+                <button id="answer-modal-cancel"
+                    class="px-4 py-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition rounded hover:bg-gray-100 dark:hover:bg-gray-800">
+                    বাতিল
+                </button>
+                <button id="submit-answer-btn"
+                    class="bg-[#0056b3] hover:bg-[#004494] text-white px-5 py-1.5 rounded text-sm font-medium transition
+                           disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                    <span id="submit-btn-text">জমা দিন</span>
+                    <span id="submit-spinner" class="hidden">
+                        <i class="fas fa-spinner fa-spin text-xs"></i>
+                    </span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ===================== FOOTER (matching homepage) ===================== -->
+<footer class="bg-[#232629] text-gray-400 py-6 mt-auto border-t dark:border-gray-800">
+    <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
+        <div class="flex space-x-6 text-xs uppercase font-medium">
+            <a href="#" class="hover:text-gray-100 transition">সম্পর্কে</a>
+            <a href="#" class="hover:text-gray-100 transition">যোগাযোগ</a>
+            <a href="#" class="hover:text-gray-100 transition">শর্তাবলী</a>
+            <a href="#" class="hover:text-gray-100 transition">গোপনীয়তা নীতি</a>
+        </div>
+        <div class="text-[11px]">
+            physflow – &copy; ২০২৬ সর্বস্বত্ব সংরক্ষিত
+        </div>
+    </div>
+</footer>
+
+<!-- ===================== SCRIPTS ===================== -->
+<script type="module">
+    import { setupLayout, initTheme, setupAuth } from './javascript/layout.js';
+    import { initQuestionPage } from './javascript/question.js';
+
+    initTheme();
+    setupLayout();
+    setupAuth();
+    initQuestionPage();
+</script>
+
+</body>
+</html>
