@@ -50,7 +50,7 @@ const createQuestionCard = (question) => {
                         <span class="text-[11px] text-gray-500">টি ভোট</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answer_count || 0)}</span>
                         <span class="text-[11px] text-gray-500">টি উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
