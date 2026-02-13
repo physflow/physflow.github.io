@@ -36,8 +36,8 @@ const truncateText = (text, maxLength = 130) => {
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
+    const timeAgo = formatTimeAgo(question.created_at);
     
-    // ✅ GUARANTEED URL - Query Parameter
     const questionLink = `/question.html?id=${question.id}`;
     
     return `
@@ -53,23 +53,35 @@ const createQuestionCard = (question) => {
                     ${excerpt}
                 </p>
                 
-                <div class="flex flex-wrap gap-1.5">
-                    ${question.category ? `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
-                            ${question.category}
-                        </span>
-                    ` : ''}
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex flex-wrap gap-1.5 items-center">
+                        ${question.category ? `
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-50 dark:bg-gray-800 text-[#0056b3] border border-blue-100 dark:border-gray-700 rounded">
+                                ${question.category}
+                            </span>
+                        ` : ''}
 
-                    ${tag.map(t => `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
-                            #${t}
+                        ${tag.map(t => `
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-500 border border-gray-200 dark:border-gray-700 rounded">
+                                #${t}
+                            </span>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex items-center gap-3 shrink-0">
+                        <span class="text-[11px] font-medium text-green-600 bg-green-50 px-1.5 py-0.5 rounded border border-green-100">
+                            ${toBanglaNumber(question.answer_count || 0)} উত্তর
                         </span>
-                    `).join('')}
+                        <time datetime="${question.created_at}" class="text-[11px] text-gray-400 whitespace-nowrap">
+                            ${timeAgo}
+                        </time>
+                    </div>
                 </div>
             </div>
         </article>
     `;
 };
+
 
 
 
