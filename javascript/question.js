@@ -115,35 +115,39 @@ function renderQuestion(q) {
     // Title
     document.getElementById('question-title').textContent = q.title;
 
-    // Date
-    document.getElementById('question-date').innerHTML =
-        `<i class="far fa-clock"></i> ${formatDate(q.created_at)}`;
+    // Meta (Author image, Name and Date)
+    const metaContainer = document.getElementById('question-meta');
+    metaContainer.innerHTML = `
+        <div class="flex items-center gap-2 mb-4">
+            <img id="q-author-img" src="default-avatar.png" class="w-6 h-6 rounded-full object-cover border border-gray-200" alt="Author">
+            <span id="question-author" class="text-sm font-medium text-blue-600">লোড হচ্ছে...</span>
+            <span class="text-gray-400 text-sm">•</span>
+            <span class="text-sm text-gray-500">${formatDate(q.created_at)}</span>
+        </div>
+    `;
 
     // Views
     document.getElementById('question-views').innerHTML =
-        `<i class="far fa-eye"></i> ${formatNumber(q.views ?? 0)} বার দেখা হয়েছে`;
+        `<i class="far fa-eye"></i> ${formatNumber(q.views ?? 0)} বার দেখেছে`;
 
     // Vote count
     document.getElementById('q-vote-count').textContent = q.votes ?? 0;
 
-    // Body (sanitized HTML from Quill)
+    // Body
     const bodyEl = document.getElementById('question-body');
     bodyEl.innerHTML = sanitizeHTML(q.body ?? '');
-
-    // Trigger MathJax typesetting on the body
     typesetMath(bodyEl);
 
     // Tags
-    renderTags(q.tags ?? []);
+    renderTag(q.tag ?? []);
 
-    // Edit button: show only for question author
     if (state.currentUserId && state.currentUserId === q.author_id) {
         document.getElementById('q-edit-btn').classList.remove('hidden');
     }
 
-    // Vote button events
     bindQuestionVotes(q);
 }
+
 
 function renderTags(tags) {
     const container = document.getElementById('question-tags');
