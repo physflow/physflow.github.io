@@ -38,8 +38,8 @@ const createQuestionCard = (question) => {
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
     
-    // 🎯 সহজ URL - শুধু ID
-    const questionLink = `/question/${question.id}`;
+    // ✅ GUARANTEED URL - Query Parameter
+    const questionLink = `/question.html?id=${question.id}`;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
