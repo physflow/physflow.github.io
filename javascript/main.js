@@ -33,18 +33,38 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
+কোশ্চেন কার্ড তৈরির HTML
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
-    
-    // ✅ GUARANTEED URL - Query Parameter
-    const questionLink = `/question.html?id=${question.id}`;
+    const timeAgo = formatTimeAgo(question.created_at);
     
     return `
-        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent">
+            <div class="flex items-center justify-between mb-0.5">
+                <div class="flex gap-3">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-[11px] text-gray-500">ভোট</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answers_count || 0)}</span>
+                        <span class="text-[11px] text-gray-500">উত্তর</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-[11px] text-gray-500">দেখেছে</span>
+                    </div>
+                </div>
+                
+                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
+                    ${timeAgo}
+                </time>
+            </div>
+
             <div class="min-w-0">
                 <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
-                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
+                    <a href="/question/${question.slug}" style="color: #0056b3;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
