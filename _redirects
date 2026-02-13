@@ -1,2 +1,0 @@
-# Simple redirects for ID-only URLs
-/question/*  /question.html  200
