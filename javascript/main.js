@@ -43,27 +43,6 @@ const createQuestionCard = (question) => {
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
-            <div class="flex items-center justify-between mb-0.5">
-                <div class="flex gap-3">
-                    <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-[11px] text-gray-500">টি ভোট</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answer_count || 0)}</span>
-                        <span class="text-[11px] text-gray-500">টি উত্তর</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[11px] text-gray-500">বার দেখেছে</span>
-                    </div>
-                </div>
-                
-                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
-                    ${timeAgo}
-                </time>
-            </div>
-
             <div class="min-w-0">
                 <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
                     <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
@@ -75,23 +54,30 @@ const createQuestionCard = (question) => {
                     ${excerpt}
                 </p>
                 
-                <div class="flex flex-wrap gap-1.5">
-                    ${question.category ? `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
-                            ${question.category}
-                        </span>
-                    ` : ''}
+                <div class="flex items-center justify-between gap-1.5">
+                    <div class="flex flex-wrap gap-1.5">
+                        ${question.category ? `
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
+                                ${question.category}
+                            </span>
+                        ` : ''}
 
-                    ${tag.map(t => `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
-                            #${t}
-                        </span>
-                    `).join('')}
+                        ${tag.map(t => `
+                            <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
+                                #${t}
+                            </span>
+                        `).join('')}
+                    </div>
+
+                    <time datetime="${question.created_at}" class="text-[11px] text-gray-400 whitespace-nowrap">
+                        ${timeAgo}
+                    </time>
                 </div>
             </div>
         </article>
     `;
 };
+
 
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
