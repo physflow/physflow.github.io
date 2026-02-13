@@ -47,15 +47,15 @@ const createQuestionCard = (question) => {
                 <div class="flex gap-3">
                     <div class="flex items-center gap-1">
                         <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-[11px] text-gray-500">ভোট</span>
+                        <span class="text-[11px] text-gray-500">টি ভোট</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answers_count || 0)}</span>
-                        <span class="text-[11px] text-gray-500">উত্তর</span>
+                        <span class="text-[11px] text-gray-500">টি উত্তর</span>
                     </div>
                     <div class="flex items-center gap-1">
                         <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[11px] text-gray-500">দেখেছে</span>
+                        <span class="text-[11px] text-gray-500">বার দেখেছে</span>
                     </div>
                 </div>
                 
