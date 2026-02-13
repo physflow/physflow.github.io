@@ -560,7 +560,7 @@ function initQuillEditor() {
 
     state.quillEditor = new Quill('#answer-editor', {
         theme: 'snow',
-        placeholder: 'আপনার উত্তর এখানে লিখুন… (LaTeX: $E=mc^2$ অথবা $$\\frac{d^2x}{dt^2}$$)',
+        placeholder: 'আপনার উত্তর লিখুন…',
         modules: {
             toolbar: [
                 ['bold', 'italic', 'underline', 'strike'],
@@ -579,21 +579,16 @@ function initQuillEditor() {
 function applyQuillDarkMode() {
     const qlContainer = document.querySelector('#answer-editor .ql-container');
     const qlToolbar   = document.querySelector('#answer-editor .ql-toolbar');
-    
     if (qlContainer) {
         qlContainer.style.background  = '#161616';
         qlContainer.style.color       = '#e5e5e5';
         qlContainer.style.borderColor = '#444';
-        // এখানে বসাও:
-        qlContainer.style.minHeight   = '250px'; 
     }
-    
     if (qlToolbar) {
         qlToolbar.style.background  = '#252525';
         qlToolbar.style.borderColor = '#444';
     }
 }
-
 
 // ─────────────────────────────────────────────
 //  SUBMIT ANSWER
