@@ -1,3 +1,17 @@
+
+<script>
+    // URL protect করুন
+    const originalURL = window.location.href;
+    console.log('Original URL:', originalURL);
+    
+    // Error catch করুন
+    window.addEventListener('error', (e) => {
+        console.error('Page Error:', e.message);
+        alert('Error: ' + e.message);
+    });
+</script>
+
+
 <!DOCTYPE html>
 <html lang="bn">
 <head> 
