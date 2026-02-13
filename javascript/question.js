@@ -1,44 +1,28 @@
-// javascript/question.js - Simplified version with ID-only URLs
+// javascript/question.js - Query Parameter Version (GUARANTEED!)
 
 import { supabase } from './supabase-config.js';
 
 const CONFIG = {
     ANSWERS_PER_PAGE: 5,
-    MIN_ANSWER_LENGTH: 50,
-    SESSION_KEY: 'question_views',
-    SITE_URL: 'https://physflow.pages.dev'
+    SESSION_KEY: 'question_views'
 };
 
 let state = {
     questionId: null,
     question: null,
     answers: [],
-    currentSort: 'votes',
     answersLoaded: 0,
-    totalAnswers: 0,
-    currentUser: null
+    totalAnswers: 0
 };
 
 // ============================================
-// URL PARSING - SIMPLE VERSION (ID only)
+// URL PARSING - Query Parameter (SIMPLE!)
 // ============================================
 
-/**
- * Extract question ID from URL
- * Supports: /question/ID or /question/ID/slug (slug ignored)
- */
-function parseURLParams() {
-    // Check pathname
-    const path = window.location.pathname;
-    
-    // Match: /question/ID or /question/ID/anything
-    const match = path.match(/\/question\/([^\/]+)/);
-    
-    if (match) {
-        return { id: match[1] }; // ID can be number or UUID string
-    }
-    
-    return { id: null };
+function getQuestionId() {
+    // Get ?id=xyz from URL
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
 }
 
 // ============================================
@@ -67,27 +51,13 @@ async function fetchQuestion(questionId) {
     }
 }
 
-async function fetchAnswers(questionId, sort = 'votes', offset = 0, limit = CONFIG.ANSWERS_PER_PAGE) {
+async function fetchAnswers(questionId) {
     try {
-        let query = supabase
+        const { data, error, count } = await supabase
             .from('answer')
             .select('*', { count: 'exact' })
             .eq('question_id', questionId)
-            .range(offset, offset + limit - 1);
-        
-        if (sort === 'votes') {
-            query = query.order('is_accepted', { ascending: false })
-                        .order('votes', { ascending: false })
-                        .order('created_at', { ascending: true });
-        } else if (sort === 'newest') {
-            query = query.order('is_accepted', { ascending: false })
-                        .order('created_at', { ascending: false });
-        } else if (sort === 'oldest') {
-            query = query.order('is_accepted', { ascending: false })
-                        .order('created_at', { ascending: true });
-        }
-        
-        const { data, error, count } = await query;
+            .order('created_at', { ascending: false });
         
         if (error) throw error;
         
@@ -95,22 +65,6 @@ async function fetchAnswers(questionId, sort = 'votes', offset = 0, limit = CONF
     } catch (error) {
         console.error('Error fetching answers:', error);
         return { answers: [], total: 0 };
-    }
-}
-
-async function fetchRelatedQuestions(questionId, tag) {
-    try {
-        let { data, error } = await supabase
-            .from('question')
-            .select('id, title, slug, votes, answers_count')
-            .neq('id', questionId)
-            .limit(5);
-        
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        console.error('Error fetching related:', error);
-        return [];
     }
 }
 
@@ -123,14 +77,17 @@ async function incrementViewCount(questionId) {
     if (viewed.includes(questionId)) return;
     
     try {
+        const currentViews = state.question.views || 0;
         const { error } = await supabase
             .from('question')
-            .update({ views: state.question.views + 1 })
+            .update({ views: currentViews + 1 })
             .eq('id', questionId);
         
         if (!error) {
             viewed.push(questionId);
             sessionStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(viewed));
+            state.question.views = currentViews + 1;
+            document.getElementById('question-views').textContent = currentViews + 1;
         }
     } catch (error) {
         console.error('View increment error:', error);
@@ -141,18 +98,26 @@ async function incrementViewCount(questionId) {
 // RENDERING
 // ============================================
 
-function renderMarkdown(markdown) {
+function renderMarkdown(text) {
+    if (!text) return '';
+    
+    // Simple markdown rendering
     if (typeof marked !== 'undefined') {
-        return marked.parse(markdown);
+        return marked.parse(text);
     }
-    return markdown.replace(/\n/g, '<br>');
+    
+    // Fallback: basic formatting
+    return text
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
 }
 
 function renderQuestion() {
     document.getElementById('question-title').textContent = state.question.title;
     document.getElementById('question-date').textContent = formatDate(state.question.created_at);
     document.getElementById('question-views').textContent = state.question.views || 0;
-    document.getElementById('question-author').textContent = 'Anonymous';
+    document.getElementById('question-author').textContent = state.question.author_name || 'Anonymous';
     document.getElementById('question-votes').textContent = state.question.votes || 0;
     
     // Tags
@@ -181,15 +146,21 @@ function renderAnswers() {
     
     const visibleAnswers = state.answers.slice(0, state.answersLoaded);
     
+    if (visibleAnswers.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 dark:text-gray-400">এখনও কোনো উত্তর নেই</p>';
+        return;
+    }
+    
     visibleAnswers.forEach(answer => {
         const answerEl = document.createElement('div');
-        answerEl.className = 'pb-6 border-b dark:border-gray-700';
+        answerEl.className = 'pb-6 border-b dark:border-gray-700 mb-6';
         answerEl.innerHTML = `
             <div class="markdown-content prose dark:prose-invert max-w-none mb-4">
                 ${renderMarkdown(answer.body)}
             </div>
             <div class="text-sm text-gray-600 dark:text-gray-400">
-                <span>${formatDate(answer.created_at)}</span>
+                <span>উত্তর দেওয়া হয়েছে ${formatDate(answer.created_at)}</span>
+                ${answer.votes ? ` • ${answer.votes} ভোট` : ''}
             </div>
         `;
         container.appendChild(answerEl);
@@ -203,23 +174,9 @@ function renderAnswers() {
     }
 }
 
-function renderRelatedQuestions(questions) {
-    const container = document.getElementById('related-questions');
-    
-    if (questions.length === 0) {
-        container.innerHTML = '<p class="text-gray-500">কোন সম্পর্কিত প্রশ্ন নেই</p>';
-        return;
-    }
-    
-    container.innerHTML = questions.map(q => `
-        <a href="/question/${q.id}" class="block p-3 rounded-lg border dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-            <h4 class="font-medium text-gray-900 dark:text-gray-100">${q.title}</h4>
-        </a>
-    `).join('');
-}
-
 function updateAnswersCount() {
-    const count = state.totalAnswers;
+    const banglaNumbers = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const count = state.totalAnswers.toString().split('').map(d => banglaNumbers[parseInt(d)] || d).join('');
     document.getElementById('answers-count').textContent = `${count}টি উত্তর`;
 }
 
@@ -241,7 +198,11 @@ function formatDate(dateString) {
     if (diffHours < 24) return `${diffHours} ঘন্টা আগে`;
     if (diffDays < 7) return `${diffDays} দিন আগে`;
     
-    return date.toLocaleDateString('bn-BD');
+    return date.toLocaleDateString('bn-BD', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
 }
 
 // ============================================
@@ -249,10 +210,16 @@ function formatDate(dateString) {
 // ============================================
 
 function setupEventListeners() {
-    document.getElementById('load-more-btn')?.addEventListener('click', () => {
-        state.answersLoaded = Math.min(state.answersLoaded + CONFIG.ANSWERS_PER_PAGE, state.answers.length);
-        renderAnswers();
-    });
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            state.answersLoaded = Math.min(
+                state.answersLoaded + CONFIG.ANSWERS_PER_PAGE, 
+                state.answers.length
+            );
+            renderAnswers();
+        });
+    }
 }
 
 // ============================================
@@ -260,58 +227,56 @@ function setupEventListeners() {
 // ============================================
 
 export async function initQuestionPage() {
-    console.log('🚀 Question page init...');
+    console.log('🚀 Question page initializing...');
     
-    // Parse URL
-    const { id } = parseURLParams();
+    // Get question ID from URL (?id=xyz)
+    const questionId = getQuestionId();
     
-    console.log('Question ID:', id);
+    console.log('Question ID:', questionId);
     
-    if (!id) {
-        console.error('No ID found');
+    if (!questionId) {
+        console.error('❌ No question ID in URL');
         showError();
         return;
     }
     
-    state.questionId = id;
+    state.questionId = questionId;
     
     // Fetch question
-    const question = await fetchQuestion(id);
+    console.log('📡 Fetching question...');
+    const question = await fetchQuestion(questionId);
     
     if (!question) {
-        console.error('Question not found');
+        console.error('❌ Question not found');
         return;
     }
     
     state.question = question;
-    console.log('Question loaded:', question.title);
+    console.log('✅ Question loaded:', question.title);
     
     // Fetch answers
-    const { answers, total } = await fetchAnswers(id);
+    console.log('📡 Fetching answers...');
+    const { answers, total } = await fetchAnswers(questionId);
     state.answers = answers;
     state.totalAnswers = total;
     state.answersLoaded = Math.min(CONFIG.ANSWERS_PER_PAGE, answers.length);
     
-    console.log(`Loaded ${answers.length} answers`);
-    
-    // Fetch related
-    const related = await fetchRelatedQuestions(id, question.tag);
+    console.log(`✅ Loaded ${answers.length} answers`);
     
     // Increment views
-    incrementViewCount(id);
+    incrementViewCount(questionId);
     
-    // Show content
+    // Hide loading, show content
     document.getElementById('loading-skeleton').classList.add('hidden');
     document.getElementById('question-container').classList.remove('hidden');
     
-    // Render
+    // Render everything
     renderQuestion();
     renderAnswers();
-    renderRelatedQuestions(related);
     updateAnswersCount();
     
-    // Setup events
+    // Setup event listeners
     setupEventListeners();
     
-    console.log('✅ Init complete');
+    console.log('✅ Initialization complete!');
 }
