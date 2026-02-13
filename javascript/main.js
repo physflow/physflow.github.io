@@ -36,7 +36,6 @@ const truncateText = (text, maxLength = 130) => {
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
-    const timeAgo = formatTimeAgo(question.created_at);
     
     // ✅ GUARANTEED URL - Query Parameter
     const questionLink = `/question.html?id=${question.id}`;
@@ -54,29 +53,24 @@ const createQuestionCard = (question) => {
                     ${excerpt}
                 </p>
                 
-                <div class="flex items-center justify-between gap-1.5">
-                    <div class="flex flex-wrap gap-1.5">
-                        ${question.category ? `
-                            <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
-                                ${question.category}
-                            </span>
-                        ` : ''}
+                <div class="flex flex-wrap gap-1.5">
+                    ${question.category ? `
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
+                            ${question.category}
+                        </span>
+                    ` : ''}
 
-                        ${tag.map(t => `
-                            <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
-                                #${t}
-                            </span>
-                        `).join('')}
-                    </div>
-
-                    <time datetime="${question.created_at}" class="text-[11px] text-gray-400 whitespace-nowrap">
-                        ${timeAgo}
-                    </time>
+                    ${tag.map(t => `
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
+                            #${t}
+                        </span>
+                    `).join('')}
                 </div>
             </div>
         </article>
     `;
 };
+
 
 
 const loadLatestQuestion = async () => {
