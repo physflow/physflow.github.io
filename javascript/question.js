@@ -1,4 +1,4 @@
-// javascript/question.js - Query Parameter Version (GUARANTEED!)
+// javascript/question.js
 
 import { supabase } from './supabase-config.js';
 
@@ -16,11 +16,10 @@ let state = {
 };
 
 // ============================================
-// URL PARSING - Query Parameter (SIMPLE!)
+// URL PARSING
 // ============================================
 
 function getQuestionId() {
-    // Get ?id=xyz from URL
     const params = new URLSearchParams(window.location.search);
     return params.get('id');
 }
@@ -38,11 +37,6 @@ async function fetchQuestion(questionId) {
             .single();
         
         if (error) throw error;
-        if (!data) {
-            showError();
-            return null;
-        }
-        
         return data;
     } catch (error) {
         console.error('Error fetching question:', error);
@@ -60,7 +54,6 @@ async function fetchAnswers(questionId) {
             .order('created_at', { ascending: false });
         
         if (error) throw error;
-        
         return { answers: data || [], total: count || 0 };
     } catch (error) {
         console.error('Error fetching answers:', error);
@@ -87,7 +80,6 @@ async function incrementViewCount(questionId) {
             viewed.push(questionId);
             sessionStorage.setItem(CONFIG.SESSION_KEY, JSON.stringify(viewed));
             state.question.views = currentViews + 1;
-            document.getElementById('question-views').textContent = currentViews + 1;
         }
     } catch (error) {
         console.error('View increment error:', error);
@@ -100,43 +92,62 @@ async function incrementViewCount(questionId) {
 
 function renderMarkdown(text) {
     if (!text) return '';
+    if (typeof marked !== 'undefined') return marked.parse(text);
+    return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / 3600000);
     
-    // Simple markdown rendering
-    if (typeof marked !== 'undefined') {
-        return marked.parse(text);
-    }
+    if (diffHours < 24) return `${Math.floor(diffMs / 60000) < 60 ? Math.floor(diffMs / 60000) + ' মিনিট' : diffHours + ' ঘণ্টা'} আগে`;
     
-    // Fallback: basic formatting
-    return text
-        .replace(/\n/g, '<br>')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    return date.toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function renderQuestion() {
-    document.getElementById('question-title').textContent = state.question.title;
-    document.getElementById('question-date').textContent = formatDate(state.question.created_at);
-    document.getElementById('question-views').textContent = state.question.views || 0;
-    document.getElementById('question-author').textContent = state.question.author_name || 'Anonymous';
-    document.getElementById('question-votes').textContent = state.question.votes || 0;
+    const container = document.getElementById('question-container');
     
-    // Tags
-    const tagsContainer = document.getElementById('question-tags');
-    tagsContainer.innerHTML = '';
-    if (state.question.tag && Array.isArray(state.question.tag)) {
-        state.question.tag.forEach(tag => {
-            const tagEl = document.createElement('span');
-            tagEl.className = 'px-3 py-1 bg-gray-100 dark:bg-gray-800 text-sm rounded-full';
-            tagEl.textContent = tag;
-            tagsContainer.appendChild(tagEl);
-        });
-    }
+    // UI Structure
+    container.innerHTML = `
+        <header class="border-b dark:border-gray-700 pb-6 mb-6">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">${state.question.title}</h1>
+            <div class="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
+                <span>প্রশ্ন করা হয়েছে: <b>${formatDate(state.question.created_at)}</b></span>
+                <span>দেখা হয়েছে: <b>${state.question.views || 0} বার</b></span>
+                <span>লেখক: <b>${state.question.author_name || 'Anonymous'}</b></span>
+            </div>
+        </header>
+
+        <div class="flex gap-4 md:gap-8">
+            <div class="flex flex-col items-center gap-3">
+                <button class="p-2 border dark:border-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
+                </button>
+                <span class="text-xl font-bold text-gray-700 dark:text-gray-200">${state.question.votes || 0}</span>
+                <button class="p-2 border dark:border-gray-700 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <button class="mt-2 text-gray-400 hover:text-yellow-500 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-hidden">
+                <div class="prose dark:prose-invert max-w-none mb-8 text-gray-800 dark:text-gray-200">
+                    ${renderMarkdown(state.question.body)}
+                </div>
+                <div class="flex flex-wrap gap-2 mb-8">
+                    ${(state.question.tag || []).map(tag => `
+                        <span class="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-medium rounded-md">${tag}</span>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
     
-    // Body
-    const bodyContainer = document.getElementById('question-body');
-    bodyContainer.innerHTML = renderMarkdown(state.question.body);
-    
-    // SEO
     document.title = `${state.question.title} - PhysFlow`;
 }
 
@@ -147,79 +158,38 @@ function renderAnswers() {
     const visibleAnswers = state.answers.slice(0, state.answersLoaded);
     
     if (visibleAnswers.length === 0) {
-        container.innerHTML = '<p class="text-gray-500 dark:text-gray-400">এখনও কোনো উত্তর নেই</p>';
+        container.innerHTML = '<p class="text-gray-500 py-4">এখনও কোনো উত্তর নেই।</p>';
         return;
     }
     
     visibleAnswers.forEach(answer => {
-        const answerEl = document.createElement('div');
-        answerEl.className = 'pb-6 border-b dark:border-gray-700 mb-6';
-        answerEl.innerHTML = `
-            <div class="markdown-content prose dark:prose-invert max-w-none mb-4">
-                ${renderMarkdown(answer.body)}
-            </div>
-            <div class="text-sm text-gray-600 dark:text-gray-400">
-                <span>উত্তর দেওয়া হয়েছে ${formatDate(answer.created_at)}</span>
-                ${answer.votes ? ` • ${answer.votes} ভোট` : ''}
-            </div>
+        const div = document.createElement('div');
+        div.className = 'py-6 border-b dark:border-gray-800';
+        div.innerHTML = `
+            <div class="prose dark:prose-invert max-w-none mb-4">${renderMarkdown(answer.body)}</div>
+            <div class="text-xs text-gray-500 text-right">উত্তর দিয়েছেন <b>${formatDate(answer.created_at)}</b></div>
         `;
-        container.appendChild(answerEl);
+        container.appendChild(div);
     });
-    
+
     const loadMoreBtn = document.getElementById('load-more-btn');
     if (state.answersLoaded < state.answers.length) {
-        loadMoreBtn.classList.remove('hidden');
+        loadMoreBtn?.classList.remove('hidden');
     } else {
-        loadMoreBtn.classList.add('hidden');
+        loadMoreBtn?.classList.add('hidden');
     }
 }
 
 function updateAnswersCount() {
-    const banglaNumbers = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    const count = state.totalAnswers.toString().split('').map(d => banglaNumbers[parseInt(d)] || d).join('');
-    document.getElementById('answers-count').textContent = `${count}টি উত্তর`;
+    const countEl = document.getElementById('answers-count');
+    if (countEl) countEl.textContent = `${state.totalAnswers}টি উত্তর`;
 }
 
 function showError() {
-    document.getElementById('loading-skeleton').classList.add('hidden');
-    document.getElementById('question-container').classList.add('hidden');
-    document.getElementById('error-container').classList.remove('hidden');
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 60) return `${diffMins} মিনিট আগে`;
-    if (diffHours < 24) return `${diffHours} ঘন্টা আগে`;
-    if (diffDays < 7) return `${diffDays} দিন আগে`;
-    
-    return date.toLocaleDateString('bn-BD', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
-
-// ============================================
-// EVENT LISTENERS
-// ============================================
-
-function setupEventListeners() {
-    const loadMoreBtn = document.getElementById('load-more-btn');
-    if (loadMoreBtn) {
-        loadMoreBtn.addEventListener('click', () => {
-            state.answersLoaded = Math.min(
-                state.answersLoaded + CONFIG.ANSWERS_PER_PAGE, 
-                state.answers.length
-            );
-            renderAnswers();
-        });
-    }
+    const loader = document.getElementById('loading-skeleton');
+    const error = document.getElementById('error-container');
+    if (loader) loader.classList.add('hidden');
+    if (error) error.classList.remove('hidden');
 }
 
 // ============================================
@@ -227,56 +197,33 @@ function setupEventListeners() {
 // ============================================
 
 export async function initQuestionPage() {
-    console.log('🚀 Question page initializing...');
-    
-    // Get question ID from URL (?id=xyz)
     const questionId = getQuestionId();
-    
-    console.log('Question ID:', questionId);
-    
-    if (!questionId) {
-        console.error('❌ No question ID in URL');
-        showError();
-        return;
-    }
-    
+    if (!questionId) return showError();
+
     state.questionId = questionId;
-    
-    // Fetch question
-    console.log('📡 Fetching question...');
     const question = await fetchQuestion(questionId);
     
-    if (!question) {
-        console.error('❌ Question not found');
-        return;
-    }
-    
+    if (!question) return;
     state.question = question;
-    console.log('✅ Question loaded:', question.title);
-    
-    // Fetch answers
-    console.log('📡 Fetching answers...');
+
     const { answers, total } = await fetchAnswers(questionId);
     state.answers = answers;
     state.totalAnswers = total;
     state.answersLoaded = Math.min(CONFIG.ANSWERS_PER_PAGE, answers.length);
-    
-    console.log(`✅ Loaded ${answers.length} answers`);
-    
-    // Increment views
+
     incrementViewCount(questionId);
-    
-    // Hide loading, show content
-    document.getElementById('loading-skeleton').classList.add('hidden');
-    document.getElementById('question-container').classList.remove('hidden');
-    
-    // Render everything
+
+    // Toggle Visibility
+    document.getElementById('loading-skeleton')?.classList.add('hidden');
+    document.getElementById('question-container')?.classList.remove('hidden');
+
     renderQuestion();
     renderAnswers();
     updateAnswersCount();
-    
-    // Setup event listeners
-    setupEventListeners();
-    
-    console.log('✅ Initialization complete!');
+
+    // Load More Event
+    document.getElementById('load-more-btn')?.addEventListener('click', () => {
+        state.answersLoaded = Math.min(state.answersLoaded + CONFIG.ANSWERS_PER_PAGE, state.answers.length);
+        renderAnswers();
+    });
 }
