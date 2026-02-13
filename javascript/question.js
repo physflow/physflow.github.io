@@ -115,39 +115,35 @@ function renderQuestion(q) {
     // Title
     document.getElementById('question-title').textContent = q.title;
 
-    // Meta (Author image, Name and Date)
-    const metaContainer = document.getElementById('question-meta');
-    metaContainer.innerHTML = `
-        <div class="flex items-center gap-2 mb-4">
-            <img id="q-author-img" src="default-avatar.png" class="w-6 h-6 rounded-full object-cover border border-gray-200" alt="Author">
-            <span id="question-author" class="text-sm font-medium text-blue-600">লোড হচ্ছে...</span>
-            <span class="text-gray-400 text-sm">•</span>
-            <span class="text-sm text-gray-500">${formatDate(q.created_at)}</span>
-        </div>
-    `;
+    // Date
+    document.getElementById('question-date').innerHTML =
+        `<i class="far fa-clock"></i> ${formatDate(q.created_at)}`;
 
     // Views
     document.getElementById('question-views').innerHTML =
-        `<i class="far fa-eye"></i> ${formatNumber(q.views ?? 0)} বার দেখেছে`;
+        `<i class="far fa-eye"></i> ${formatNumber(q.views ?? 0)} বার দেখা হয়েছে`;
 
     // Vote count
     document.getElementById('q-vote-count').textContent = q.votes ?? 0;
 
-    // Body
+    // Body (sanitized HTML from Quill)
     const bodyEl = document.getElementById('question-body');
     bodyEl.innerHTML = sanitizeHTML(q.body ?? '');
+
+    // Trigger MathJax typesetting on the body
     typesetMath(bodyEl);
 
     // Tags
-    renderTag(q.tag ?? []);
+    renderTags(q.tags ?? []);
 
+    // Edit button: show only for question author
     if (state.currentUserId && state.currentUserId === q.author_id) {
         document.getElementById('q-edit-btn').classList.remove('hidden');
     }
 
+    // Vote button events
     bindQuestionVotes(q);
 }
-
 
 function renderTags(tags) {
     const container = document.getElementById('question-tags');
@@ -915,30 +911,22 @@ async function fetchAuthorName(authorId, elementId, element = null) {
     if (!authorId) return;
 
     const { data: profile } = await supabase
-        .from('profile')
-        .select('username, full_name, avatar_url')
+        .from('profile')               // adjust table name if needed
+        .select('username, full_name')
         .eq('id', authorId)
         .single();
 
     const displayName = profile?.username || profile?.full_name || 'অজানা ব্যবহারকারী';
-    const photoURL = profile?.avatar_url || 'default-avatar.png'; // ডিফল্ট ছবি
 
-    if (elementId === 'question-author') {
-        const nameEl = document.getElementById(elementId);
-        const imgEl = document.getElementById('q-author-img');
-        if (nameEl) nameEl.textContent = displayName;
-        if (imgEl) imgEl.src = photoURL;
-    } else if (elementId) {
+    if (elementId) {
         const el = document.getElementById(elementId);
         if (el) el.textContent = displayName;
     }
-    
     if (element) {
         element.textContent = displayName;
         element.href = `user.html?id=${authorId}`;
     }
 }
-
 
 // ─────────────────────────────────────────────
 //  MATHJAX TYPESETTING
