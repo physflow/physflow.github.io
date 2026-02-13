@@ -58,8 +58,9 @@ const createQuestionCard = (question) => {
     const qId = question.id; 
     const qSlug = question.slug || generateSlug(question.title);
 
-    // 🎯 URL ফরম্যাট: question.html#/question/{id}/{slug}
-    const questionLink = `/question.html#/question/${qId}/${encodeURIComponent(qSlug)}`;
+    // 🎯 CLEAN URL ফরম্যাট: /question/{id}/{slug}
+    // এটা কাজ করবে যদি _redirects file থাকে
+    const questionLink = `/question/${qId}/${encodeURIComponent(qSlug)}`;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
