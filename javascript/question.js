@@ -915,22 +915,30 @@ async function fetchAuthorName(authorId, elementId, element = null) {
     if (!authorId) return;
 
     const { data: profile } = await supabase
-        .from('profile')               // adjust table name if needed
-        .select('username, full_name')
+        .from('profile')
+        .select('username, full_name, avatar_url')
         .eq('id', authorId)
         .single();
 
     const displayName = profile?.username || profile?.full_name || 'অজানা ব্যবহারকারী';
+    const photoURL = profile?.avatar_url || 'default-avatar.png'; // ডিফল্ট ছবি
 
-    if (elementId) {
+    if (elementId === 'question-author') {
+        const nameEl = document.getElementById(elementId);
+        const imgEl = document.getElementById('q-author-img');
+        if (nameEl) nameEl.textContent = displayName;
+        if (imgEl) imgEl.src = photoURL;
+    } else if (elementId) {
         const el = document.getElementById(elementId);
         if (el) el.textContent = displayName;
     }
+    
     if (element) {
         element.textContent = displayName;
         element.href = `user.html?id=${authorId}`;
     }
 }
+
 
 // ─────────────────────────────────────────────
 //  MATHJAX TYPESETTING
