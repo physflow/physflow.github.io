@@ -1,15 +1,12 @@
 import { supabase } from './supabase-config.js';
 
-// ১. কনফিগারেশন
 const PAGE_SIZE = 20;
 
-// ২. বাংলা সংখ্যা কনভার্টার
 const toBanglaNumber = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     return String(num).split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
 };
 
-// ৩. সময় ফরম্যাট
 const formatTimeAgo = (date) => {
     if (!date) return '';
     const now = new Date();
@@ -29,7 +26,6 @@ const formatTimeAgo = (date) => {
     return `${toBanglaNumber(years)} বছর আগে`;
 };
 
-// ৪. টেক্সট ছোট করা
 const truncateText = (text, maxLength = 130) => {
     if (!text) return '';
     const stripped = text.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
@@ -37,30 +33,13 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// ৫. Slug Generator (fallback)
-const generateSlug = (title) => {
-    if (!title) return 'untitled';
-    return title
-        .toLowerCase()
-        .replace(/[^\u0980-\u09FFa-z0-9\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .substring(0, 100);
-};
-
-// ৬. প্রশ্ন কার্ড তৈরির HTML
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
     
-    const qId = question.id; 
-    const qSlug = question.slug || generateSlug(question.title);
-
-    // 🎯 CLEAN URL ফরম্যাট: /question/{id}/{slug}
-    // এটা কাজ করবে যদি _redirects file থাকে
-    const questionLink = `/question/${qId}/${encodeURIComponent(qSlug)}`;
+    // 🎯 সহজ URL - শুধু ID
+    const questionLink = `/question/${question.id}`;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
@@ -114,7 +93,6 @@ const createQuestionCard = (question) => {
     `;
 };
 
-// ৭. ডাটা লোড ফাংশন
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
@@ -154,7 +132,6 @@ const loadLatestQuestion = async () => {
     }
 };
 
-// ৮. ইনিশিয়ালাইজেশন
 export const initHomePage = () => {
     loadLatestQuestion();
 };
