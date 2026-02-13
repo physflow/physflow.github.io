@@ -115,35 +115,40 @@ function renderQuestion(q) {
     // Title
     document.getElementById('question-title').textContent = q.title;
 
-    // Date
-    document.getElementById('question-date').innerHTML =
-        `<i class="far fa-clock"></i> ${formatDate(q.created_at)}`;
-
-    // Views
-    document.getElementById('question-views').innerHTML =
-        `<i class="far fa-eye"></i> ${formatNumber(q.views ?? 0)} বার দেখা হয়েছে`;
+    // Author, Date & Views Container
+    const metaContainer = document.getElementById('question-meta-sub'); // নিশ্চিত করো এই ID টি HTML এ আছে
+    metaContainer.innerHTML = `
+        <div class="flex items-center gap-2 mb-4">
+            <img id="q-author-img" src="assets/default-avatar.png" class="w-8 h-8 rounded-full object-cover border border-gray-200" alt="Author">
+            <div class="flex flex-col">
+                <a id="question-author" href="#" class="text-sm font-medium text-[#0056b3] hover:underline">লোড হচ্ছে...</a>
+                <div class="flex gap-3 text-[12px] text-gray-500">
+                    <span><i class="far fa-clock"></i> ${formatDate(q.created_at)}</span>
+                    <span><i class="far fa-eye"></i> ${formatNumber(q.views ?? 0)} বার</span>
+                </div>
+            </div>
+        </div>
+    `;
 
     // Vote count
     document.getElementById('q-vote-count').textContent = q.votes ?? 0;
 
-    // Body (sanitized HTML from Quill)
+    // Body
     const bodyEl = document.getElementById('question-body');
     bodyEl.innerHTML = sanitizeHTML(q.body ?? '');
-
-    // Trigger MathJax typesetting on the body
     typesetMath(bodyEl);
 
     // Tags
     renderTags(q.tags ?? []);
 
-    // Edit button: show only for question author
+    // Edit button logic
     if (state.currentUserId && state.currentUserId === q.author_id) {
         document.getElementById('q-edit-btn').classList.remove('hidden');
     }
 
-    // Vote button events
     bindQuestionVotes(q);
 }
+
 
 function renderTags(tags) {
     const container = document.getElementById('question-tags');
@@ -423,25 +428,40 @@ async function handleAcceptAnswer(answerId) {
     if (!state.currentUserId || !state.question) return;
     if (state.currentUserId !== state.question.author_id) return;
 
-    // Set all answers to is_accepted = false
-    const { error: resetError } = await supabase
-        .from('answer')
-        .update({ is_accepted: false })
-        .eq('question_id', state.questionId);
+    // খুঁজে বের করো এই উত্তরটি কি আগে থেকেই accepted আছে কি না
+    const targetAnswer = state.answers.find(a => a.id === answerId);
+    const isAlreadyAccepted = targetAnswer && targetAnswer.is_accepted === true;
 
-    if (resetError) { console.error('Accept reset error:', resetError); return; }
+    if (isAlreadyAccepted) {
+        // যদি আগে থেকেই accepted থাকে, তবে এটাকে false করে দাও (সরিয়ে ফেলো)
+        const { error } = await supabase
+            .from('answer')
+            .update({ is_accepted: false })
+            .eq('id', answerId);
 
-    // Set selected answer to is_accepted = true
-    const { error: acceptError } = await supabase
-        .from('answer')
-        .update({ is_accepted: true })
-        .eq('id', answerId);
+        if (error) { console.error('Unaccept error:', error); return; }
+    } else {
+        // যদি অন্য কোনো উত্তর accepted থাকে, প্রথমে সবগুলোকে false করো
+        const { error: resetError } = await supabase
+            .from('answer')
+            .update({ is_accepted: false })
+            .eq('question_id', state.questionId);
 
-    if (acceptError) { console.error('Accept error:', acceptError); return; }
+        if (resetError) { console.error('Accept reset error:', resetError); return; }
 
-    // Reload answers to reflect new order
+        // এরপর বর্তমান উত্তরটিকে true করো
+        const { error: acceptError } = await supabase
+            .from('answer')
+            .update({ is_accepted: true })
+            .eq('id', answerId);
+
+        if (acceptError) { console.error('Accept error:', acceptError); return; }
+    }
+
+    // পরিবর্তন শেষে লিস্ট রিফ্রেশ করো
     await loadAnswers(true);
 }
+
 
 // ─────────────────────────────────────────────
 //  VIEW COUNT (once per session)
@@ -911,22 +931,30 @@ async function fetchAuthorName(authorId, elementId, element = null) {
     if (!authorId) return;
 
     const { data: profile } = await supabase
-        .from('profile')               // adjust table name if needed
-        .select('username, full_name')
+        .from('profile') 
+        .select('username, full_name, avatar_url') // avatar_url যোগ করা হয়েছে
         .eq('id', authorId)
         .single();
 
     const displayName = profile?.username || profile?.full_name || 'অজানা ব্যবহারকারী';
+    const avatar = profile?.avatar_url || 'assets/default-avatar.png'; // ডিফল্ট ছবি
 
-    if (elementId) {
-        const el = document.getElementById(elementId);
-        if (el) el.textContent = displayName;
-    }
-    if (element) {
+    if (elementId === 'question-author') {
+        const nameEl = document.getElementById('question-author');
+        const imgEl = document.getElementById('q-author-img');
+        if (nameEl) {
+            nameEl.textContent = displayName;
+            nameEl.href = `user.html?id=${authorId}`;
+        }
+        if (imgEl) imgEl.src = avatar;
+    } else if (element) {
+        // উত্তরদাতার জন্য
         element.textContent = displayName;
         element.href = `user.html?id=${authorId}`;
+        // যদি উত্তরের পাশেও ছবি দেখাতে চাও তবে এখানেও ছবি সেট করার লজিক দিতে পারো
     }
 }
+
 
 // ─────────────────────────────────────────────
 //  MATHJAX TYPESETTING
