@@ -37,31 +37,19 @@ const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
-    
-    // ✅ GUARANTEED URL - Query Parameter
     const questionLink = `/question.html?id=${question.id}`;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
-            <div class="flex items-center justify-between mb-0.5">
-                <div class="flex gap-3">
-                    <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
-                        <span class="text-[11px] text-gray-500">টি ভোট</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answer_count || 0)}</span>
-                        <span class="text-[11px] text-gray-500">টি উত্তর</span>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
-                        <span class="text-[11px] text-gray-500">বার দেখেছে</span>
-                    </div>
+            <div class="flex items-center gap-2 mb-2">
+                <img src="${question.author_avatar || 'https://via.placeholder.com/32'}" 
+                     class="w-8 h-8 rounded-full border border-gray-100 shadow-sm" alt="User">
+                <div class="flex items-center gap-2">
+                    <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200">${question.author_name || 'অজানা ইউজার'}</span>
+                    <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
+                        ${timeAgo}
+                    </time>
                 </div>
-                
-                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
-                    ${timeAgo}
-                </time>
             </div>
 
             <div class="min-w-0">
@@ -108,22 +96,16 @@ const loadLatestQuestion = async () => {
     questionList.innerHTML = skeletonHTML.repeat(20);
 
     try {
-        // answer টেবিল থেকে কাউন্ট সহ ডাটা ফেচ করা হচ্ছে
         const { data: questionData, error, count } = await supabase
             .from('question')
-            .select('*, answer(count)', { count: 'exact' })
+            .select('*', { count: 'exact' }) // যেহেতু ভোট/উত্তর দেখাচ্ছ না, তাই সিম্পল সিলেক্ট রাখা হয়েছে
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
         if (error) throw error;
 
         if (questionData && questionData.length > 0) {
-            questionList.innerHTML = questionData.map(q => {
-                // উত্তর সংখ্যা বের করা হচ্ছে
-                const answerCount = q.answer?.[0]?.count || 0;
-                // মূল অবজেক্টের সাথে answer_count যোগ করে কার্ড তৈরি করা হচ্ছে
-                return createQuestionCard({ ...q, answer_count: answerCount });
-            }).join('');
+            questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
             
             const countEl = document.getElementById('question-count');
             if (countEl) {
