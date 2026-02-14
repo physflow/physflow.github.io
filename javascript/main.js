@@ -39,9 +39,9 @@ const createQuestionCard = (question) => {
     const timeAgo = formatTimeAgo(question.created_at);
     const questionLink = `/question.html?id=${question.id}`;
     
-    // প্রোফাইল টেবিল থেকে আসা ডাটা সেট করা
-    const authorName = question.profile?.full_name || 'অজানা ইউজার';
-    const authorAvatar = question.profile?.avatar_url || 'https://via.placeholder.com/32';
+    // প্রোফাইল ডাটা হ্যান্ডলিং (তোমার স্ক্রিনশট অনুযায়ী full_name ব্যবহার করা হয়েছে)
+    const authorName = question.profile?.full_name || question.profile?.username || 'অজানা ইউজার';
+    const authorAvatar = question.profile?.avatar_url || 'https://ui-avatars.com/api/?name=' + authorName;
     
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
@@ -90,10 +90,10 @@ const loadLatestQuestion = async () => {
     if (!questionList) return;
     
     try {
-        // 'profile' টেবিলের সাথে জয়েন করা হয়েছে যাতে ইউজারের নাম ও ছবি পাওয়া যায়
+        // question টেবিল থেকে ডাটা আনার সময় profile টেবিল থেকে নাম ও ছবি আনা হচ্ছে
         const { data: questionData, error, count } = await supabase
             .from('question')
-            .select('*, profile(full_name, avatar_url)', { count: 'exact' })
+            .select('*, profile:user_id(full_name, username, avatar_url)', { count: 'exact' })
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
