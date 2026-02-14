@@ -18,7 +18,7 @@
                     colors: {
                         brand: {
                             500: '#e1f0ff',
-                            600: '#0a95ff'
+                            600: '#0056b3'
                         }
                     }
                 }
@@ -38,15 +38,15 @@
 
         .sidebar-active { 
             background-color: #e1f0ff; 
-            border-right-color: #0a95ff;
-            color: #0a95ff !important;
+            border-right-color: #0056b3;
+            color: #0056b3 !important;
             font-weight: 500;
         }
 
         .dark .sidebar-active { 
             background-color: #2d2d2d; 
-            color: #0a95ff !important;
-            border-right-color: #0a95ff;
+            color: #0056b3 !important;
+            border-right-color: #0056b3;
         }
     </style>
 </head>
@@ -58,9 +58,10 @@
             <button id="hamburger-btn" class="md:hidden p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition">
                 <i class="fas fa-bars"></i>
             </button>
-            <a href="index.html" class="text-2xl font-extrabold tracking-tighter">
-                phys<span class="font-light text-gray-500">flow</span>
-            </a>
+            <a href="index.html" class="text-2xl font-extrabold tracking-tighter hover:bg-gray-100 dark:hover:bg-gray-800 px-2 py-1 rounded transition-colors duration-200">
+    phys<span class="font-light text-gray-500">flow</span>
+</a>
+
         </div>
 
         <form action="questions.html" method="GET" class="hidden md:flex flex-1 max-w-2xl relative group">
@@ -78,7 +79,7 @@
             </a>
 
             <div id="auth-section">
-                <button id="login-btn" class="bg-[#e1f0ff] text-[#0a95ff] px-4 py-1.5 rounded text-sm font-medium dark:bg-blue-900/30 hover:bg-[#d0e7ff] dark:hover:bg-blue-900/50 transition">
+                <button id="login-btn" class="bg-[#e1f0ff] text-[#0056b3] px-4 py-1.5 rounded text-sm font-medium dark:bg-blue-900/30 hover:bg-[#d0e7ff] dark:hover:bg-blue-900/50 transition">
                     লগ ইন
                 </button>
                 <div id="user-menu" class="hidden flex items-center space-x-3">
@@ -89,7 +90,7 @@
     </div>
 
     <div id="mobile-search-bar" class="absolute top-14 left-0 w-full bg-white dark:bg-[#1a1a1b] border-b dark:border-gray-700 p-2 hidden md:hidden shadow-lg">
-        <form action="search.html" method="GET" class="relative">
+        <form action="explore.html" method="GET" class="relative">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             <input type="text" name="q" placeholder="এখানে খুঁজুন..." class="w-full bg-gray-50 dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-brand-600">
         </form>
@@ -99,38 +100,57 @@
     <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-[140] hidden"></div>
 
     <div class="container mx-auto flex flex-1 pt-14">
+   <aside id="mobile-sidebar"
+  class="fixed md:sticky top-14 left-0 w-60 h-[calc(100vh-3.5rem)]
+         bg-white dark:bg-[#1a1a1b]
+         border-r border-gray-200 dark:border-gray-700
+         z-[150] md:z-40
+         -translate-x-full md:translate-x-0
+         overflow-y-auto transition-transform duration-300">
 
-        <aside id="mobile-sidebar" class="fixed md:sticky top-14 left-0 w-64 h-[calc(100vh-3.5rem)] bg-white dark:bg-[#1a1a1b] border-r dark:border-gray-700 z-[150] md:z-40 -translate-x-full md:translate-x-0 overflow-y-auto transition-transform duration-300">
-    
-    <div class="px-5 py-4 border-b dark:border-gray-700 flex items-center justify-between sticky top-0 bg-white dark:bg-[#1a1a1b] z-10">
-        <div class="flex items-center gap-3">
-            <i id="theme-icon" class="fas fa-moon text-lg text-gray-500 dark:text-gray-400"></i>
-            <span class="text-[14px] font-semibold text-gray-700 dark:text-gray-200"></span>
-        </div>
-        
-        <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="theme-toggle" class="sr-only peer">
-            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
-        </label>
-    </div>
+  <!-- Top -->
+  <div class="px-4 py-3 border-b dark:border-gray-700 flex items-center justify-between">
+    <span class="text-sm font-medium text-gray-700 dark:text-gray-200">ডার্ক মোড</span>
+    <label class="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" id="theme-toggle" class="sr-only peer">
+      <div class="w-9 h-5 bg-gray-200 rounded-full peer dark:bg-gray-700
+                  peer-checked:after:translate-x-full
+                  after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                  after:bg-white after:rounded-full after:h-4 after:w-4
+                  after:transition-all peer-checked:bg-blue-500">
+      </div>
+    </label>
+  </div>
 
-    <nav class="flex flex-col text-[13px] py-2">
-        <a href="index.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-home w-5 mr-2"></i>হোম
-        </a>
-        <a href="questions.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-magnifying-glass w-5 mr-2"></i>খুঁজুন
-        </a>
-        <a href="categories.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-folder w-5 mr-2"></i>বিভাগ
-        </a>
-        <a href="tags.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-tags w-5 mr-2"></i>ট্যাগ
-        </a>
-        <a href="blogs.html" class="sidebar-link hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition">
-            <i class="fas fa-blog w-5 mr-2"></i>ব্লগ
-        </a>
-    </nav>
+  <!-- Nav -->
+  <nav class="flex flex-col py-2 text-[14px]">
+
+    <a href="index.html"
+      class="px-4 py-2 rounded-md mx-2 text-blue-600 bg-blue-50 dark:bg-gray-800">
+      প্রধান পাতা
+    </a>
+
+    <a href="questions.html"
+      class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+      সকল প্রশ্ন
+    </a>
+
+    <a href="categories.html"
+      class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+      বিভাগগুলো
+    </a>
+
+    <a href="tags.html"
+      class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+      ট্যাগ সমূহ
+    </a>
+
+    <a href="blogs.html"
+      class="px-4 py-2 rounded-md mx-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+      ব্লগ পোস্ট
+    </a>
+
+  </nav>
 </aside>
 
 
