@@ -1,85 +1,98 @@
-import { supabase } from './javascript/supabase-config.js'
+import { supabase } from './supabase-config.js';
+import { setupLayout, initTheme } from './layout.js';
 
-const urlParams = new URLSearchParams(window.location.search)
-const questionId = urlParams.get("id")
+// লেআউট ইনিশিয়ালাইজেশন
+initTheme();
+setupLayout();
 
-const titleEl = document.getElementById("question-title")
-const bodyEl = document.getElementById("question-body")
-const answerList = document.getElementById("answer-list")
-const answerCountEl = document.getElementById("answer-count")
-const submitBtn = document.getElementById("submit-answer")
-const answerInput = document.getElementById("answer-input")
+const urlParams = new URLSearchParams(window.location.search);
+const questionId = urlParams.get('id');
 
-async function loadQuestion() {
+async function fetchQuestionDetails() {
+    if (!questionId) return;
 
-    if (!questionId) {
-        titleEl.textContent = "প্রশ্ন পাওয়া যায়নি"
-        return
-    }
-
-    const { data, error } = await supabase
-        .from("question")
-        .select("*")
-        .eq("id", questionId)
-        .single()
+    // ১. প্রশ্নের ডাটা ফেচ করা
+    const { data: question, error } = await supabase
+        .from('questions')
+        .select(`*, profiles(username, avatar_url)`)
+        .eq('id', questionId)
+        .single();
 
     if (error) {
-        titleEl.textContent = "লোড করতে সমস্যা হয়েছে"
-        return
+        console.error('Error:', error);
+        return;
     }
 
-    titleEl.textContent = data.title
-    bodyEl.textContent = data.body
+    // UI আপডেট
+    document.title = `${question.title} - physflow`;
+    document.getElementById('question-title').innerText = question.title;
+    document.getElementById('question-body').innerText = question.content;
+    document.getElementById('author-name').innerText = `u/${question.profiles.username}`;
+    document.getElementById('vote-count').innerText = question.votes || 0;
+    
+    loadComments();
 }
 
-async function loadAnswers() {
+async function loadComments() {
+    const { data: comments, error } = await supabase
+        .from('comments')
+        .select(`*, profiles(username, avatar_url)`)
+        .eq('question_id', questionId)
+        .order('created_at', { ascending: false });
 
-    const { data, error } = await supabase
-        .from("answer")
-        .select("*")
-        .eq("question_id", questionId)
-        .order("created_at", { ascending: true })
+    if (error) return;
 
-    if (error) return
-
-    answerList.innerHTML = ""
-    answerCountEl.textContent = `${data.length} মন্তব্য`
-
-    data.forEach(answer => {
-
-        const div = document.createElement("div")
-        div.className = "bg-white dark:bg-[#1a1a1b] border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-
-        div.innerHTML = `
-            <div class="text-gray-700 dark:text-gray-300 text-sm mb-2">
-                ${answer.content}
+    const commentsSection = document.getElementById('comments-section');
+    const commentCountText = document.getElementById('comment-count-text');
+    commentCountText.innerText = `${comments.length} Comments`;
+    
+    commentsSection.innerHTML = comments.map(comment => `
+        <div class="flex gap-2">
+            <div class="flex flex-col items-center shrink-0">
+                <img src="${comment.profiles.avatar_url || 'https://via.placeholder.com/30'}" class="w-7 h-7 rounded-full">
+                <div class="w-0.5 h-full bg-gray-200 dark:bg-[#343536] my-1"></div>
             </div>
-            <div class="text-xs text-gray-500">
-                ${new Date(answer.created_at).toLocaleString()}
+            <div class="flex-1">
+                <div class="flex items-center gap-2 text-xs mb-1">
+                    <span class="font-bold text-gray-900 dark:text-[#D7DADC]">${comment.profiles.username}</span>
+                    <span class="text-gray-500">${new Date(comment.created_at).toLocaleDateString()}</span>
+                </div>
+                <div class="text-sm mb-2">${comment.content}</div>
+                <div class="flex items-center gap-3 text-gray-500 text-xs font-bold">
+                    <div class="flex items-center gap-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-1 rounded">
+                        <i class="fas fa-arrow-up"></i> 0 <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <span class="cursor-pointer hover:underline">Reply</span>
+                </div>
             </div>
-        `
-
-        answerList.appendChild(div)
-    })
+        </div>
+    `).join('');
 }
 
-submitBtn?.addEventListener("click", async () => {
+// কমেন্ট সাবমিট ফাংশন
+document.getElementById('submit-comment').addEventListener('click', async () => {
+    const content = document.getElementById('comment-input').value;
+    if (!content) return;
 
-    const content = answerInput.value.trim()
-    if (!content) return
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        alert('কমেন্ট করতে লগইন করুন');
+        return;
+    }
 
-    await supabase
-        .from("answer")
-        .insert([
-            {
-                question_id: questionId,
-                content: content
-            }
-        ])
+    const { error } = await supabase
+        .from('comments')
+        .insert([{ 
+            question_id: questionId, 
+            user_id: user.id, 
+            content: content 
+        }]);
 
-    answerInput.value = ""
-    loadAnswers()
-})
+    if (!error) {
+        document.getElementById('comment-input').value = '';
+        loadComments();
+    }
+});
 
-loadQuestion()
-loadAnswers()
+// পেজ লোড হলে কল হবে
+fetchQuestionDetails();
