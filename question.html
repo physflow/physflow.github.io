@@ -216,22 +216,23 @@
         <div id="question-content" class="hidden">
 
             <!-- ── Question Header ── -->
-            <div class="pb-4 mb-2 border-b border-gray-200 dark:border-gray-700">
-                <h1 id="question-title" class="text-xl font-normal text-gray-900 dark:text-gray-100 leading-tight mb-3"></h1>
+     <div class="pb-4 mb-2 border-b border-gray-200 dark:border-gray-700">
+    <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
+        <div class="flex items-center gap-1.5 text-[13px]">
+            <a id="question-author-link" href="#" class="font-medium text-[#0056b3] hover:underline"></a>
+            <span class="text-gray-300 dark:text-gray-600 select-none">·</span>
+            <span id="question-timeago" class="text-[12px] text-gray-400 dark:text-gray-500"></span>
+        </div>
+        <span id="question-views" class="text-[12px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
+            <i class="far fa-eye"></i>
+        </span>
+    </div>
 
-                <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
-                    <div class="flex items-center gap-1.5 text-[13px]">
-                        <a id="question-author-link" href="#" class="font-medium text-[#0056b3] hover:underline"></a>
-                        <span class="text-gray-300 dark:text-gray-600 select-none">·</span>
-                        <span id="question-timeago" class="text-[12px] text-gray-400 dark:text-gray-500"></span>
-                    </div>
-                    <span id="question-views" class="text-[12px] text-gray-400 dark:text-gray-500 flex items-center gap-1">
-                        <i class="far fa-eye"></i>
-                    </span>
-                </div>
+    <h1 id="question-title" class="text-xl font-normal text-gray-900 dark:text-gray-100 leading-tight mb-3"></h1>
 
-                <div id="question-tags" class="flex flex-wrap gap-1.5"></div>
-            </div>
+    <div id="question-tags" class="flex flex-wrap gap-1.5"></div>
+</div>
+
 
             <!-- ── Question Body + Vote ── -->
             <div class="flex gap-4 mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
@@ -266,7 +267,7 @@
                 <div class="flex items-center gap-2 text-sm">
                     <label class="text-gray-500 dark:text-gray-400 text-xs">সাজান:</label>
                     <select id="answer-sort" class="bg-white dark:bg-[#2d2d2d] border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:border-[#0056b3]">
-                        <option value="votes">ভোট (সেরা)</option>
+                        <option value="votes">সেরা</option>
                         <option value="newest">নতুন</option>
                         <option value="oldest">পুরনো</option>
                     </select>
@@ -289,30 +290,6 @@
                 <ul id="related-questions-list" class="space-y-2 text-sm"></ul>
             </div>
 
-            <!-- ── Answer Submit Form ── -->
-            <div class="border-t border-gray-200 dark:border-gray-700 pt-6 mt-2">
-                <h3 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">আপনার উত্তর লিখুন</h3>
-                <div id="answer-editor" class="mb-3 rounded border border-gray-300 dark:border-gray-600 overflow-hidden"></div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <button id="submit-answer-btn" class="bg-[#0056b3] text-white px-5 py-2 rounded text-sm font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                        <span id="submit-btn-text">উত্তর জমা দিন</span>
-                        <span id="submit-spinner" class="hidden"><i class="fas fa-spinner fa-spin"></i></span>
-                    </button>
-                    <button id="preview-toggle-btn" class="border border-gray-300 dark:border-gray-600 px-4 py-2 rounded text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition">
-                        <i class="fas fa-eye mr-1"></i> প্রিভিউ
-                    </button>
-                    <span id="answer-validation-msg" class="text-red-500 text-xs hidden">উত্তরটি কমপক্ষে ৩০ অক্ষরের হতে হবে।</span>
-                </div>
-                <div id="answer-preview" class="hidden mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded bg-gray-50 dark:bg-[#222] answer-body prose prose-sm max-w-none text-gray-800 dark:text-gray-200"></div>
-                <div id="login-required-notice" class="hidden mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-700 dark:text-blue-300">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    উত্তর দিতে <a href="login.html" class="font-medium underline">লগ ইন করুন</a>।
-                </div>
-            </div>
-
-        </div><!-- end #question-content -->
-    </main>
-</div>
 
 <!-- ===================== FOOTER (matching homepage) ===================== -->
 <footer class="bg-[#232629] text-gray-400 py-6 mt-auto border-t dark:border-gray-800">
