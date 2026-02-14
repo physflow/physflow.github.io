@@ -39,13 +39,17 @@ const createQuestionCard = (question) => {
     const timeAgo = formatTimeAgo(question.created_at);
     const questionLink = `/question.html?id=${question.id}`;
     
+    // প্রোফাইল টেবিল থেকে আসা ডাটা সেট করা
+    const authorName = question.profile?.full_name || 'অজানা ইউজার';
+    const authorAvatar = question.profile?.avatar_url || 'https://via.placeholder.com/32';
+    
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
             <div class="flex items-center gap-2 mb-2">
-                <img src="${question.author_avatar || 'https://via.placeholder.com/32'}" 
+                <img src="${authorAvatar}" 
                      class="w-8 h-8 rounded-full border border-gray-100 shadow-sm" alt="User">
                 <div class="flex items-center gap-2">
-                    <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200">${question.author_name || 'অজানা ইউজার'}</span>
+                    <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
                     <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
                         ${timeAgo}
                     </time>
@@ -85,20 +89,11 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
-    const skeletonHTML = `
-        <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
-            <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-4 w-full bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
-        </div>
-    `;
-
-    questionList.innerHTML = skeletonHTML.repeat(20);
-
     try {
+        // 'profile' টেবিলের সাথে জয়েন করা হয়েছে যাতে ইউজারের নাম ও ছবি পাওয়া যায়
         const { data: questionData, error, count } = await supabase
             .from('question')
-            .select('*', { count: 'exact' }) // যেহেতু ভোট/উত্তর দেখাচ্ছ না, তাই সিম্পল সিলেক্ট রাখা হয়েছে
+            .select('*, profile(full_name, avatar_url)', { count: 'exact' })
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
