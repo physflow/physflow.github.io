@@ -54,16 +54,17 @@ const createQuestionCard = (question) => {
     
     const answerCount = question.answer?.[0]?.count || 0;
     const voteCount = (question.upvotes || 0) - (question.downvotes || 0);
-    const viewCount = question.views || 0; // ডাটাবেজে views কলাম থাকতে হবে
+    const viewCount = question.views || 0;
 
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm flex flex-col gap-2">
+            
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <img src="${authorAvatar}" class="w-7 h-7 rounded-full object-cover" alt="User">
+                    <img src="${authorAvatar}" class="w-7 h-7 rounded-full object-cover border border-gray-100" alt="User">
                     <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
                 </div>
-                <time class="text-[11px] text-gray-400">${timeAgo}</time>
+                <time class="text-[11px] text-gray-400 shrink-0">${timeAgo}</time>
             </div>
 
             <div class="min-w-0">
@@ -77,29 +78,30 @@ const createQuestionCard = (question) => {
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 mt-1 overflow-x-auto no-scrollbar">
-                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2 shrink-0">
-                    <button class="hover:text-orange-600 p-1"><i class="fas fa-arrow-up text-sm"></i></button>
-                    <span class="text-[12px] font-bold">${toBanglaNumber(voteCount)}</span>
-                    <button class="hover:text-blue-600 p-1"><i class="fas fa-arrow-down text-sm"></i></button>
+            <div class="flex items-center gap-2 mt-1">
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2">
+                    <button class="hover:text-orange-600 transition p-1"><i class="fas fa-arrow-up text-xs"></i></button>
+                    <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
+                    <button class="hover:text-blue-600 transition p-1"><i class="fas fa-arrow-down text-xs"></i></button>
                 </div>
 
-                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 shrink-0 hover:bg-gray-200 transition">
+                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     <i class="far fa-comment text-sm"></i>
-                    <span class="text-[12px] font-medium">${toBanglaNumber(answerCount)}</span>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)}</span>
                 </a>
 
-                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 shrink-0">
-                    <i class="far fa-eye text-sm"></i>
-                    <span class="text-[12px] font-medium">${toBanglaNumber(viewCount)}</span>
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2">
+                    <i class="far fa-eye text-sm text-gray-500"></i>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(viewCount)}</span>
                 </div>
 
                 <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
-                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 shrink-0 hover:bg-gray-200 transition">
+                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     <i class="fas fa-share text-sm"></i>
-                    <span class="text-[12px] font-medium">শেয়ার</span>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">শেয়ার</span>
                 </button>
             </div>
+
         </article>
     `;
 };
@@ -111,7 +113,11 @@ const loadLatestQuestion = async () => {
     try {
         const { data: questionData, error } = await supabase
             .from('question')
-            .select('*, profile:author_id(full_name, username, avatar_url), answer(count)')
+            .select(`
+                *,
+                profile:author_id (full_name, username, avatar_url),
+                answer(count)
+            `)
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
@@ -125,4 +131,8 @@ const loadLatestQuestion = async () => {
     }
 };
 
-document.addEventListener('DOMContentLoaded', loadLatestQuestion);
+export const initHomePage = () => {
+    loadLatestQuestion();
+};
+
+document.addEventListener('DOMContentLoaded', initHomePage);
