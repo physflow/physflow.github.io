@@ -61,7 +61,7 @@ const createQuestionCard = (question) => {
             
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <img src="${authorAvatar}" class="w-7 h-7 rounded-full object-cover border border-gray-100" alt="User">
+                    <img src="${authorAvatar}" class="w-7 h-7 rounded-full object-cover" alt="User">
                     <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
                 </div>
                 <time class="text-[11px] text-gray-400 shrink-0">${timeAgo}</time>
@@ -69,7 +69,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-medium mb-1 leading-tight">
-                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600 transition-colors">
+                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-[#0056b3] transition-colors">
                         ${question.title}
                     </a>
                 </h3>
@@ -79,26 +79,33 @@ const createQuestionCard = (question) => {
             </div>
 
             <div class="flex items-center gap-2 mt-1">
-                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2">
-                    <button class="hover:text-orange-600 transition p-1"><i class="fas fa-arrow-up text-xs"></i></button>
-                    <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
-                    <button class="hover:text-blue-600 transition p-1"><i class="fas fa-arrow-down text-xs"></i></button>
+                
+                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full p-0.5">
+                    <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#ff4500] transition-colors">
+                        <i class="fas fa-arrow-up text-sm"></i>
+                    </button>
+                    <span class="text-[12px] font-bold px-1 min-w-[20px] text-center text-gray-800 dark:text-gray-200">
+                        ${toBanglaNumber(voteCount)}
+                    </span>
+                    <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#7193ff] transition-colors">
+                        <i class="fas fa-arrow-down text-sm"></i>
+                    </button>
                 </div>
 
-                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                <a href="${questionLink}" class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     <i class="far fa-comment text-sm"></i>
-                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)}</span>
+                    <span class="text-[12px] font-medium">${toBanglaNumber(answerCount)}</span>
                 </a>
 
-                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2">
+                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full px-3 py-1.5 gap-2">
                     <i class="far fa-eye text-sm text-gray-500"></i>
-                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(viewCount)}</span>
+                    <span class="text-[12px] font-medium">${toBanglaNumber(viewCount)}</span>
                 </div>
 
                 <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
-                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition ml-auto">
                     <i class="fas fa-share text-sm"></i>
-                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">শেয়ার</span>
+                    <span class="text-[12px] font-medium hidden sm:inline">শেয়ার</span>
                 </button>
             </div>
 
@@ -113,17 +120,12 @@ const loadLatestQuestion = async () => {
     try {
         const { data: questionData, error } = await supabase
             .from('question')
-            .select(`
-                *,
-                profile:author_id (full_name, username, avatar_url),
-                answer(count)
-            `)
+            .select('*, profile:author_id(full_name, username, avatar_url), answer(count)')
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
         if (error) throw error;
-
-        if (questionData && questionData.length > 0) {
+        if (questionData) {
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
         }
     } catch (err) {
