@@ -40,23 +40,11 @@ const getInitials = (name) => {
     return name.charAt(0).toUpperCase();
 };
 
-// ===== ডিবাগ হেল্পার: পেজেই error দেখাবে =====
-const showDebug = (containerId, msg, type = 'error') => {
-    const el = document.getElementById(containerId);
-    if (!el) return;
-    const color = type === 'error' ? 'red' : type === 'warn' ? 'yellow' : 'blue';
-    el.innerHTML = `
-        <div class="p-3 my-2 bg-${color}-50 dark:bg-${color}-900/20 border border-${color}-200 rounded text-[12px] text-${color}-700 dark:text-${color}-300 font-mono whitespace-pre-wrap break-all">
-${msg}
-        </div>
-    `;
-};
-
+// ===== প্রশ্ন রেন্ডার =====
 const renderQuestion = (question, currentUser) => {
     document.getElementById('question-skeleton').classList.add('hidden');
     document.getElementById('question-content').classList.remove('hidden');
     document.getElementById('answers-section').classList.remove('hidden');
-    document.getElementById('answer-form-section').classList.remove('hidden');
 
     const breadcrumb = document.getElementById('breadcrumb-title');
     if (breadcrumb) {
@@ -65,12 +53,23 @@ const renderQuestion = (question, currentUser) => {
 
     document.title = `${question.title} - physflow`;
     document.getElementById('question-title').textContent = question.title;
+
+    // ২. প্রশ্নকর্তার username টাইটেলের নিচে সময়ের আগে
+    const authorUsername = question.profile?.username || question.profile?.full_name || 'অজ্ঞাত';
+    document.getElementById('question-author-name').textContent = authorUsername;
     document.getElementById('question-time').textContent = formatTimeAgo(question.created_at);
     document.getElementById('question-views').textContent = toBanglaNumber(question.views || 0);
 
-    const categoryBadge = document.getElementById('question-category-badge');
+    document.getElementById('q-vote-count').textContent = toBanglaNumber(question.votes || 0);
+    document.getElementById('question-body').innerHTML = question.body || '';
+
+    // ১. ক্যাটাগরি ও ট্যাগ — body-র নিচে একসাথে
+    const tagsContainer = document.getElementById('question-tags');
+    const tags = Array.isArray(question.tag) ? question.tag : [];
+    let tagsHTML = '';
+
     if (question.category) {
-        categoryBadge.innerHTML = `
+        tagsHTML += `
             <a href="categories.html?cat=${encodeURIComponent(question.category)}"
                class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded hover:bg-blue-50 transition">
                 ${question.category}
@@ -78,29 +77,19 @@ const renderQuestion = (question, currentUser) => {
         `;
     }
 
-    document.getElementById('q-vote-count').textContent = toBanglaNumber(question.votes || 0);
-    document.getElementById('question-body').innerHTML = question.body || '';
-
-    const tagsContainer = document.getElementById('question-tags');
-    const tags = Array.isArray(question.tag) ? question.tag : [];
-    tagsContainer.innerHTML = tags.map(t => `
+    tagsHTML += tags.map(t => `
         <a href="tags.html?tag=${encodeURIComponent(t)}"
            class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded hover:bg-blue-50 hover:text-[#0056b3] hover:border-blue-200 transition">
             #${t}
         </a>
     `).join('');
 
-    const authorName = question.profile?.username || question.profile?.full_name || 'অজ্ঞাত';
-    document.getElementById('author-name').textContent = authorName;
-    document.getElementById('author-avatar-placeholder').textContent = getInitials(authorName);
-    if (question.profile?.avatar_url) {
-        const avatarEl = document.getElementById('author-avatar-placeholder');
-        avatarEl.outerHTML = `<img src="${question.profile.avatar_url}" class="w-7 h-7 rounded object-cover" alt="${authorName}">`;
-    }
+    tagsContainer.innerHTML = tagsHTML;
 
     setupVoteButtons(question.id, question.votes || 0, currentUser, 'question');
 };
 
+// ===== ভোট সিস্টেম =====
 const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
     const prefix = type === 'question' ? 'q' : `ans-${id}`;
     const upBtn = document.getElementById(`${prefix}-vote-up`);
@@ -119,10 +108,7 @@ const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
     }
 
     const handleVote = async (direction) => {
-        if (!currentUser) {
-            alert('ভোট দিতে হলে লগ ইন করতে হবে।');
-            return;
-        }
+        if (!currentUser) { alert('ভোট দিতে হলে লগ ইন করতে হবে।'); return; }
         const table = type === 'question' ? 'question' : 'answer';
         if (currentVote === direction) {
             voteCount += direction === 'up' ? -1 : 1;
@@ -146,6 +132,146 @@ const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
     downBtn.addEventListener('click', () => handleVote('down'));
 };
 
+// ===== বুকমার্ক =====
+const setupBookmark = (answerId) => {
+    const btn = document.getElementById(`ans-${answerId}-bookmark`);
+    if (!btn) return;
+    const key = `bookmark_answer_${answerId}`;
+    if (localStorage.getItem(key)) {
+        btn.classList.add('text-[#0056b3]');
+        btn.classList.remove('text-gray-400');
+    }
+    btn.addEventListener('click', () => {
+        if (localStorage.getItem(key)) {
+            localStorage.removeItem(key);
+            btn.classList.remove('text-[#0056b3]');
+            btn.classList.add('text-gray-400');
+        } else {
+            localStorage.setItem(key, '1');
+            btn.classList.add('text-[#0056b3]');
+            btn.classList.remove('text-gray-400');
+        }
+    });
+};
+
+// ===== কমেন্ট modal =====
+const openCommentModal = async (answerId, currentUser) => {
+    // backdrop
+    let backdrop = document.getElementById('comment-backdrop');
+    if (!backdrop) {
+        backdrop = document.createElement('div');
+        backdrop.id = 'comment-backdrop';
+        backdrop.className = 'fixed inset-0 bg-black/50 z-[200] flex items-end md:items-center justify-center';
+        document.body.appendChild(backdrop);
+    }
+
+    backdrop.innerHTML = `
+        <div class="bg-white dark:bg-[#1a1a1b] w-full md:w-[500px] md:rounded-xl rounded-t-2xl shadow-2xl flex flex-col max-h-[80vh]">
+            <!-- হেডার -->
+            <div class="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 shrink-0">
+                <span class="font-semibold text-[15px] text-gray-800 dark:text-gray-200">কমেন্ট</span>
+                <button id="close-comment-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- কমেন্ট লিস্ট -->
+            <div id="comment-list" class="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+                <div class="text-center text-gray-400 text-[13px] py-4">
+                    <i class="fas fa-spinner fa-spin"></i> লোড হচ্ছে...
+                </div>
+            </div>
+
+            <!-- কমেন্ট ইনপুট -->
+            <div class="border-t dark:border-gray-700 px-4 py-3 shrink-0">
+                ${currentUser ? `
+                    <div class="flex gap-2 items-end">
+                        <textarea id="comment-input"
+                            placeholder="কমেন্ট লেখো..."
+                            rows="2"
+                            class="flex-1 border border-gray-300 dark:border-gray-600 rounded-xl px-3 py-2 text-[13px] bg-white dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#0056b3] resize-none transition"></textarea>
+                        <button id="comment-submit"
+                            class="bg-[#0056b3] text-white px-4 py-2 rounded-xl text-[13px] font-medium hover:bg-blue-700 active:scale-95 transition shrink-0">
+                            পাঠাও
+                        </button>
+                    </div>
+                ` : `
+                    <p class="text-center text-[13px] text-gray-500">কমেন্ট করতে <button id="comment-login-btn" class="text-[#0056b3] font-medium hover:underline">লগ ইন করো</button></p>
+                `}
+            </div>
+        </div>
+    `;
+
+    backdrop.classList.remove('hidden');
+
+    // বন্ধ করার লজিক
+    document.getElementById('close-comment-modal').addEventListener('click', () => backdrop.remove());
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
+    document.getElementById('comment-login-btn')?.addEventListener('click', () => {
+        backdrop.remove();
+        document.getElementById('login-btn')?.click();
+    });
+
+    // কমেন্ট লোড
+    await loadComments(answerId, currentUser);
+
+    // কমেন্ট সাবমিট
+    document.getElementById('comment-submit')?.addEventListener('click', async () => {
+        const input = document.getElementById('comment-input');
+        const text = input?.value.trim();
+        if (!text || text.length < 2) return;
+
+        const submitBtn = document.getElementById('comment-submit');
+        submitBtn.disabled = true;
+        submitBtn.textContent = '...';
+
+        const { error } = await supabase.from('comment').insert([{
+            answer_id: answerId,
+            body: text,
+            author_id: currentUser.id,
+            created_at: new Date().toISOString()
+        }]);
+
+        if (!error) {
+            input.value = '';
+            await loadComments(answerId, currentUser);
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'পাঠাও';
+    });
+};
+
+const loadComments = async (answerId, currentUser) => {
+    const listEl = document.getElementById('comment-list');
+    if (!listEl) return;
+
+    const { data, error } = await supabase
+        .from('comment')
+        .select('*, profile(username, full_name)')
+        .eq('answer_id', answerId)
+        .order('created_at', { ascending: true });
+
+    if (error || !data || data.length === 0) {
+        listEl.innerHTML = `<div class="text-center text-gray-400 text-[13px] py-4">এখনো কোনো কমেন্ট নেই।</div>`;
+        return;
+    }
+
+    listEl.innerHTML = data.map(c => {
+        const name = c.profile?.username || c.profile?.full_name || 'অজ্ঞাত';
+        const initials = getInitials(name);
+        return `
+            <div class="flex gap-2.5">
+                <div class="w-7 h-7 rounded-full bg-[#0056b3] flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-0.5">${initials}</div>
+                <div class="flex-1 bg-gray-50 dark:bg-[#2d2d2d] rounded-2xl px-3 py-2">
+                    <div class="text-[12px] font-semibold text-gray-800 dark:text-gray-200 mb-0.5">${name}</div>
+                    <div class="text-[13px] text-gray-700 dark:text-gray-300">${c.body}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+// ===== উত্তর কার্ড =====
 const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     const authorName = answer.profile?.username || answer.profile?.full_name || 'অজ্ঞাত';
     const initials = getInitials(authorName);
@@ -162,22 +288,42 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
                     </span>
                 </div>
             ` : ''}
+
             <div class="flex gap-3">
+                <!-- ৩. ভোট + বুকমার্ক + কমেন্ট কলাম -->
                 <div class="flex flex-col items-center gap-1 shrink-0 pt-1">
-                    <button id="ans-${answer.id}-vote-up" class="vote-btn w-7 h-7 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-[#0056b3] hover:text-[#0056b3] text-[12px]">
+                    <button id="ans-${answer.id}-vote-up" class="vote-btn w-7 h-7 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-[#0056b3] hover:text-[#0056b3]">
                         <i class="fas fa-caret-up text-lg"></i>
                     </button>
                     <span id="ans-${answer.id}-vote-count" class="text-[13px] font-semibold text-gray-700 dark:text-gray-300">${toBanglaNumber(answer.votes || 0)}</span>
-                    <button id="ans-${answer.id}-vote-down" class="vote-btn w-7 h-7 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-red-500 hover:text-red-500 text-[12px]">
+                    <button id="ans-${answer.id}-vote-down" class="vote-btn w-7 h-7 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-red-500 hover:text-red-500">
                         <i class="fas fa-caret-down text-lg"></i>
                     </button>
+
+                    <!-- সেরা উত্তর বাটন -->
                     ${isQuestionAuthor && !isBest ? `
-                        <button class="mark-best-btn mt-1 text-gray-300 dark:text-gray-600 hover:text-green-500 dark:hover:text-green-400 transition"
-                                data-answer-id="${answer.id}" title="সেরা উত্তর হিসেবে চিহ্নিত করুন">
+                        <button class="mark-best-btn mt-1 text-gray-300 dark:text-gray-600 hover:text-green-500 transition"
+                                data-answer-id="${answer.id}" title="সেরা উত্তর">
                             <i class="fas fa-check-circle text-lg"></i>
                         </button>
                     ` : ''}
+
+                    <!-- বুকমার্ক -->
+                    <button id="ans-${answer.id}-bookmark"
+                        class="vote-btn mt-2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#0056b3] transition"
+                        title="বুকমার্ক">
+                        <i class="fas fa-bookmark text-[14px]"></i>
+                    </button>
+
+                    <!-- কমেন্ট -->
+                    <button id="ans-${answer.id}-comment"
+                        class="vote-btn w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#0056b3] transition"
+                        title="কমেন্ট">
+                        <i class="fas fa-comment text-[14px]"></i>
+                    </button>
                 </div>
+
+                <!-- বডি -->
                 <div class="flex-1 min-w-0">
                     <div class="answer-body-content text-[14px] text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
                         ${answer.body || ''}
@@ -218,7 +364,16 @@ const renderAnswers = (answers, questionAuthorId, currentUser) => {
     });
 
     answerList.innerHTML = sorted.map(ans => createAnswerCard(ans, questionAuthorId, currentUser)).join('');
-    sorted.forEach(ans => setupVoteButtons(ans.id, ans.votes || 0, currentUser, 'answer'));
+
+    sorted.forEach(ans => {
+        setupVoteButtons(ans.id, ans.votes || 0, currentUser, 'answer');
+        setupBookmark(ans.id);
+        // কমেন্ট বাটন
+        document.getElementById(`ans-${ans.id}-comment`)?.addEventListener('click', () => {
+            openCommentModal(ans.id, currentUser);
+        });
+    });
+
     document.querySelectorAll('.mark-best-btn').forEach(btn => {
         btn.addEventListener('click', () => markBestAnswer(btn.dataset.answerId));
     });
@@ -251,37 +406,102 @@ const setupSortButtons = (questionAuthorId, currentUser) => {
     });
 };
 
-const setupAnswerForm = (questionId, currentUser) => {
-    const answerLoginPrompt = document.getElementById('answer-login-prompt');
-    const answerForm = document.getElementById('answer-form');
-    const answerTextarea = document.getElementById('answer-textarea');
-    const charCount = document.getElementById('answer-char-count');
-    const submitBtn = document.getElementById('answer-submit-btn');
+// ===== ৪. FAB বাটন + Answer Modal =====
+const setupAnswerFAB = (questionId, currentUser) => {
+    // FAB বাটন তৈরি
+    const fab = document.createElement('button');
+    fab.id = 'answer-fab';
+    fab.innerHTML = '<i class="fas fa-plus text-xl"></i>';
+    fab.className = 'fixed bottom-6 right-6 z-[100] w-14 h-14 bg-[#0056b3] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all duration-200';
+    fab.title = 'উত্তর দিন';
+    document.body.appendChild(fab);
 
-    if (!currentUser) {
-        answerLoginPrompt.classList.remove('hidden');
-        document.getElementById('answer-login-btn')?.addEventListener('click', () => {
-            document.getElementById('login-btn')?.click();
-        });
-        return;
-    }
+    fab.addEventListener('click', () => openAnswerModal(questionId, currentUser));
+};
 
-    answerForm.classList.remove('hidden');
+const openAnswerModal = (questionId, currentUser) => {
+    let backdrop = document.getElementById('answer-modal-backdrop');
+    if (backdrop) backdrop.remove();
 
-    answerTextarea.addEventListener('input', () => {
-        const len = answerTextarea.value.length;
+    backdrop = document.createElement('div');
+    backdrop.id = 'answer-modal-backdrop';
+    backdrop.className = 'fixed inset-0 bg-black/50 z-[200] flex items-end md:items-center justify-center';
+
+    backdrop.innerHTML = `
+        <div class="bg-white dark:bg-[#1a1a1b] w-full md:w-[600px] md:rounded-xl rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh]">
+            <!-- হেডার -->
+            <div class="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 shrink-0">
+                <span class="font-semibold text-[15px] text-gray-800 dark:text-gray-200">উত্তর লেখো</span>
+                <button id="close-answer-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- বডি -->
+            <div class="flex-1 overflow-y-auto px-4 py-3">
+                ${currentUser ? `
+                    <textarea id="answer-modal-textarea"
+                        placeholder="এখানে তোমার উত্তর লেখো... (বিস্তারিত হলে ভালো হয়)"
+                        class="w-full h-48 border border-gray-300 dark:border-gray-600 rounded-lg p-3 text-[14px] bg-white dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 focus:outline-none focus:border-[#0056b3] focus:ring-1 focus:ring-[#0056b3] resize-none transition"></textarea>
+                    <div class="flex items-center justify-between mt-2">
+                        <span id="answer-modal-char-count" class="text-[11px] text-gray-400">০ অক্ষর</span>
+                        <div id="answer-modal-message" class="hidden text-[12px]"></div>
+                    </div>
+                ` : `
+                    <div class="text-center py-8">
+                        <i class="fas fa-lock text-3xl text-gray-300 mb-3 block"></i>
+                        <p class="text-[14px] text-gray-500 mb-3">উত্তর দিতে লগ ইন করো।</p>
+                        <button id="answer-modal-login-btn" class="bg-[#0056b3] text-white px-5 py-2 rounded text-[13px] font-medium hover:bg-blue-700 transition">লগ ইন করুন</button>
+                    </div>
+                `}
+            </div>
+
+            <!-- ফুটার -->
+            ${currentUser ? `
+                <div class="border-t dark:border-gray-700 px-4 py-3 flex justify-end shrink-0">
+                    <button id="answer-modal-submit"
+                        class="bg-[#0056b3] text-white px-6 py-2 rounded-lg text-[13px] font-medium hover:bg-blue-700 active:scale-95 transition">
+                        <i class="fas fa-paper-plane mr-1.5"></i> উত্তর জমা দিন
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    // বন্ধ করা
+    document.getElementById('close-answer-modal').addEventListener('click', () => backdrop.remove());
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) backdrop.remove(); });
+    document.getElementById('answer-modal-login-btn')?.addEventListener('click', () => {
+        backdrop.remove();
+        document.getElementById('login-btn')?.click();
+    });
+
+    if (!currentUser) return;
+
+    // অক্ষর গণনা
+    const textarea = document.getElementById('answer-modal-textarea');
+    const charCount = document.getElementById('answer-modal-char-count');
+    textarea.addEventListener('input', () => {
+        const len = textarea.value.length;
         charCount.textContent = `${toBanglaNumber(len)} অক্ষর`;
         charCount.className = len < 20 ? 'text-[11px] text-red-400' : 'text-[11px] text-green-500';
     });
 
-    answerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const body = answerTextarea.value.trim();
+    // সাবমিট
+    document.getElementById('answer-modal-submit').addEventListener('click', async () => {
+        const body = textarea.value.trim();
+        const msgEl = document.getElementById('answer-modal-message');
+
         if (body.length < 20) {
-            showAnswerMessage('উত্তর কমপক্ষে ২০ অক্ষর হতে হবে।', 'error');
+            msgEl.textContent = 'উত্তর কমপক্ষে ২০ অক্ষর হতে হবে।';
+            msgEl.className = 'text-[12px] text-red-500';
+            msgEl.classList.remove('hidden');
             return;
         }
 
+        const submitBtn = document.getElementById('answer-modal-submit');
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> জমা হচ্ছে...';
 
@@ -297,90 +517,57 @@ const setupAnswerForm = (questionId, currentUser) => {
 
             if (error) throw error;
 
-            showAnswerMessage('উত্তর সফলভাবে জমা হয়েছে!', 'success');
-            answerTextarea.value = '';
-            charCount.textContent = '০ অক্ষর';
-            charCount.className = 'text-[11px] text-gray-400';
+            // সাকসেস
+            backdrop.remove();
             await loadAnswers(questionId, currentUser);
 
         } catch (err) {
-            showAnswerMessage('ত্রুটি: ' + err.message, 'error');
-        } finally {
+            msgEl.textContent = 'ত্রুটি: ' + err.message;
+            msgEl.className = 'text-[12px] text-red-500';
+            msgEl.classList.remove('hidden');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-1.5"></i> উত্তর জমা দিন';
         }
     });
+
+    // textarea এ focus
+    setTimeout(() => textarea?.focus(), 100);
 };
 
-const showAnswerMessage = (msg, type) => {
-    const el = document.getElementById('answer-message');
-    el.textContent = msg;
-    el.className = `text-[12px] mt-2 ${type === 'error' ? 'text-red-500' : 'text-green-600'}`;
-    el.classList.remove('hidden');
-    setTimeout(() => el.classList.add('hidden'), 4000);
-};
-
-// ===== উত্তর লোড (পেজেই error দেখাবে) =====
+// ===== উত্তর লোড =====
 const loadAnswers = async (questionId, currentUser, questionAuthorId) => {
-    const answerList = document.getElementById('answer-list');
-
-    // ধাপ ১: আগে profile join ছাড়া চেষ্টা করি
     const { data, error } = await supabase
         .from('answer')
         .select('*')
         .eq('question_id', questionId)
         .order('votes', { ascending: false });
 
-    if (error) {
+    if (error || !data || data.length === 0) {
+        const answerList = document.getElementById('answer-list');
         answerList.innerHTML = `
-            <div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded text-[12px] text-red-600 font-mono">
-                <div class="font-bold mb-1">⚠️ Answer Load Error:</div>
-                <div>Message: ${error.message}</div>
-                <div>Code: ${error.code || 'N/A'}</div>
-                <div>Details: ${error.details || 'N/A'}</div>
-                <div>Hint: ${error.hint || 'N/A'}</div>
-                <div class="mt-1">question_id: "${questionId}"</div>
+            <div class="text-center py-6 text-gray-400 text-[13px]">
+                <i class="far fa-comment-dots text-3xl block mb-2 opacity-40"></i>
+                এখনো কোনো উত্তর নেই। প্রথম উত্তর দাও!
             </div>
         `;
         return;
     }
 
-    if (!data || data.length === 0) {
-        answerList.innerHTML = `
-            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 rounded text-[12px] text-yellow-700">
-                <div class="font-bold mb-1">ℹ️ Debug Info:</div>
-                <div>question_id = "${questionId}" দিয়ে answer টেবিলে কোনো row পাওয়া যায়নি।</div>
-                <div class="mt-1">Supabase Dashboard → answer টেবিলে question_id কলাম চেক করো।</div>
-            </div>
-        `;
-        return;
-    }
-
-    // data পাওয়া গেলে profile আলাদাভাবে fetch করা (join সমস্যা এড়াতে)
+    // profile আলাদাভাবে fetch
     const authorIds = [...new Set(data.map(a => a.author_id).filter(Boolean))];
     let profileMap = {};
-
     if (authorIds.length > 0) {
         const { data: profiles } = await supabase
             .from('profile')
             .select('id, username, full_name, avatar_url')
             .in('id', authorIds);
-
-        if (profiles) {
-            profiles.forEach(p => { profileMap[p.id] = p; });
-        }
+        if (profiles) profiles.forEach(p => { profileMap[p.id] = p; });
     }
 
-    // প্রতিটি answer-এ profile যোগ করা
-    allAnswers = data.map(a => ({
-        ...a,
-        profile: profileMap[a.author_id] || null
-    }));
+    allAnswers = data.map(a => ({ ...a, profile: profileMap[a.author_id] || null }));
 
     const answerCountText = document.getElementById('answer-count-text');
-    if (answerCountText) {
-        answerCountText.textContent = toBanglaNumber(allAnswers.length);
-    }
+    if (answerCountText) answerCountText.textContent = toBanglaNumber(allAnswers.length);
 
     renderAnswers(allAnswers, questionAuthorId, currentUser);
     setupSortButtons(questionAuthorId, currentUser);
@@ -409,15 +596,16 @@ export const initQuestionPage = async () => {
         if (error || !question) {
             document.getElementById('question-skeleton').classList.add('hidden');
             document.getElementById('question-error').classList.remove('hidden');
-            document.getElementById('question-error-msg').textContent =
-                `প্রশ্নটি খুঁজে পাওয়া যায়নি। (ID: ${questionId}, Error: ${error?.message || 'null'})`;
+            document.getElementById('question-error-msg').textContent = 'প্রশ্নটি খুঁজে পাওয়া যায়নি।';
             return;
         }
 
         renderQuestion(question, currentUser);
         incrementViewCount(questionId);
         await loadAnswers(questionId, currentUser, question.author_id);
-        setupAnswerForm(questionId, currentUser);
+
+        // ৪. FAB বাটন সেটআপ
+        setupAnswerFAB(questionId, currentUser);
 
     } catch (err) {
         document.getElementById('question-skeleton').classList.add('hidden');
