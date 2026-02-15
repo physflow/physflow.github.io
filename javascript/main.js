@@ -33,6 +33,25 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
+// শেয়ার ফাংশন
+window.shareQuestion = async (title, url) => {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: title,
+                text: 'physflow-তে এই প্রশ্নটি দেখুন:',
+                url: window.location.origin + url
+            });
+        } catch (err) {
+            console.log('Share failed:', err);
+        }
+    } else {
+        // যদি ব্রাউজার শেয়ার সাপোর্ট না করে তবে লিঙ্ক কপি হবে
+        navigator.clipboard.writeText(window.location.origin + url);
+        alert('লিঙ্কটি কপি করা হয়েছে!');
+    }
+};
+
 const createQuestionCard = (question) => {
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
@@ -41,7 +60,6 @@ const createQuestionCard = (question) => {
     const authorName = question.profile?.full_name || question.profile?.username || 'অজানা ইউজার';
     const authorAvatar = question.profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random&color=fff`;
     
-    // উত্তর সংখ্যা বের করা (যদি select-এ answer_count থাকে)
     const answerCount = question.answer?.[0]?.count || 0;
     const voteCount = (question.upvotes || 0) - (question.downvotes || 0);
 
@@ -58,26 +76,32 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-medium mb-1 leading-tight">
-                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600">
+                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600 transition-colors">
                         ${question.title}
                     </a>
                 </h3>
-                <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2">
+                <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">
                     ${excerpt}
                 </p>
             </div>
 
-            <div class="flex items-center gap-4 mt-1">
+            <div class="flex items-center gap-2 mt-1">
                 <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2">
                     <button class="hover:text-orange-600 transition p-1"><i class="fas fa-arrow-up text-sm"></i></button>
                     <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
                     <button class="hover:text-blue-600 transition p-1"><i class="fas fa-arrow-down text-sm"></i></button>
                 </div>
 
-                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     <i class="far fa-comment text-sm"></i>
-                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)} টি উত্তর</span>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)}</span>
                 </a>
+
+                <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
+                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    <i class="fas fa-share text-sm"></i>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">শেয়ার</span>
+                </button>
             </div>
 
         </article>
@@ -103,17 +127,10 @@ const loadLatestQuestion = async () => {
 
         if (questionData && questionData.length > 0) {
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
-        } else {
-            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
         console.error('Error:', err);
-        questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
     }
 };
 
-export const initHomePage = () => {
-    loadLatestQuestion();
-};
-
-document.addEventListener('DOMContentLoaded', initHomePage);
+document.addEventListener('DOMContentLoaded', loadLatestQuestion);
