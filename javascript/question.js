@@ -68,17 +68,17 @@ const renderQuestion = (question, currentUser) => {
     if (avatarImg) avatarImg.src = question.profile?.avatar_url || `https://ui-avatars.com/api/?name=${question.profile?.username || 'U'}&background=0056b3&color=fff`;
     if (profileLink) profileLink.href = `profile.html?id=${question.author_id}`;
 
-    // ক্যাটাগরি ও ট্যাগ রেন্ডার (সাইজ ১২ পিক্সেল)
+    // ক্যাটাগরি ও ট্যাগ রেন্ডার (সাইজ ৮ পিক্সেল)
     const catBadge = document.getElementById('question-category-badge');
     const tagsContainer = document.getElementById('question-tags');
     
     if (catBadge && question.category) {
-        catBadge.innerHTML = `<span class="px-2 py-1 text-[12px] font-bold bg-blue-50 dark:bg-blue-900/20 text-[#0056b3] rounded border border-blue-100 dark:border-blue-800">${question.category}</span>`;
+        catBadge.innerHTML = `<span class="px-2 py-1 text-[8px] font-bold bg-blue-50 dark:bg-blue-900/20 text-[#0056b3] rounded border border-blue-100 dark:border-blue-800">${question.category}</span>`;
     }
 
     if (tagsContainer) {
         const tags = Array.isArray(question.tag) ? question.tag : [];
-        tagsContainer.innerHTML = tags.map(t => `<span class="px-2 py-1 text-[12px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 rounded border border-gray-200 dark:border-gray-700">#${t}</span>`).join('');
+        tagsContainer.innerHTML = tags.map(t => `<span class="px-2 py-1 text-[8px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 rounded border border-gray-200 dark:border-gray-700">#${t}</span>`).join('');
     }
 
     setupVoteButtons(question.id, question.votes || 0, currentUser, 'question');
@@ -91,7 +91,7 @@ const createAnswerCard = (answer, currentUser) => {
     const avatarUrl = answer.profile?.avatar_url || `https://ui-avatars.com/api/?name=${name}&background=0056b3&color=fff`;
     
     return `
-        <div class="py-6 border-b border-gray-100 dark:border-gray-800 last:border-0" id="answer-card-${answer.id}">
+        <div class="py-2 border-b border-gray-100 dark:border-gray-800 last:border-0" id="answer-card-${answer.id}">
             <div class="flex gap-4">
                 <div class="shrink-0">
                     <img src="${avatarUrl}" class="w-9 h-9 rounded-full object-cover border border-gray-100 dark:border-gray-800" alt="${name}">
@@ -252,7 +252,7 @@ const openAnswerModal = (questionId, currentUser) => {
 
     document.getElementById('submit-modal-answer').onclick = async () => {
         const body = document.getElementById('modal-answer-body').value.trim();
-        if (body.length < 20) { alert("উত্তরটি কমপক্ষে ২০ অক্ষর হতে হবে।"); return; }
+        if (body.length < 10) { alert("উত্তরটি কমপক্ষে ১০ অক্ষর হতে হবে।"); return; }
         
         const { error } = await supabase.from('answer').insert([{
             question_id: questionId,
