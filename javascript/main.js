@@ -32,7 +32,6 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-// শেয়ার ফাংশনটিকে গ্লোবাল উইন্ডোতে সেট করা (যাতে onclick খুঁজে পায়)
 window.shareQuestion = async (title, url) => {
     const fullUrl = window.location.origin + url;
     if (navigator.share) {
@@ -54,6 +53,7 @@ const createQuestionCard = (question) => {
     const authorAvatar = question.profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random&color=fff`;
     
     const answerCount = question.answer?.[0]?.count || 0;
+    // এখানে আপভোট ও ডাউনভোটের পার্থক্যই ভোট সংখ্যা হিসেবে দেখানো হচ্ছে
     const voteCount = (question.upvotes || 0) - (question.downvotes || 0);
 
     return `
@@ -78,21 +78,20 @@ const createQuestionCard = (question) => {
             </div>
 
             <div class="flex items-center gap-2 mt-1">
-                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2">
-                    <button class="hover:text-orange-600 p-1"><i class="fas fa-arrow-up text-sm"></i></button>
-                    <span class="text-[12px] font-bold">${toBanglaNumber(voteCount)}</span>
-                    <button class="hover:text-blue-600 p-1"><i class="fas fa-arrow-down text-sm"></i></button>
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition">
+                    <i class="fab fa-angellist text-sm"></i>
+                    <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
                 </div>
 
-                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2">
+                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     <i class="far fa-comment text-sm"></i>
-                    <span class="text-[12px] font-medium">${toBanglaNumber(answerCount)}</span>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)}</span>
                 </a>
 
                 <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
-                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2">
+                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
                     <i class="fas fa-share text-sm"></i>
-                    <span class="text-[12px] font-medium">শেয়ার</span>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">শেয়ার</span>
                 </button>
             </div>
         </article>
@@ -114,8 +113,6 @@ const loadLatestQuestion = async () => {
 
         if (questionData && questionData.length > 0) {
             questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
-        } else {
-            questionList.innerHTML = '<p class="p-6 text-center text-gray-500">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
         console.error('Error:', err);
