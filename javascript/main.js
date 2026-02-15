@@ -53,8 +53,8 @@ const createQuestionCard = (question) => {
     const authorAvatar = question.profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random&color=fff`;
     
     const answerCount = question.answer?.[0]?.count || 0;
-    // এখানে আপভোট ও ডাউনভোটের পার্থক্যই ভোট সংখ্যা হিসেবে দেখানো হচ্ছে
     const voteCount = (question.upvotes || 0) - (question.downvotes || 0);
+    const viewCount = question.views || 0; // ডাটাবেজে views কলাম থাকতে হবে
 
     return `
         <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm flex flex-col gap-2">
@@ -68,7 +68,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-medium mb-1 leading-tight">
-                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600">
+                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600 transition-colors">
                         ${question.title}
                     </a>
                 </h3>
@@ -77,21 +77,27 @@ const createQuestionCard = (question) => {
                 </p>
             </div>
 
-            <div class="flex items-center gap-2 mt-1">
-                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition">
-                    <i class="fa-solid fa-fire"></i>
-                    <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
+            <div class="flex items-center gap-2 mt-1 overflow-x-auto no-scrollbar">
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2 shrink-0">
+                    <button class="hover:text-orange-600 p-1"><i class="fas fa-arrow-up text-sm"></i></button>
+                    <span class="text-[12px] font-bold">${toBanglaNumber(voteCount)}</span>
+                    <button class="hover:text-blue-600 p-1"><i class="fas fa-arrow-down text-sm"></i></button>
                 </div>
 
-                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                    <i class="fa fa-comments"></i>
-                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)}</span>
+                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 shrink-0 hover:bg-gray-200 transition">
+                    <i class="far fa-comment text-sm"></i>
+                    <span class="text-[12px] font-medium">${toBanglaNumber(answerCount)}</span>
                 </a>
 
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 shrink-0">
+                    <i class="far fa-eye text-sm"></i>
+                    <span class="text-[12px] font-medium">${toBanglaNumber(viewCount)}</span>
+                </div>
+
                 <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
-                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 shrink-0 hover:bg-gray-200 transition">
                     <i class="fas fa-share text-sm"></i>
-                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">শেয়ার</span>
+                    <span class="text-[12px] font-medium">শেয়ার</span>
                 </button>
             </div>
         </article>
@@ -116,12 +122,7 @@ const loadLatestQuestion = async () => {
         }
     } catch (err) {
         console.error('Error:', err);
-        questionList.innerHTML = `<p class="p-6 text-center text-red-500">লোডিং ত্রুটি!</p>`;
     }
 };
 
-export const initHomePage = () => {
-    loadLatestQuestion();
-};
-
-document.addEventListener('DOMContentLoaded', initHomePage);
+document.addEventListener('DOMContentLoaded', loadLatestQuestion);
