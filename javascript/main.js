@@ -33,92 +33,70 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-const createQuestionCard = (question) => {
-    const tag = Array.isArray(question.tag) ? question.tag : [];
-    const excerpt = truncateText(question.body, 120); 
-    const timeAgo = formatTimeAgo(question.created_at);
-    const questionLink = `/question.html?id=${question.id}`;
-    
-    // স্ক্রিনশট অনুযায়ী profile টেবিল থেকে ডাটা নেওয়া
-    const authorName = question.profile?.full_name || question.profile?.username || 'অজানা ইউজার';
-    const authorAvatar = `https://ui-avatars.com/api/?name=${authorName}&background=random`;
-    
-    return `
-        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
-            <div class="flex items-center gap-2 mb-2">
-                <img src="${authorAvatar}" 
-                     class="w-8 h-8 rounded-full border border-gray-100 shadow-sm" alt="User">
-                <div class="flex items-center gap-2">
-                    <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
-                    <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
-                        ${timeAgo}
-                    </time>
-                </div>
-            </div>
-
-            <div class="min-w-0">
-                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
-                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
-                        ${question.title}
-                    </a>
-                </h3>
-                
-                <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
-                    ${excerpt}
-                </p>
-                
-                <div class="flex flex-wrap gap-1.5">
-                    ${question.category ? `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
-                            ${question.category}
-                        </span>
-                    ` : ''}
-
-                    ${tag.map(t => `
-                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
-                            #${t}
-                        </span>
-                    `).join('')}
-                </div>
-            </div>
-        </article>
-    `;
-};
-
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
     try {
-        // স্ক্রিনশট অনুযায়ী author_id ব্যবহার করে profile টেবিলের সাথে জয়েন
+        // profile টেবিল থেকে avatar_url সহ ডাটা ফেচ করা হচ্ছে
         const { data: questionData, error, count } = await supabase
             .from('question')
-            .select('*, profile:author_id(full_name, username)', { count: 'exact' })
+            .select('*, profile:author_id(full_name, username, avatar_url)', { count: 'exact' })
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
         if (error) throw error;
 
         if (questionData && questionData.length > 0) {
-            questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
+            questionList.innerHTML = questionData.map(q => {
+                const authorName = q.profile?.full_name || q.profile?.username || 'অজানা ইউজার';
+                
+                // যদি ডাটাবেজে ছবি থাকে তবে সেটি দেখাবে, নয়তো UI Avatars থেকে ছবি জেনারেট করবে
+                const authorAvatar = q.profile?.avatar_url 
+                    ? q.profile.avatar_url 
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random&color=fff`;
+
+                const timeAgo = formatTimeAgo(q.created_at);
+                const questionLink = `/question.html?id=${q.id}`;
+                const excerpt = truncateText(q.body, 120);
+
+                return `
+                    <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="${authorAvatar}" 
+                                 class="w-8 h-8 rounded-full border border-gray-100 object-cover shadow-sm" 
+                                 alt="${authorName}"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random'">
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
+                                <span class="text-[11px] text-gray-400">${timeAgo}</span>
+                            </div>
+                        </div>
+
+                        <div class="min-w-0">
+                            <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
+                                <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
+                                    ${q.title}
+                                </a>
+                            </h3>
+                            <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
+                                ${excerpt}
+                            </p>
+                        </div>
+                    </article>
+                `;
+            }).join('');
             
             const countEl = document.getElementById('question-count');
             if (countEl) {
                 countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
             }
-        } else {
-            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
         console.error('Error:', err);
-        questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
+        questionList.innerHTML = `<p class="p-6 text-center text-red-500">ত্রুটি: ${err.message}</p>`;
     }
 };
 
-export const initHomePage = () => {
-    loadLatestQuestion();
-};
-
-document.addEventListener('DOMContentLoaded', initHomePage);
-
-export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
+document.addEventListener('DOMContentLoaded', loadLatestQuestion);
