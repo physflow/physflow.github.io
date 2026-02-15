@@ -1,5 +1,5 @@
 import { supabase } from './supabase-config.js';
- 
+
 // গ্লোবাল ভেরিয়েবল
 let allAnswers = [];
 let currentSort = 'votes';
@@ -41,12 +41,63 @@ const getQuestionId = () => {
     return params.get('id');
 };
 
-// ৫. ভিউ কাউন্ট বাড়ানো
+// ৫. ভিউ কাউন্ট বাড়ানো (Simplified Version - RPC ছাড়া)
 const incrementViewCount = async (questionId) => {
     const sessionKey = `viewed_${questionId}`;
-    if (sessionStorage.getItem(sessionKey)) return;
-    await supabase.rpc('increment_views', { question_id: questionId });
-    sessionStorage.setItem(sessionKey, 'true');
+    const viewedAt = sessionStorage.getItem(sessionKey);
+    
+    // যদি ইতিমধ্যে দেখা হয়ে থাকে (১ ঘন্টার মধ্যে)
+    if (viewedAt) {
+        const lastViewed = parseInt(viewedAt);
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+        
+        if (now - lastViewed < oneHour) {
+            console.log('Already viewed recently');
+            return;
+        }
+    }
+    
+    try {
+        // বর্তমান ভিউ কাউন্ট নিয়ে আসি
+        const { data: currentQuestion, error: fetchError } = await supabase
+            .from('question')
+            .select('views')
+            .eq('id', questionId)
+            .single();
+        
+        if (fetchError) {
+            console.error('Error fetching current views:', fetchError);
+            return;
+        }
+        
+        // ১ বাড়িয়ে আপডেট করি
+        const newViews = (currentQuestion?.views || 0) + 1;
+        
+        const { error: updateError } = await supabase
+            .from('question')
+            .update({ views: newViews })
+            .eq('id', questionId);
+        
+        if (updateError) {
+            console.error('Error updating views:', updateError);
+            return;
+        }
+        
+        console.log(`✓ View count updated: ${newViews}`);
+        
+        // UI তে তাৎক্ষণিক আপডেট
+        const viewsElement = document.getElementById('question-views');
+        if (viewsElement) {
+            viewsElement.textContent = toBanglaNumber(newViews);
+        }
+        
+        // সেশনে timestamp সেভ করি
+        sessionStorage.setItem(sessionKey, Date.now().toString());
+        
+    } catch (err) {
+        console.error('Unexpected error in incrementViewCount:', err);
+    }
 };
 
 // ৬. মূল প্রশ্নটি স্ক্রিনে দেখানো
@@ -195,15 +246,35 @@ const loadAnswers = async (qId, user) => {
 // ১০. মূল ইনিশিয়ালাইজেশন
 export const initQuestionPage = async () => {
     const qId = getQuestionId();
-    if (!qId) return;
+    if (!qId) {
+        console.error('No question ID found in URL');
+        return;
+    }
+
+    console.log('Loading question:', qId);
 
     try {
         const { data: { user } } = await supabase.auth.getUser();
-        const { data: q } = await supabase.from('question').select('*, profile(username, avatar_url)').eq('id', qId).single();
+        const { data: q, error: qError } = await supabase
+            .from('question')
+            .select('*, profile(username, avatar_url)')
+            .eq('id', qId)
+            .single();
+
+        if (qError) {
+            console.error('Error loading question:', qError);
+            return;
+        }
 
         if (q) {
+            console.log('Question loaded:', q.title);
             renderQuestion(q, user);
-            incrementViewCount(qId);
+            
+            // ভিউ কাউন্ট increment করি (একটু দেরিতে যাতে page load হয়)
+            setTimeout(() => {
+                incrementViewCount(qId);
+            }, 1000);
+            
             await loadAnswers(qId, user);
             setupAnswerFAB(qId, user);
         }
@@ -294,7 +365,6 @@ window.submitReply = async (answerId) => {
         if (!error) {
             input.value = '';
             window.toggleReplyBox(answerId);
-            // রিপ্লাই লোড করার ফাংশন কল করুন
             alert('রিপ্লাই সফলভাবে যোগ হয়েছে!');
         } else {
             alert('রিপ্লাই যোগ করতে সমস্যা হয়েছে।');
