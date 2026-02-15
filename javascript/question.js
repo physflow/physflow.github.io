@@ -142,9 +142,10 @@ window.toggleReplyBox = (answerId) => {
 
 
 
-// ১০. রিপ্লাই সাবমিট করা
-window.submitReply = async (answerId) => {
-    const input = document.getElementById(`reply-input-${answerId}`);
+// ১০. রিপ্লাই সাবমিট করা (Nested Support)
+window.submitReply = async (answerId, parentId = null) => {
+    const inputId = parentId ? `reply-input-comment-${parentId}` : `reply-input-${answerId}`;
+    const input = document.getElementById(inputId);
     const text = input?.value.trim();
     if (!text) return;
 
@@ -154,19 +155,24 @@ window.submitReply = async (answerId) => {
     const { error } = await supabase.from('comment').insert([{
         answer_id: answerId,
         body: text,
-        author_id: user.id
+        author_id: user.id,
+        parent_id: parentId // যদি কমেন্টের রিপ্লাই হয় তবে parentId থাকবে
     }]);
 
     if (!error) {
         input.value = '';
-        window.toggleReplyBox(answerId);
+        if (parentId) {
+            document.getElementById(`reply-box-comment-${parentId}`)?.classList.add('hidden');
+        } else {
+            window.toggleReplyBox(answerId);
+        }
         await loadComments(answerId);
-    } else {
-        console.error("Reply Error:", error.message);
     }
 };
 
-// ১১. নির্দিষ্ট উত্তরের কমেন্টগুলো লোড করা
+
+
+// ১১. নির্দিষ্ট উত্তরের কমেন্টগুলো লোড করা (Threaded/Nested)
 const loadComments = async (answerId) => {
     const listEl = document.getElementById(`nested-comments-${answerId}`);
     if (!listEl) return;
@@ -177,26 +183,64 @@ const loadComments = async (answerId) => {
         .eq('answer_id', answerId)
         .order('created_at', { ascending: true });
 
-    if (error || !data || data.length === 0) return;
+    if (error || !data) return;
 
-    listEl.innerHTML = data.map(c => {
+    // কমেন্টগুলোকে গুছিয়ে নেওয়া (Parent-Child mapping)
+    const commentMap = {};
+    const roots = [];
+    data.forEach(c => {
+        commentMap[c.id] = { ...c, children: [] };
+    });
+    data.forEach(c => {
+        if (c.parent_id && commentMap[c.parent_id]) {
+            commentMap[c.parent_id].children.push(commentMap[c.id]);
+        } else {
+            roots.push(commentMap[c.id]);
+        }
+    });
+
+    // রেন্ডার করার ফাংশন
+    const renderCommentHtml = (c, level = 0) => {
         const name = c.profile?.username || 'অজ্ঞাত';
+        const marginLeft = level > 0 ? 'ml-6 border-l border-gray-200 dark:border-gray-700 pl-4' : '';
+        
         return `
-            <div class="flex gap-2.5 relative">
-                <div class="shrink-0 mt-1">${getAvatarHtml(c.profile?.avatar_url, name, "w-6 h-6")}</div>
-                <div class="flex-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-[12px] font-bold text-gray-800 dark:text-gray-200">${name}</span>
-                        <span class="text-[10px] text-gray-400">${formatTimeAgo(c.created_at)}</span>
+            <div class="comment-item ${marginLeft} mt-3">
+                <div class="flex gap-2.5">
+                    <div class="shrink-0 mt-1">${getAvatarHtml(c.profile?.avatar_url, name, "w-6 h-6")}</div>
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2">
+                            <span class="text-[12px] font-bold text-gray-800 dark:text-gray-200">${name}</span>
+                            <span class="text-[10px] text-gray-400">${formatTimeAgo(c.created_at)}</span>
+                        </div>
+                        <p class="text-[13px] text-gray-600 dark:text-gray-400 leading-snug mt-0.5">${c.body}</p>
+                        
+                        <button onclick="toggleCommentReplyBox('${c.id}')" class="text-[11px] text-blue-500 font-semibold mt-1 hover:underline">রিপ্লাই</button>
+                        
+                        <div id="reply-box-comment-${c.id}" class="hidden mt-2">
+                            <textarea id="reply-input-comment-${c.id}" class="w-full p-2 text-xs bg-gray-50 dark:bg-[#1a1a1b] border border-gray-200 dark:border-gray-700 rounded focus:outline-none" placeholder="রিপ্লাই লেখো..."></textarea>
+                            <div class="flex justify-end gap-2 mt-1">
+                                <button onclick="submitReply('${answerId}', '${c.id}')" class="bg-blue-600 text-white px-2 py-1 rounded text-[10px]">পাঠাও</button>
+                            </div>
+                        </div>
                     </div>
-                    <p class="text-[13px] text-gray-600 dark:text-gray-400 leading-snug mt-0.5">${c.body}</p>
                 </div>
+                ${c.children.map(child => renderCommentHtml(child, level + 1)).join('')}
             </div>
         `;
-    }).join('');
+    };
+
+    listEl.innerHTML = roots.map(root => renderCommentHtml(root)).join('');
 };
 
-// ১২. ভোট সিস্টেম (সংশোধিত)
+// কমেন্টের রিপ্লাই বক্স টগল করার জন্য আলাদা ফাংশন
+window.toggleCommentReplyBox = (commentId) => {
+    const box = document.getElementById(`reply-box-comment-${commentId}`);
+    if (box) box.classList.toggle('hidden');
+};
+
+
+// ১২. ভোট সিস্টেম (১ ইউজার ১ ভোট লজিক)
 const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
     const prefix = type === 'question' ? 'q' : `ans-${id}`;
     const upBtn = document.getElementById(`${prefix}-vote-up`);
@@ -204,17 +248,55 @@ const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
     const countEl = document.getElementById(`${prefix}-vote-count`);
     if (!upBtn || !downBtn || !countEl) return;
 
+    // লোকাল স্টোরেজ থেকে আগের ভোট চেক করা
+    const voteKey = `voted_${type}_${id}`;
+    let userVote = localStorage.getItem(voteKey); // 'up', 'down' অথবা null
+
+    // প্রাথমিক বাটনের রঙ সেট করা
+    if (userVote === 'up') upBtn.style.color = '#0056b3';
+    if (userVote === 'down') downBtn.style.color = '#ef4444';
+
     const handleVote = async (direction) => {
         if (!currentUser) { alert('ভোট দিতে লগ ইন করো।'); return; }
-        const { data: currentData } = await supabase.from(type === 'question' ? 'question' : 'answer').select('votes').eq('id', id).single();
-        let newVotes = (currentData?.votes || 0) + (direction === 'up' ? 1 : -1);
+
+        // যদি ইউজার আগের ভোটেই আবার ক্লিক করে, তবে ভোট বাতিল হবে
+        if (userVote === direction) {
+            alert('তুমি ইতিমধ্যে ভোট দিয়েছ।');
+            return;
+        }
+
+        const table = type === 'question' ? 'question' : 'answer';
+        const { data: currentData } = await supabase.from(table).select('votes').eq('id', id).single();
+        let currentDBVotes = currentData?.votes || 0;
+
+        let voteChange = 0;
+        if (!userVote) {
+            // নতুন ভোট
+            voteChange = direction === 'up' ? 1 : -1;
+        } else {
+            // ভোট পরিবর্তন (Up থেকে Down বা উল্টোটা)
+            voteChange = direction === 'up' ? 2 : -2;
+        }
+
+        let newVotes = currentDBVotes + voteChange;
+        
+        // UI আপডেট
         countEl.textContent = toBanglaNumber(newVotes);
-        await supabase.from(type === 'question' ? 'question' : 'answer').update({ votes: newVotes }).eq('id', id);
+        userVote = direction;
+        localStorage.setItem(voteKey, direction);
+
+        // বাটন হাইলাইট ঠিক করা
+        upBtn.style.color = direction === 'up' ? '#0056b3' : '';
+        downBtn.style.color = direction === 'down' ? '#ef4444' : '';
+
+        // ডাটাবেস আপডেট
+        await supabase.from(table).update({ votes: newVotes }).eq('id', id);
     };
 
     upBtn.onclick = () => handleVote('up');
     downBtn.onclick = () => handleVote('down');
 };
+
 
 // ১৩. উত্তরগুলো রেন্ডার করা
 const renderAnswers = (answers, questionAuthorId, currentUser) => {
@@ -249,7 +331,7 @@ const loadAnswers = async (qId, user, authorId) => {
     renderAnswers(allAnswers, authorId, user);
 };
 
-// ১৫. মূল ইনিশিয়ালাইজেশন ফাংশন
+// ১৫. মূল ইনিশিয়ালাইজেশন ফাংশন (আপডেটেড)
 export const initQuestionPage = async () => {
     const qId = getQuestionId();
     if (!qId) return;
@@ -262,8 +344,40 @@ export const initQuestionPage = async () => {
             renderQuestion(q, user);
             incrementViewCount(qId);
             await loadAnswers(qId, user, q.author_id);
+            
+            // এই লাইনটি যোগ করো
+            setupAnswerFAB(qId, user); 
         }
     } catch (err) {
         console.error("Initialization Error:", err);
     }
 };
+
+
+// ১৬. FAB বাটন সেটআপ
+const setupAnswerFAB = (questionId, currentUser) => {
+    // আগে থেকে বাটন থাকলে ডিলিট করে নতুন করে তৈরি করা (ডুপ্লিকেট এড়াতে)
+    const existingFab = document.getElementById('answer-fab');
+    if (existingFab) existingFab.remove();
+
+    const fab = document.createElement('button');
+    fab.id = 'answer-fab';
+    fab.innerHTML = '<i class="fas fa-pen text-xl"></i>'; // পেন্সিল আইকন
+    // টেলওয়াইন্ড ক্লাস দিয়ে বাটন ডিজাইন
+    fab.className = 'fixed bottom-8 right-6 z-[100] w-14 h-14 bg-[#0056b3] text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all duration-300 md:bottom-10 md:right-10';
+    fab.title = 'উত্তর দিন';
+    
+    document.body.appendChild(fab);
+
+    fab.addEventListener('click', () => {
+        if (!currentUser) {
+            alert('উত্তর দিতে হলে আগে লগ ইন করো।');
+            document.getElementById('login-btn')?.click(); // তোমার লগইন বাটন আইডি থাকলে
+            return;
+        }
+        // এখানে তোমার উত্তর দেওয়ার মডাল ওপেন হবে
+        openAnswerModal(questionId, currentUser); 
+    });
+};
+
+
