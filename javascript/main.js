@@ -41,9 +41,9 @@ const getBadge = (type) => {
     };
 
     const badgeText = {
-        new: '🆕 New',
-        trending: '🔥 Trending',
-        top: '⭐ Top'
+        new: 'New',
+        trending: 'Trending',
+        top: 'Top'
     };
 
     return `
@@ -83,20 +83,20 @@ const createQuestionCard = (question) => {
             </div>
 
             <div class="min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <h3 class="text-[16px] font-normal leading-tight">
-                        <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
-                            ${question.title}
-                        </a>
-                    </h3>
-                    ${question.badge ? getBadge(question.badge) : ''}
-                </div>
+                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
+                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
+                        ${question.title}
+                    </a>
+                </h3>
                 
                 <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
                     ${excerpt}
                 </p>
                 
-                <div class="flex flex-wrap gap-1.5">
+                <div class="flex flex-wrap gap-1.5 items-center">
+                    
+                    ${question.badge ? getBadge(question.badge) : ''}
+
                     ${question.category ? `
                         <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
                             ${question.category}
