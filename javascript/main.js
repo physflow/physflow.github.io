@@ -1,6 +1,6 @@
 import { supabase } from './supabase-config.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 30;
 
 const toBanglaNumber = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
@@ -33,6 +33,26 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
+const getBadge = (type) => {
+    const badgeStyles = {
+        new: 'bg-blue-50 text-blue-600 border-blue-200',
+        trending: 'bg-orange-50 text-orange-600 border-orange-200',
+        top: 'bg-yellow-50 text-yellow-700 border-yellow-300'
+    };
+
+    const badgeText = {
+        new: '🆕 New',
+        trending: '🔥 Trending',
+        top: '⭐ Top'
+    };
+
+    return `
+        <span class="px-2 py-0.5 text-[10px] font-bold border rounded ${badgeStyles[type]}">
+            ${badgeText[type]}
+        </span>
+    `;
+};
+
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
@@ -63,11 +83,14 @@ const createQuestionCard = (question) => {
             </div>
 
             <div class="min-w-0">
-                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
-                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
-                        ${question.title}
-                    </a>
-                </h3>
+                <div class="flex items-center gap-2 mb-1">
+                    <h3 class="text-[16px] font-normal leading-tight">
+                        <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
+                            ${question.title}
+                        </a>
+                    </h3>
+                    ${question.badge ? getBadge(question.badge) : ''}
+                </div>
                 
                 <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
                     ${excerpt}
@@ -99,16 +122,6 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
 
-    const skeletonHTML = `
-        <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
-            <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-4 w-full bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
-        </div>
-    `;
-
-    questionList.innerHTML = skeletonHTML.repeat(20);
-
     try {
 
         const oneWeekAgo = new Date();
@@ -118,7 +131,6 @@ const loadLatestQuestion = async () => {
             latest,
             weeklyViews,
             weeklyVotes,
-            weeklyAnswers,
             allTimeVotes,
             randomSet
         ] = await Promise.all([
@@ -126,47 +138,42 @@ const loadLatestQuestion = async () => {
             supabase.from('question')
                 .select('*, answer(count)')
                 .order('created_at', { ascending: false })
-                .limit(5),
+                .limit(8),
 
             supabase.from('question')
                 .select('*, answer(count)')
                 .gte('created_at', oneWeekAgo.toISOString())
                 .order('views', { ascending: false })
-                .limit(4),
+                .limit(7),
 
             supabase.from('question')
                 .select('*, answer(count)')
                 .gte('created_at', oneWeekAgo.toISOString())
                 .order('votes', { ascending: false })
-                .limit(3),
-
-            supabase.from('question')
-                .select('*, answer(count)')
-                .gte('created_at', oneWeekAgo.toISOString())
-                .order('answer_count', { ascending: false })
-                .limit(3),
+                .limit(7),
 
             supabase.from('question')
                 .select('*, answer(count)')
                 .order('votes', { ascending: false })
-                .limit(3),
+                .limit(5),
 
             supabase.from('question')
                 .select('*, answer(count)')
-                .limit(10)
+                .limit(15)
         ]);
 
+        const markBadge = (list, type) =>
+            (list?.data || []).map(q => ({ ...q, badge: type }));
+
         const combined = [
-            ...(latest.data || []),
-            ...(weeklyViews.data || []),
-            ...(weeklyVotes.data || []),
-            ...(weeklyAnswers.data || []),
-            ...(allTimeVotes.data || []),
-            ...(randomSet.data || []).slice(0, 2)
+            ...markBadge(latest, 'new'),
+            ...markBadge(weeklyViews, 'trending'),
+            ...markBadge(weeklyVotes, 'trending'),
+            ...markBadge(allTimeVotes, 'top'),
+            ...(randomSet.data || []).slice(0, 5)
         ];
 
         const uniqueMap = new Map();
-
         combined.forEach(q => {
             if (!uniqueMap.has(q.id)) {
                 uniqueMap.set(q.id, q);
@@ -175,14 +182,10 @@ const loadLatestQuestion = async () => {
 
         const finalQuestions = shuffleArray(Array.from(uniqueMap.values())).slice(0, PAGE_SIZE);
 
-        if (finalQuestions.length > 0) {
-            questionList.innerHTML = finalQuestions.map(q => {
-                const answerCount = q.answer?.[0]?.count || 0;
-                return createQuestionCard({ ...q, answer_count: answerCount });
-            }).join('');
-        } else {
-            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
-        }
+        questionList.innerHTML = finalQuestions.map(q => {
+            const answerCount = q.answer?.[0]?.count || 0;
+            return createQuestionCard({ ...q, answer_count: answerCount });
+        }).join('');
 
     } catch (err) {
         console.error('Error:', err);
