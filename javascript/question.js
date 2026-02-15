@@ -242,42 +242,49 @@ const openCommentModal = async (answerId, currentUser) => {
 };
 
 const loadComments = async (answerId, currentUser) => {
-    const listEl = document.getElementById('comment-list');
+    const listEl = document.getElementById(`nested-comments-${answerId}`);
     if (!listEl) return;
 
     const { data, error } = await supabase
         .from('comment')
-        .select('*, profile(username, full_name)')
+        .select('*, profile(username, full_name, avatar_url)')
         .eq('answer_id', answerId)
         .order('created_at', { ascending: true });
 
-    if (error || !data || data.length === 0) {
-        listEl.innerHTML = `<div class="text-center text-gray-400 text-[13px] py-4">এখনো কোনো কমেন্ট নেই।</div>`;
-        return;
-    }
+    if (error || !data || data.length === 0) return;
 
     listEl.innerHTML = data.map(c => {
         const name = c.profile?.username || c.profile?.full_name || 'অজ্ঞাত';
-        const initials = getInitials(name);
+        const cAvatar = c.profile?.avatar_url;
+        const cInitials = getInitials(name);
+        
         return `
-            <div class="flex gap-2.5">
-                <div class="w-7 h-7 rounded-full bg-[#0056b3] flex items-center justify-center text-white text-[10px] font-bold shrink-0 mt-0.5">${initials}</div>
-                <div class="flex-1 bg-gray-50 dark:bg-[#2d2d2d] rounded-2xl px-3 py-2">
-                    <div class="text-[12px] font-semibold text-gray-800 dark:text-gray-200 mb-0.5">${name}</div>
-                    <div class="text-[13px] text-gray-700 dark:text-gray-300">${c.body}</div>
+            <div class="flex gap-3 relative before:absolute before:w-4 before:h-[1px] before:bg-gray-100 dark:before:bg-gray-800 before:-left-6 before:top-4">
+                <div class="shrink-0">
+                    ${cAvatar 
+                        ? `<img src="${cAvatar}" class="w-7 h-7 rounded-full object-cover">` 
+                        : `<div class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-500">${cInitials}</div>`}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200">${name}</span>
+                        <span class="text-[10px] text-gray-400">${formatTimeAgo(c.created_at)}</span>
+                    </div>
+                    <p class="text-[13px] text-gray-600 dark:text-gray-400 mt-0.5 leading-snug">${c.body}</p>
                 </div>
             </div>
         `;
     }).join('');
 };
 
+
 // ===== উত্তর কার্ড =====
 const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     const authorName = answer.profile?.username || answer.profile?.full_name || 'অজ্ঞাত';
     const avatarUrl = answer.profile?.avatar_url; 
     const timeAgo = formatTimeAgo(answer.created_at);
-    const isBest = answer.is_best_answer;
 
+    // প্রোফাইল পিকচার অথবা নামের প্রথম অক্ষর
     const profileDisplay = avatarUrl 
         ? `<img src="${avatarUrl}" class="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100 dark:border-gray-800" alt="${authorName}">`
         : `<div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[12px]">${getInitials(authorName)}</div>`;
@@ -293,7 +300,6 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
                     <div class="flex items-center gap-2 mb-1.5">
                         <span class="font-bold text-[14px] text-gray-900 dark:text-gray-100">${authorName}</span>
                         <span class="text-gray-400 text-[11px]">${timeAgo}</span>
-                        ${isBest ? `<span class="ml-2 text-[10px] bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 px-2 py-0.5 rounded-full font-bold border border-green-100 dark:border-green-800">সেরা উত্তর</span>` : ''}
                     </div>
 
                     <div class="answer-body-content text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
@@ -314,12 +320,6 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
                         <button id="ans-${answer.id}-comment" class="text-gray-500 hover:text-blue-600 text-[13px] font-semibold transition-colors">
                             রিপ্লাই
                         </button>
-
-                        ${currentUser && currentUser.id === questionAuthorId && !isBest ? `
-                            <button class="mark-best-btn text-gray-300 hover:text-green-500 transition-colors" data-answer-id="${answer.id}">
-                                <i class="fas fa-check-circle text-[16px]"></i>
-                            </button>
-                        ` : ''}
                     </div>
 
                     <div id="nested-comments-${answer.id}" class="mt-4 ml-2 pl-6 border-l-2 border-gray-100 dark:border-gray-800 space-y-4 relative">
@@ -329,6 +329,7 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
         </div>
     `;
 };
+
 
 
 
