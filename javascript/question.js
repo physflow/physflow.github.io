@@ -276,70 +276,49 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     const authorName = answer.profile?.username || answer.profile?.full_name || 'অজ্ঞাত';
     const initials = getInitials(authorName);
     const timeAgo = formatTimeAgo(answer.created_at);
-    const isBest = answer.is_best_answer;
-    const isQuestionAuthor = currentUser && currentUser.id === questionAuthorId;
-
+    
     return `
-        <div class="border ${isBest ? 'border-green-300 dark:border-green-700' : 'border-gray-200 dark:border-gray-800'} rounded-md p-4 bg-white dark:bg-transparent" id="answer-card-${answer.id}">
-            ${isBest ? `
-                <div class="flex items-center gap-1.5 mb-3">
-                    <span class="best-answer-badge px-2 py-0.5 text-[11px] font-semibold rounded-full flex items-center gap-1">
-                        <i class="fas fa-check-circle"></i> সেরা উত্তর
-                    </span>
+        <div class="flex gap-4 p-4 mb-4 bg-white dark:bg-[#1a1a1b] rounded-xl transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-800" id="answer-card-${answer.id}">
+            <div class="shrink-0">
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                    ${initials}
                 </div>
-            ` : ''}
+            </div>
 
-            <div class="flex gap-3">
-                <!-- ৩. ভোট + বুকমার্ক + কমেন্ট কলাম -->
-                <div class="flex flex-col items-center gap-1 shrink-0 pt-1">
-                    <button id="ans-${answer.id}-vote-up" class="vote-btn w-7 h-7 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-[#0056b3] hover:text-[#0056b3]">
-                        <i class="fas fa-caret-up text-lg"></i>
-                    </button>
-                    <span id="ans-${answer.id}-vote-count" class="text-[13px] font-semibold text-gray-700 dark:text-gray-300">${toBanglaNumber(answer.votes || 0)}</span>
-                    <button id="ans-${answer.id}-vote-down" class="vote-btn w-7 h-7 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-red-500 hover:text-red-500">
-                        <i class="fas fa-caret-down text-lg"></i>
-                    </button>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-bold text-[14px] text-gray-900 dark:text-gray-100">${authorName}</span>
+                    <span class="text-gray-400 text-[12px]">• ${timeAgo}</span>
+                </div>
 
-                    <!-- সেরা উত্তর বাটন -->
-                    ${isQuestionAuthor && !isBest ? `
-                        <button class="mark-best-btn mt-1 text-gray-300 dark:text-gray-600 hover:text-green-500 transition"
-                                data-answer-id="${answer.id}" title="সেরা উত্তর">
-                            <i class="fas fa-check-circle text-lg"></i>
+                <div class="answer-body-content text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed">
+                    ${answer.body || ''}
+                </div>
+
+                <div class="flex items-center gap-4 mt-3">
+                    <div class="flex items-center bg-gray-50 dark:bg-[#2d2d2d] rounded-full px-2 py-1">
+                        <button id="ans-${answer.id}-vote-up" class="vote-btn p-1 hover:text-blue-600 transition">
+                            <i class="fas fa-arrow-up text-[14px]"></i>
                         </button>
-                    ` : ''}
-
-                    <!-- বুকমার্ক -->
-                    <button id="ans-${answer.id}-bookmark"
-                        class="vote-btn mt-2 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#0056b3] transition"
-                        title="বুকমার্ক">
-                        <i class="fas fa-bookmark text-[14px]"></i>
-                    </button>
-
-                    <!-- কমেন্ট -->
-                    <button id="ans-${answer.id}-comment"
-                        class="vote-btn w-7 h-7 flex items-center justify-center text-gray-400 hover:text-[#0056b3] transition"
-                        title="কমেন্ট">
-                        <i class="fas fa-comment text-[14px]"></i>
-                    </button>
-                </div>
-
-                <!-- বডি -->
-                <div class="flex-1 min-w-0">
-                    <div class="answer-body-content text-[14px] text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-                        ${answer.body || ''}
+                        <span id="ans-${answer.id}-vote-count" class="px-2 text-[13px] font-medium">${toBanglaNumber(answer.votes || 0)}</span>
+                        <button id="ans-${answer.id}-vote-down" class="vote-btn p-1 hover:text-red-500 transition">
+                            <i class="fas fa-arrow-down text-[14px]"></i>
+                        </button>
                     </div>
-                    <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100 dark:border-gray-800">
-                        <time class="text-[11px] text-gray-400">${timeAgo}</time>
-                        <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded px-2 py-1.5 text-[11px] flex items-center gap-1.5">
-                            <div class="w-5 h-5 rounded bg-[#0056b3] flex items-center justify-center text-white text-[9px] font-bold">${initials}</div>
-                            <span class="text-[#0056b3] font-medium">${authorName}</span>
-                        </div>
-                    </div>
+
+                    <button id="ans-${answer.id}-comment" class="text-gray-500 hover:text-blue-600 text-[13px] font-medium transition">
+                        রিপ্লাই
+                    </button>
+                    
+                    <button id="ans-${answer.id}-bookmark" class="text-gray-400 hover:text-blue-600 transition">
+                        <i class="far fa-bookmark text-[13px]"></i>
+                    </button>
                 </div>
             </div>
         </div>
     `;
 };
+
 
 let allAnswers = [];
 let currentSort = 'votes';
