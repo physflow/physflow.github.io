@@ -356,28 +356,71 @@ export const initQuestionPage = async () => {
 
 // ১৬. FAB বাটন সেটআপ
 const setupAnswerFAB = (questionId, currentUser) => {
-    // আগে থেকে বাটন থাকলে ডিলিট করে নতুন করে তৈরি করা (ডুপ্লিকেট এড়াতে)
     const existingFab = document.getElementById('answer-fab');
     if (existingFab) existingFab.remove();
 
     const fab = document.createElement('button');
     fab.id = 'answer-fab';
-    fab.innerHTML = '<i class="fas fa-pen text-xl"></i>'; // পেন্সিল আইকন
-    // টেলওয়াইন্ড ক্লাস দিয়ে বাটন ডিজাইন
-    fab.className = 'fixed bottom-8 right-6 z-[100] w-14 h-14 bg-[#0056b3] text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all duration-300 md:bottom-10 md:right-10';
-    fab.title = 'উত্তর দিন';
+    fab.innerHTML = '<i class="fas fa-pen text-xl"></i>';
+    fab.className = 'fixed bottom-8 right-6 z-[100] w-14 h-14 bg-[#0056b3] text-white rounded-full shadow-2xl flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all duration-300';
     
     document.body.appendChild(fab);
 
     fab.addEventListener('click', () => {
         if (!currentUser) {
             alert('উত্তর দিতে হলে আগে লগ ইন করো।');
-            document.getElementById('login-btn')?.click(); // তোমার লগইন বাটন আইডি থাকলে
             return;
         }
-        // এখানে তোমার উত্তর দেওয়ার মডাল ওপেন হবে
+        // মডাল ওপেন করার ফাংশন কল
         openAnswerModal(questionId, currentUser); 
     });
 };
 
+// ১৭. উত্তর দেওয়ার মডাল (Modal) তৈরি ও ওপেন করা
+const openAnswerModal = (questionId, currentUser) => {
+    // যদি আগে থেকে মডাল থাকে তবে সেটি ডিলিট করা
+    const oldModal = document.getElementById('answer-modal');
+    if (oldModal) oldModal.remove();
 
+    const modalHtml = `
+    <div id="answer-modal" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-4">
+        <div class="bg-white dark:bg-[#1a1a1b] w-full max-w-lg rounded-xl shadow-xl overflow-hidden">
+            <div class="p-4 border-b dark:border-gray-800 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800 dark:text-white">আপনার উত্তর লিখুন</h3>
+                <button onclick="document.getElementById('answer-modal').remove()" class="text-gray-500 hover:text-red-500 text-xl">&times;</button>
+            </div>
+            <div class="p-4">
+                <textarea id="modal-answer-body" class="w-full h-40 p-3 bg-gray-50 dark:bg-[#2d2d2d] dark:text-white border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" placeholder="কমপক্ষে ২০ অক্ষরে উত্তরটি লিখুন..."></textarea>
+                <div class="mt-4 flex justify-end gap-3">
+                    <button onclick="document.getElementById('answer-modal').remove()" class="px-4 py-2 text-gray-600 dark:text-gray-400 font-medium">বাতিল</button>
+                    <button id="submit-modal-answer" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition">জমা দিন</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // জমা দেওয়ার বাটনে ইভেন্ট লিসেনার
+    document.getElementById('submit-modal-answer').addEventListener('click', async () => {
+        const body = document.getElementById('modal-answer-body').value.trim();
+        if (body.length < 20) {
+            alert("উত্তরটি খুবই ছোট! কমপক্ষে ২০ অক্ষর লিখুন।");
+            return;
+        }
+
+        const { error } = await supabase.from('answer').insert([{
+            question_id: questionId,
+            body: body,
+            author_id: currentUser.id,
+            votes: 0
+        }]);
+
+        if (!error) {
+            document.getElementById('answer-modal').remove();
+            location.reload(); // পেজ রিলোড করে নতুন উত্তর দেখানো
+        } else {
+            alert("ত্রুটি: " + error.message);
+        }
+    });
+};
