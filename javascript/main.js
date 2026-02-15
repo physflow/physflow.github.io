@@ -35,15 +35,15 @@ const truncateText = (text, maxLength = 130) => {
 
 const getBadge = (type) => {
     const badgeStyles = {
-        new: 'bg-blue-50 text-blue-600 border-blue-200',
-        trending: 'bg-orange-50 text-orange-600 border-orange-200',
-        top: 'bg-yellow-50 text-yellow-700 border-yellow-300'
+        new: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700',
+        trending: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700',
+        top: 'bg-yellow-50 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
     };
 
     const badgeText = {
-        new: 'New',
-        trending: 'Trending',
-        top: 'Top'
+        new: 'নতুন',
+        trending: 'ট্রেন্ডিং',
+        top: 'জনপ্রিয়'
     };
 
     return `
