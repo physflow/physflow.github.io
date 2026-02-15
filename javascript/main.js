@@ -38,37 +38,48 @@ const createQuestionCard = (question) => {
     const timeAgo = formatTimeAgo(question.created_at);
     const questionLink = `/question.html?id=${question.id}`;
     
-    // profile:author_id থেকে আসা ডাটা সেট করা
-    // তোমার স্ক্রিনশট অনুযায়ী full_name এবং avatar_url ব্যবহার করা হয়েছে
     const authorName = question.profile?.full_name || question.profile?.username || 'অজানা ইউজার';
     const authorAvatar = question.profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random&color=fff`;
     
+    // উত্তর সংখ্যা বের করা (যদি select-এ answer_count থাকে)
+    const answerCount = question.answer?.[0]?.count || 0;
+    const voteCount = (question.upvotes || 0) - (question.downvotes || 0);
+
     return `
-        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
-            <div class="flex items-center gap-2 mb-2">
-                <img src="${authorAvatar}" 
-                     class="w-8 h-8 rounded-full border border-gray-100 object-cover shadow-sm" 
-                     alt="${authorName}"
-                     onerror="this.src='https://ui-avatars.com/api/?name=User'">
-                
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm flex flex-col gap-2">
+            
+            <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="text-[14px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
-                    <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
-                        ${timeAgo}
-                    </time>
+                    <img src="${authorAvatar}" class="w-7 h-7 rounded-full object-cover border border-gray-100" alt="User">
+                    <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
                 </div>
+                <time class="text-[11px] text-gray-400 shrink-0">${timeAgo}</time>
             </div>
 
             <div class="min-w-0">
-                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
-                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
+                <h3 class="text-[16px] font-medium mb-1 leading-tight">
+                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-blue-600">
                         ${question.title}
                     </a>
                 </h3>
-                <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">
+                <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2">
                     ${excerpt}
                 </p>
             </div>
+
+            <div class="flex items-center gap-4 mt-1">
+                <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5 gap-2">
+                    <button class="hover:text-orange-600 transition p-1"><i class="fas fa-arrow-up text-sm"></i></button>
+                    <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
+                    <button class="hover:text-blue-600 transition p-1"><i class="fas fa-arrow-down text-sm"></i></button>
+                </div>
+
+                <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    <i class="far fa-comment text-sm"></i>
+                    <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)} টি উত্তর</span>
+                </a>
+            </div>
+
         </article>
     `;
 };
@@ -78,16 +89,12 @@ const loadLatestQuestion = async () => {
     if (!questionList) return;
     
     try {
-        // রিলেশনশিপ অনুযায়ী সঠিক সিলেক্ট কুয়েরি
         const { data: questionData, error } = await supabase
             .from('question')
             .select(`
                 *,
-                profile:author_id (
-                    full_name,
-                    username,
-                    avatar_url
-                )
+                profile:author_id (full_name, username, avatar_url),
+                answer(count)
             `)
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
@@ -109,5 +116,4 @@ export const initHomePage = () => {
     loadLatestQuestion();
 };
 
-// layout.js থেকে ডাকা হবে অথবা সরাসরি
 document.addEventListener('DOMContentLoaded', initHomePage);
