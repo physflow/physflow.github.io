@@ -3,8 +3,8 @@ import { supabase } from './supabase-config.js';
 const PAGE_SIZE = 30;
 
 const toBanglaNumber = (num) => {
-    const banglaDigits = ['০','১','২','৩','৪','৫','৬','৭','৮','৯'];
-    return String(num).split('').map(d => banglaDigits[parseInt(d)] || d).join('');
+    const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    return String(num).split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
 };
 
 const formatTimeAgo = (date) => {
@@ -33,6 +33,26 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
+const getBadge = (type) => {
+    const badgeStyles = {
+        new: 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700',
+        trending: 'bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700',
+        top: 'bg-yellow-50 text-yellow-700 border-yellow-300 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-700'
+    };
+
+    const badgeText = {
+        new: 'নতুন',
+        trending: 'ট্রেন্ডিং',
+        top: 'জনপ্রিয়'
+    };
+
+    return `
+        <span class="px-2 py-0.5 text-[10px] font-bold border rounded ${badgeStyles[type]}">
+            ${badgeText[type]}
+        </span>
+    `;
+};
+
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
@@ -40,93 +60,133 @@ const createQuestionCard = (question) => {
     const questionLink = `/question.html?id=${question.id}`;
     
     return `
-    <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
-        <div class="flex items-center justify-between mb-0.5">
-            <div class="flex gap-3">
-                <div class="flex items-center gap-1">
-                    <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
-                    <span class="text-[11px] text-gray-500">টি ভোট</span>
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
+            <div class="flex items-center justify-between mb-0.5">
+                <div class="flex gap-3">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-[11px] text-gray-500">টি ভোট</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answer_count || 0)}</span>
+                        <span class="text-[11px] text-gray-500">টি উত্তর</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-[11px] text-gray-500">বার দেখেছে</span>
+                    </div>
                 </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answer_count || 0)}</span>
-                    <span class="text-[11px] text-gray-500">টি উত্তর</span>
-                </div>
-                <div class="flex items-center gap-1">
-                    <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
-                    <span class="text-[11px] text-gray-500">বার দেখেছে</span>
+                
+                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
+                    ${timeAgo}
+                </time>
+            </div>
+
+            <div class="min-w-0">
+                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
+                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
+                        ${question.title}
+                    </a>
+                </h3>
+                
+                <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
+                    ${excerpt}
+                </p>
+                
+                <div class="flex flex-wrap gap-1.5 items-center">
+                    
+                    ${question.badge ? getBadge(question.badge) : ''}
+
+                    ${question.category ? `
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
+                            ${question.category}
+                        </span>
+                    ` : ''}
+
+                    ${tag.map(t => `
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
+                            #${t}
+                        </span>
+                    `).join('')}
                 </div>
             </div>
-            
-            <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
-                ${timeAgo}
-            </time>
-        </div>
-
-        <div class="min-w-0">
-            <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
-                <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
-                    ${question.title}
-                </a>
-            </h3>
-            
-            <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
-                ${excerpt}
-            </p>
-            
-            <div class="flex flex-wrap gap-1.5">
-                ${question.category ? `
-                    <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
-                        ${question.category}
-                    </span>
-                ` : ''}
-
-                ${tag.map(t => `
-                    <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
-                        #${t}
-                    </span>
-                `).join('')}
-            </div>
-        </div>
-    </article>
+        </article>
     `;
+};
+
+const shuffleArray = (array) => {
+    return array.sort(() => Math.random() - 0.5);
 };
 
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
-    
-    // Skeleton loading
-    const skeletonHTML = `
-        <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
-            <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
-            <div class="h-4 w-full bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
-        </div>
-    `;
-    questionList.innerHTML = skeletonHTML.repeat(PAGE_SIZE);
 
     try {
-        const { data: questionData, error, count } = await supabase
-            .from('question')
-            .select('*, answer(count)', { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .limit(PAGE_SIZE);
-        
-        if (error) throw error;
 
-        if (questionData && questionData.length > 0) {
-            questionList.innerHTML = questionData.map(q => {
-                const answerCount = q.answer?.[0]?.count || 0;
-                return createQuestionCard({ ...q, answer_count: answerCount });
-            }).join('');
-            
-            const countEl = document.getElementById('question-count');
-            if (countEl) {
-                countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const [
+            latest,
+            weeklyViews,
+            weeklyVotes,
+            allTimeVotes,
+            randomSet
+        ] = await Promise.all([
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .order('created_at', { ascending: false })
+                .limit(8),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .gte('created_at', oneWeekAgo.toISOString())
+                .order('views', { ascending: false })
+                .limit(7),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .gte('created_at', oneWeekAgo.toISOString())
+                .order('votes', { ascending: false })
+                .limit(7),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .order('votes', { ascending: false })
+                .limit(5),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .limit(15)
+        ]);
+
+        const markBadge = (list, type) =>
+            (list?.data || []).map(q => ({ ...q, badge: type }));
+
+        const combined = [
+            ...markBadge(latest, 'new'),
+            ...markBadge(weeklyViews, 'trending'),
+            ...markBadge(weeklyVotes, 'trending'),
+            ...markBadge(allTimeVotes, 'top'),
+            ...(randomSet.data || []).slice(0, 5)
+        ];
+
+        const uniqueMap = new Map();
+        combined.forEach(q => {
+            if (!uniqueMap.has(q.id)) {
+                uniqueMap.set(q.id, q);
             }
-        } else {
-            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
-        }
+        });
+
+        const finalQuestions = shuffleArray(Array.from(uniqueMap.values())).slice(0, PAGE_SIZE);
+
+        questionList.innerHTML = finalQuestions.map(q => {
+            const answerCount = q.answer?.[0]?.count || 0;
+            return createQuestionCard({ ...q, answer_count: answerCount });
+        }).join('');
+
     } catch (err) {
         console.error('Error:', err);
         questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
