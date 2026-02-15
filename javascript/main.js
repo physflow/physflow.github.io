@@ -79,12 +79,12 @@ const createQuestionCard = (question) => {
 
             <div class="flex items-center gap-2 mt-1">
                 <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition">
-                    <i class="fa-regular fa-fire"></i>
+                    <i class="fa-solid fa-fire"></i>
                     <span class="text-[12px] font-bold text-gray-700 dark:text-gray-300">${toBanglaNumber(voteCount)}</span>
                 </div>
 
                 <a href="${questionLink}" class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
-                    <i class="fa fa-comments-o"></i>
+                    <i class="fa fa-comments"></i>
                     <span class="text-[12px] font-medium text-gray-700 dark:text-gray-300">${toBanglaNumber(answerCount)}</span>
                 </a>
 
