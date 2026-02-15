@@ -241,7 +241,7 @@ const openCommentModal = async (answerId, currentUser) => {
     });
 };
 
-const loadComments = async (answerId, currentUser) => {
+const loadComments = async (answerId) => {
     const listEl = document.getElementById(`nested-comments-${answerId}`);
     if (!listEl) return;
 
@@ -255,22 +255,21 @@ const loadComments = async (answerId, currentUser) => {
 
     listEl.innerHTML = data.map(c => {
         const name = c.profile?.username || c.profile?.full_name || 'অজ্ঞাত';
-        const cAvatar = c.profile?.avatar_url;
-        const cInitials = getInitials(name);
+        const avatar = c.profile?.avatar_url;
         
         return `
-            <div class="flex gap-3 relative before:absolute before:w-4 before:h-[1px] before:bg-gray-100 dark:before:bg-gray-800 before:-left-6 before:top-4">
-                <div class="shrink-0">
-                    ${cAvatar 
-                        ? `<img src="${cAvatar}" class="w-7 h-7 rounded-full object-cover">` 
-                        : `<div class="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[10px] font-bold text-gray-500">${cInitials}</div>`}
+            <div class="flex gap-2.5 relative">
+                <div class="shrink-0 mt-1">
+                    ${avatar 
+                        ? `<img src="${avatar}" class="w-6 h-6 rounded-full object-cover shadow-sm">` 
+                        : `<div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-[9px] font-bold text-gray-500">${getInitials(name)}</div>`}
                 </div>
                 <div class="flex-1">
                     <div class="flex items-center gap-2">
-                        <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200">${name}</span>
+                        <span class="text-[12px] font-bold text-gray-800 dark:text-gray-200">${name}</span>
                         <span class="text-[10px] text-gray-400">${formatTimeAgo(c.created_at)}</span>
                     </div>
-                    <p class="text-[13px] text-gray-600 dark:text-gray-400 mt-0.5 leading-snug">${c.body}</p>
+                    <p class="text-[13px] text-gray-600 dark:text-gray-400 leading-snug mt-0.5">${c.body}</p>
                 </div>
             </div>
         `;
