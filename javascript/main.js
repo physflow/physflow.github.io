@@ -53,6 +53,29 @@ const getBadge = (type) => {
     `;
 };
 
+const createSkeletonLoader = () => {
+    const skeletonCard = `
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent animate-pulse">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex gap-3">
+                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div class="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                </div>
+                <div class="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+            <div class="h-5 w-3/4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+            <div class="h-3 w-full bg-gray-200 dark:bg-gray-700 rounded mb-1"></div>
+            <div class="h-3 w-2/3 bg-gray-200 dark:bg-gray-700 rounded mb-3"></div>
+            <div class="flex gap-2">
+                <div class="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                <div class="h-4 w-14 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+        </article>
+    `;
+    return Array(6).fill(skeletonCard).join('');
+};
+
 const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
@@ -122,8 +145,10 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
 
-    try {
+    // Show skeletons before loading
+    questionList.innerHTML = createSkeletonLoader();
 
+    try {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
@@ -134,7 +159,6 @@ const loadLatestQuestion = async () => {
             allTimeVotes,
             randomSet
         ] = await Promise.all([
-
             supabase.from('question')
                 .select('*, answer(count)')
                 .order('created_at', { ascending: false })
