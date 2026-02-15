@@ -150,7 +150,7 @@
                     <span id="question-time" class="text-[10px] text-gray-500 dark:text-gray-400 shrink-0 font-medium"></span>
                 </div>
             </div>
-            <div class="flex items-center gap-4 border-t dark:border-gray-800 pt-4 mt-6">
+            <div class="flex items-center gap-4 border-t dark:border-gray-800 pt-2 mt-2">
                 <a href="#" id="author-profile-link" class="shrink-0"><img id="q-author-avatar" class="w-9 h-9 rounded-full object-cover border border-gray-200 dark:border-gray-700 hover:opacity-80 transition" src="" alt="Profile"></a>
                 <div class="flex items-center bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-1">
                     <button id="q-vote-up" class="vote-btn w-8 h-8 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-gray-700 text-gray-500 hover:text-[#0056b3]"><i class="fas fa-caret-up text-xl"></i></button>
@@ -162,9 +162,12 @@
                 <div class="relative ml-auto group">
                     <button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 transition-colors"><i class="fas fa-ellipsis-h"></i></button>
                     <div class="hidden group-hover:block absolute right-0 bottom-full mb-2 w-36 bg-white dark:bg-[#2d2d2d] border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-50 overflow-hidden">
+           
                         <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"><i class="far fa-edit w-4"></i> সম্পাদন</button>
-                        <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"><i class="far fa-bookmark w-4"></i> বুকমার্ক</button>
                         <button class="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"><i class="far fa-trash-alt w-4"></i> ডিলিট</button>
+
+                        <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2"><i class="far fa-bookmark w-4"></i> বুকমার্ক</button>
+                        
                         <button class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 border-t dark:border-gray-700"><i class="far fa-flag w-4"></i> রিপোর্ট</button>
                     </div>
                 </div>
@@ -172,7 +175,7 @@
         </div>
         <div id="question-error" class="hidden text-center py-10 text-red-500 text-[14px]"><i class="fas fa-exclamation-triangle text-3xl mb-3 block"></i><span id="question-error-msg">প্রশ্নটি খুঁজে পাওয়া যায়নি।</span></div>
     </div>
-    <div id="answers-section" class="mt-8 border-t dark:border-gray-800 pt-6">
+    <div id="answers-section" class="mt-2 border-t dark:border-gray-800 pt-2">
         <div id="answer-list" class="flex flex-col gap-6"></div>
     </div>
 </main>
