@@ -1,5 +1,5 @@
 import { supabase } from './supabase-config.js';
-
+ 
 // গ্লোবাল ভেরিয়েবল
 let allAnswers = [];
 let currentSort = 'votes';
