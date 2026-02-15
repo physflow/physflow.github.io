@@ -65,7 +65,6 @@
 </head>
 <body class="bg-white text-gray-800 dark:bg-[#1a1a1b] dark:text-gray-200 flex flex-col min-h-screen">
 
-    <!-- HEADER -->
     <header class="border-t-4 border-brand-500 shadow-sm bg-white dark:bg-[#1a1a1b] fixed top-0 w-full h-14 z-[100] border-b dark:border-gray-700">
         <div class="container mx-auto px-4 h-full flex items-center gap-4">
             <div class="flex items-center space-x-4 shrink-0">
@@ -107,7 +106,6 @@
 
     <div class="container mx-auto flex flex-1 pt-14">
 
-        <!-- SIDEBAR -->
         <aside id="mobile-sidebar"
             class="fixed md:sticky top-14 left-0 w-60 h-[calc(100vh-3.5rem)]
                    bg-white dark:bg-[#1a1a1b] border-r border-gray-200 dark:border-gray-700
@@ -133,13 +131,10 @@
             </nav>
         </aside>
 
-        <!-- MAIN -->
         <main class="flex-1 min-w-0 p-4 md:p-6 min-h-[calc(100vh-3.5rem)] pb-24">
 
-            <!-- প্রশ্ন সেকশন -->
             <div id="question-section">
 
-                <!-- স্কেলেটন -->
                 <div id="question-skeleton">
                     <div class="skeleton h-7 w-3/4 mb-3"></div>
                     <div class="flex gap-3 mb-4">
@@ -155,10 +150,8 @@
                     </div>
                 </div>
 
-                <!-- প্রশ্নের কন্টেন্ট -->
                 <div id="question-content" class="hidden">
 
- <!-- ২. লেখক + সময় + ভিউ — টাইটেলের নিচে এক লাইনে -->
                     <div class="flex flex-wrap items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400 mb-4 pb-3 border-b dark:border-gray-800">
                         <span class="font-medium text-[#0056b3]" id="question-author-name"></span>
                         <span>·</span>
@@ -168,13 +161,9 @@
                         <span id="question-category-badge"></span>
                     </div>
                    
-                <!-- শিরোনাম -->
                     <h1 id="question-title" class="text-[20px] md:text-[22px] font-semibold text-gray-900 dark:text-gray-100 leading-snug mb-2"></h1>
 
-
-                    <!-- প্রশ্নের বডি + ভোট -->
                     <div class="flex gap-3 md:gap-4 mb-3">
-                        <!-- ভোট কলাম -->
                         <div class="flex flex-col items-center gap-1 shrink-0 pt-1">
                             <button id="q-vote-up" class="vote-btn w-8 h-8 flex items-center justify-center rounded border border-gray-300 dark:border-gray-600 text-gray-500 hover:border-[#0056b3] hover:text-[#0056b3]">
                                 <i class="fas fa-caret-up text-xl"></i>
@@ -184,23 +173,21 @@
                                 <i class="fas fa-caret-down text-xl"></i>
                             </button>
                         </div>
-                        <!-- বডি -->
-                        <div id="question-body" class="question-body-content flex-1 text-[14px] md:text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed"></div>
+                        
+                        <div class="flex-1 min-w-0">
+                            <div id="question-body" class="question-body-content text-[14px] md:text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed mb-4"></div>
 
-                    <!-- ১. ক্যাটাগরি + ট্যাগ — বডির ঠিক নিচে -->
-                    <div id="question-tags" class="flex flex-wrap gap-1.5 ml-11 mb-4"></div>
-
+                            <div id="question-tags" class="flex flex-wrap gap-1.5 mb-4"></div>
+                        </div>
+                    </div>
                 </div>
 
-
-                <!-- ত্রুটি -->
                 <div id="question-error" class="hidden text-center py-10 text-red-500 text-[14px]">
                     <i class="fas fa-exclamation-triangle text-3xl mb-3 block"></i>
                     <span id="question-error-msg">প্রশ্নটি খুঁজে পাওয়া যায়নি।</span>
                 </div>
             </div>
 
-            <!-- উত্তর সেকশন -->
             <div id="answers-section" class="mt-6 hidden">
                 <div class="flex items-center justify-between mb-3 pb-2 border-b dark:border-gray-800">
                     <h2 class="text-[16px] font-semibold text-gray-800 dark:text-gray-200">
@@ -217,7 +204,6 @@
         </main>
     </div>
 
-    <!-- FOOTER -->
     <footer class="bg-[#232629] text-gray-400 py-6 mt-auto border-t dark:border-gray-800">
         <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2 text-center md:text-left">
             <div class="flex space-x-6 text-xs uppercase font-medium">
