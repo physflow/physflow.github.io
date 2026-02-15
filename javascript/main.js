@@ -37,8 +37,6 @@ const createQuestionCard = (question) => {
     const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
-    
-    // ✅ GUARANTEED URL - Query Parameter
     const questionLink = `/question.html?id=${question.id}`;
     
     return `
@@ -93,10 +91,14 @@ const createQuestionCard = (question) => {
     `;
 };
 
+const shuffleArray = (array) => {
+    return array.sort(() => Math.random() - 0.5);
+};
+
 const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
-    
+
     const skeletonHTML = `
         <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
             <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
@@ -108,30 +110,80 @@ const loadLatestQuestion = async () => {
     questionList.innerHTML = skeletonHTML.repeat(20);
 
     try {
-        // answer টেবিল থেকে কাউন্ট সহ ডাটা ফেচ করা হচ্ছে
-        const { data: questionData, error, count } = await supabase
-            .from('question')
-            .select('*, answer(count)', { count: 'exact' })
-            .order('created_at', { ascending: false })
-            .limit(PAGE_SIZE);
-        
-        if (error) throw error;
 
-        if (questionData && questionData.length > 0) {
-            questionList.innerHTML = questionData.map(q => {
-                // উত্তর সংখ্যা বের করা হচ্ছে
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+        const [
+            latest,
+            weeklyViews,
+            weeklyVotes,
+            weeklyAnswers,
+            allTimeVotes,
+            randomSet
+        ] = await Promise.all([
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .order('created_at', { ascending: false })
+                .limit(5),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .gte('created_at', oneWeekAgo.toISOString())
+                .order('views', { ascending: false })
+                .limit(4),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .gte('created_at', oneWeekAgo.toISOString())
+                .order('votes', { ascending: false })
+                .limit(3),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .gte('created_at', oneWeekAgo.toISOString())
+                .order('answer_count', { ascending: false })
+                .limit(3),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .order('votes', { ascending: false })
+                .limit(3),
+
+            supabase.from('question')
+                .select('*, answer(count)')
+                .limit(10)
+        ]);
+
+        const combined = [
+            ...(latest.data || []),
+            ...(weeklyViews.data || []),
+            ...(weeklyVotes.data || []),
+            ...(weeklyAnswers.data || []),
+            ...(allTimeVotes.data || []),
+            ...(randomSet.data || []).slice(0, 2)
+        ];
+
+        const uniqueMap = new Map();
+
+        combined.forEach(q => {
+            if (!uniqueMap.has(q.id)) {
+                uniqueMap.set(q.id, q);
+            }
+        });
+
+        const finalQuestions = shuffleArray(Array.from(uniqueMap.values())).slice(0, PAGE_SIZE);
+
+        if (finalQuestions.length > 0) {
+            questionList.innerHTML = finalQuestions.map(q => {
                 const answerCount = q.answer?.[0]?.count || 0;
-                // মূল অবজেক্টের সাথে answer_count যোগ করে কার্ড তৈরি করা হচ্ছে
                 return createQuestionCard({ ...q, answer_count: answerCount });
             }).join('');
-            
-            const countEl = document.getElementById('question-count');
-            if (countEl) {
-                countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
-            }
         } else {
             questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
+
     } catch (err) {
         console.error('Error:', err);
         questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
