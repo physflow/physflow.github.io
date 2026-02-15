@@ -69,7 +69,7 @@ const createQuestionCard = (question) => {
 
             <div class="min-w-0">
                 <h3 class="text-[16px] font-medium mb-1 leading-tight">
-                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-[#0056b3] transition-colors">
+                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-[#0056b3]">
                         ${question.title}
                     </a>
                 </h3>
@@ -80,32 +80,32 @@ const createQuestionCard = (question) => {
 
             <div class="flex items-center gap-2 mt-1">
                 
-                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full p-0.5">
-                    <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#ff4500] transition-colors">
+                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full p-1">
+                    <button class="flex items-center justify-center w-8 h-8 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#ff4500]">
                         <i class="fas fa-arrow-up text-sm"></i>
                     </button>
-                    <span class="text-[12px] font-bold px-1 min-w-[20px] text-center text-gray-800 dark:text-gray-200">
+                    <span class="text-[12px] font-bold px-1 text-gray-800 dark:text-gray-200">
                         ${toBanglaNumber(voteCount)}
                     </span>
-                    <button class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#7193ff] transition-colors">
+                    <button class="flex items-center justify-center w-8 h-8 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#7193ff]">
                         <i class="fas fa-arrow-down text-sm"></i>
                     </button>
                 </div>
 
-                <a href="${questionLink}" class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                <a href="${questionLink}" class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full h-10 px-3 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700">
                     <i class="far fa-comment text-sm"></i>
                     <span class="text-[12px] font-medium">${toBanglaNumber(answerCount)}</span>
                 </a>
 
-                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full px-3 py-1.5 gap-2">
+                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full h-10 px-3 gap-2">
                     <i class="far fa-eye text-sm text-gray-500"></i>
                     <span class="text-[12px] font-medium">${toBanglaNumber(viewCount)}</span>
                 </div>
 
                 <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
-                    class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full px-3 py-1.5 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition ml-auto">
+                    class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full h-10 px-3 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 ml-auto">
                     <i class="fas fa-share text-sm"></i>
-                    <span class="text-[12px] font-medium hidden sm:inline">শেয়ার</span>
+                    <span class="text-[12px] font-medium hidden sm:inline">Share</span>
                 </button>
             </div>
 
