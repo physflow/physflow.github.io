@@ -279,12 +279,12 @@ const loadComments = async (answerId, currentUser) => {
 
 
 // ===== উত্তর কার্ড =====
+// ১. উত্তর কার্ড তৈরি (Hyvor স্টাইল)
 const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     const authorName = answer.profile?.username || answer.profile?.full_name || 'অজ্ঞাত';
     const avatarUrl = answer.profile?.avatar_url; 
     const timeAgo = formatTimeAgo(answer.created_at);
 
-    // প্রোফাইল পিকচার অথবা নামের প্রথম অক্ষর
     const profileDisplay = avatarUrl 
         ? `<img src="${avatarUrl}" class="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100 dark:border-gray-800" alt="${authorName}">`
         : `<div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[12px]">${getInitials(authorName)}</div>`;
@@ -292,111 +292,70 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     return `
         <div class="py-6 border-b border-gray-100 dark:border-gray-800 last:border-0" id="answer-card-${answer.id}">
             <div class="flex gap-4">
-                <div class="shrink-0">
-                    ${profileDisplay}
-                </div>
-
+                <div class="shrink-0">${profileDisplay}</div>
                 <div class="flex-1 min-w-0">
                     <div class="flex items-center gap-2 mb-1.5">
                         <span class="font-bold text-[14px] text-gray-900 dark:text-gray-100">${authorName}</span>
                         <span class="text-gray-400 text-[11px]">${timeAgo}</span>
                     </div>
-
                     <div class="answer-body-content text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
                         ${answer.body || ''}
                     </div>
-
                     <div class="flex items-center gap-6">
                         <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-full px-3 py-1">
-                            <button id="ans-${answer.id}-vote-up" class="text-gray-400 hover:text-blue-600 transition-colors">
-                                <i class="fas fa-arrow-up text-[13px]"></i>
-                            </button>
+                            <button id="ans-${answer.id}-vote-up" class="text-gray-400 hover:text-blue-600 transition-colors"><i class="fas fa-arrow-up text-[13px]"></i></button>
                             <span id="ans-${answer.id}-vote-count" class="text-[12px] font-bold text-gray-600 dark:text-gray-400">${toBanglaNumber(answer.votes || 0)}</span>
-                            <button id="ans-${answer.id}-vote-down" class="text-gray-400 hover:text-red-500 transition-colors">
-                                <i class="fas fa-arrow-down text-[13px]"></i>
-                            </button>
+                            <button id="ans-${answer.id}-vote-down" class="text-gray-400 hover:text-red-500 transition-colors"><i class="fas fa-arrow-down text-[13px]"></i></button>
                         </div>
-
-                        <button id="ans-${answer.id}-comment" class="text-gray-500 hover:text-blue-600 text-[13px] font-semibold transition-colors">
-                            রিপ্লাই
-                        </button>
+                        <button onclick="toggleReplyBox('${answer.id}')" class="text-gray-500 hover:text-blue-600 text-[13px] font-semibold transition-colors">রিপ্লাই</button>
                     </div>
 
-                    <div id="nested-comments-${answer.id}" class="mt-4 ml-2 pl-6 border-l-2 border-gray-100 dark:border-gray-800 space-y-4 relative">
+                    <div id="reply-box-${answer.id}" class="hidden mt-4 pl-4 border-l-2 border-blue-500">
+                        <textarea id="reply-input-${answer.id}" class="w-full p-2 text-sm bg-gray-50 dark:bg-[#2d2d2d] border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none" placeholder="আপনার রিপ্লাই লেখো..."></textarea>
+                        <div class="flex justify-end gap-2 mt-2">
+                            <button onclick="toggleReplyBox('${answer.id}')" class="text-xs text-gray-500">বাতিল</button>
+                            <button onclick="submitReply('${answer.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">পাঠাও</button>
                         </div>
+                    </div>
+
+                    <div id="nested-comments-${answer.id}" class="mt-4 ml-2 pl-6 border-l-2 border-gray-100 dark:border-gray-800 space-y-4"></div>
                 </div>
             </div>
         </div>
     `;
 };
 
-
-
-
-let allAnswers = [];
-let currentSort = 'votes';
-
-const renderAnswers = (answers, questionAuthorId, currentUser) => {
-    const answerList = document.getElementById('answer-list');
-    if (!answers || answers.length === 0) {
-        answerList.innerHTML = `
-            <div class="text-center py-6 text-gray-400 text-[13px]">
-                <i class="far fa-comment-dots text-3xl block mb-2 opacity-40"></i>
-                এখনো কোনো উত্তর নেই। প্রথম উত্তর দাও!
-            </div>
-        `;
-        return;
+// ২. রিপ্লাই বক্স টগল করা
+window.toggleReplyBox = (answerId) => {
+    const box = document.getElementById(`reply-box-${answerId}`);
+    box.classList.toggle('hidden');
+    if(!box.classList.contains('hidden')) {
+        document.getElementById(`reply-input-${answerId}`).focus();
     }
-
-    const sorted = [...answers].sort((a, b) => {
-        if (a.is_best_answer && !b.is_best_answer) return -1;
-        if (!a.is_best_answer && b.is_best_answer) return 1;
-        if (currentSort === 'votes') return (b.votes || 0) - (a.votes || 0);
-        return new Date(b.created_at) - new Date(a.created_at);
-    });
-
-    answerList.innerHTML = sorted.map(ans => createAnswerCard(ans, questionAuthorId, currentUser)).join('');
-
-    sorted.forEach(ans => {
-        setupVoteButtons(ans.id, ans.votes || 0, currentUser, 'answer');
-        setupBookmark(ans.id);
-        // কমেন্ট বাটন
-        document.getElementById(`ans-${ans.id}-comment`)?.addEventListener('click', () => {
-            openCommentModal(ans.id, currentUser);
-        });
-    });
-
-    document.querySelectorAll('.mark-best-btn').forEach(btn => {
-        btn.addEventListener('click', () => markBestAnswer(btn.dataset.answerId));
-    });
 };
 
-const markBestAnswer = async (answerId) => {
-    const questionId = getQuestionId();
-    if (!confirm('এই উত্তরটিকে সেরা উত্তর হিসেবে চিহ্নিত করবে?')) return;
-    await supabase.from('answer').update({ is_best_answer: false }).eq('question_id', questionId);
-    await supabase.from('answer').update({ is_best_answer: true }).eq('id', answerId);
-    window.location.reload();
+// ৩. রিপ্লাই সাবমিট করা (সরাসরি ওই থ্রেডে)
+window.submitReply = async (answerId) => {
+    const input = document.getElementById(`reply-input-${answerId}`);
+    const text = input.value.trim();
+    if (!text) return;
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { alert('রিপ্লাই দিতে লগ ইন করো।'); return; }
+
+    const { error } = await supabase.from('comment').insert([{
+        answer_id: answerId,
+        body: text,
+        author_id: user.id
+    }]);
+
+    if (!error) {
+        input.value = '';
+        toggleReplyBox(answerId);
+        loadComments(answerId); // শুধু ওই থ্রেডটি রিলোড হবে
+    }
 };
 
-const setupSortButtons = (questionAuthorId, currentUser) => {
-    const sortVotesBtn = document.getElementById('sort-votes');
-    const sortLatestBtn = document.getElementById('sort-latest');
-
-    sortVotesBtn?.addEventListener('click', () => {
-        currentSort = 'votes';
-        sortVotesBtn.className = 'px-2 py-1 rounded text-[#0056b3] bg-blue-50 dark:bg-blue-900/20 font-medium text-[12px]';
-        sortLatestBtn.className = 'px-2 py-1 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 text-[12px]';
-        renderAnswers(allAnswers, questionAuthorId, currentUser);
-    });
-
-    sortLatestBtn?.addEventListener('click', () => {
-        currentSort = 'latest';
-        sortLatestBtn.className = 'px-2 py-1 rounded text-[#0056b3] bg-blue-50 dark:bg-blue-900/20 font-medium text-[12px]';
-        sortVotesBtn.className = 'px-2 py-1 rounded text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 text-[12px]';
-        renderAnswers(allAnswers, questionAuthorId, currentUser);
-    });
-};
 
 // ===== ৪. FAB বাটন + Answer Modal =====
 const setupAnswerFAB = (questionId, currentUser) => {
