@@ -12,6 +12,7 @@ const formatTimeAgo = (date) => {
     const now = new Date();
     const then = new Date(date);
     const seconds = Math.floor((now - then) / 1000);
+    
     if (seconds < 60) return `${toBanglaNumber(seconds)} সেকেন্ড আগে`;
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${toBanglaNumber(minutes)} মিনিট আগে`;
@@ -32,83 +33,62 @@ const truncateText = (text, maxLength = 130) => {
     return stripped.substring(0, maxLength) + '...';
 };
 
-window.shareQuestion = async (title, url) => {
-    const fullUrl = window.location.origin + url;
-    if (navigator.share) {
-        try {
-            await navigator.share({ title: title, url: fullUrl });
-        } catch (err) { console.log('Share failed'); }
-    } else {
-        navigator.clipboard.writeText(fullUrl);
-        alert('লিঙ্ক কপি করা হয়েছে!');
-    }
-};
-
 const createQuestionCard = (question) => {
+    const tag = Array.isArray(question.tag) ? question.tag : [];
     const excerpt = truncateText(question.body, 120); 
     const timeAgo = formatTimeAgo(question.created_at);
+    
+    // ✅ GUARANTEED URL - Query Parameter
     const questionLink = `/question.html?id=${question.id}`;
     
-    const authorName = question.profile?.full_name || question.profile?.username || 'অজানা ইউজার';
-    const authorAvatar = question.profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(authorName)}&background=random&color=fff`;
-    
-    const answerCount = question.answer?.[0]?.count || 0;
-    const voteCount = (question.upvotes || 0) - (question.downvotes || 0);
-    const viewCount = question.views || 0;
-
     return `
-        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm flex flex-col gap-2">
-            
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <img src="${authorAvatar}" class="w-7 h-7 rounded-full object-cover" alt="User">
-                    <span class="text-[13px] font-bold text-gray-800 dark:text-gray-200">${authorName}</span>
+        <article class="mx-2 my-1 p-3 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-transparent shadow-sm">
+            <div class="flex items-center justify-between mb-0.5">
+                <div class="flex gap-3">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-red-500">${toBanglaNumber(question.votes || 0)}</span>
+                        <span class="text-[11px] text-gray-500">টি ভোট</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-green-500">${toBanglaNumber(question.answer_count || 0)}</span>
+                        <span class="text-[11px] text-gray-500">টি উত্তর</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[14px] font-medium text-yellow-500">${toBanglaNumber(question.views || 0)}</span>
+                        <span class="text-[11px] text-gray-500">বার দেখেছে</span>
+                    </div>
                 </div>
-                <time class="text-[11px] text-gray-400 shrink-0">${timeAgo}</time>
+                
+                <time datetime="${question.created_at}" class="text-[11px] text-gray-400">
+                    ${timeAgo}
+                </time>
             </div>
 
             <div class="min-w-0">
-                <h3 class="text-[16px] font-medium mb-1 leading-tight">
-                    <a href="${questionLink}" class="text-gray-900 dark:text-gray-100 hover:text-[#0056b3]">
+                <h3 class="text-[16px] font-normal mb-0.5 leading-tight">
+                    <a href="${questionLink}" style="color: #0056b3;" class="hover:underline">
                         ${question.title}
                     </a>
                 </h3>
-                <p class="text-[13px] text-gray-500 dark:text-gray-400 line-clamp-2">
+                
+                <p class="text-[13px] text-gray-500 dark:text-gray-400 mb-2 line-clamp-2 leading-normal">
                     ${excerpt}
                 </p>
-            </div>
-
-            <div class="flex items-center gap-2 mt-1">
                 
-                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full p-1">
-                    <button class="flex items-center justify-center w-8 h-8 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#ff4500]">
-                        <i class="fas fa-arrow-up text-sm"></i>
-                    </button>
-                    <span class="text-[12px] font-bold px-1 text-gray-800 dark:text-gray-200">
-                        ${toBanglaNumber(voteCount)}
-                    </span>
-                    <button class="flex items-center justify-center w-8 h-8 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full hover:text-[#7193ff]">
-                        <i class="fas fa-arrow-down text-sm"></i>
-                    </button>
+                <div class="flex flex-wrap gap-1.5">
+                    ${question.category ? `
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-[#0056b3] dark:text-blue-400 border border-gray-200 dark:border-gray-700 rounded">
+                            ${question.category}
+                        </span>
+                    ` : ''}
+
+                    ${tag.map(t => `
+                        <span class="px-2 py-0.5 text-[10px] font-bold bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded">
+                            #${t}
+                        </span>
+                    `).join('')}
                 </div>
-
-                <a href="${questionLink}" class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full h-10 px-3 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700">
-                    <i class="far fa-comment text-sm"></i>
-                    <span class="text-[12px] font-medium">${toBanglaNumber(answerCount)}</span>
-                </a>
-
-                <div class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full h-10 px-3 gap-2">
-                    <i class="far fa-eye text-sm text-gray-500"></i>
-                    <span class="text-[12px] font-medium">${toBanglaNumber(viewCount)}</span>
-                </div>
-
-                <button onclick="shareQuestion('${question.title.replace(/'/g, "\\'")}', '${questionLink}')" 
-                    class="flex items-center bg-[#f2f4f5] dark:bg-[#2d2d2e] rounded-full h-10 px-3 gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 ml-auto">
-                    <i class="fas fa-share text-sm"></i>
-                    <span class="text-[12px] font-medium hidden sm:inline">Share</span>
-                </button>
             </div>
-
         </article>
     `;
 };
@@ -117,19 +97,44 @@ const loadLatestQuestion = async () => {
     const questionList = document.getElementById('question-list');
     if (!questionList) return;
     
+    const skeletonHTML = `
+        <div class="mx-2 my-1 p-3 border border-gray-100 dark:border-gray-800 rounded-md animate-pulse">
+            <div class="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+            <div class="h-6 w-3/4 bg-gray-200 dark:bg-gray-800 rounded mb-2"></div>
+            <div class="h-4 w-full bg-gray-100 dark:bg-gray-800 rounded mb-1"></div>
+        </div>
+    `;
+
+    questionList.innerHTML = skeletonHTML.repeat(20);
+
     try {
-        const { data: questionData, error } = await supabase
+        // answer টেবিল থেকে কাউন্ট সহ ডাটা ফেচ করা হচ্ছে
+        const { data: questionData, error, count } = await supabase
             .from('question')
-            .select('*, profile:author_id(full_name, username, avatar_url), answer(count)')
+            .select('*, answer(count)', { count: 'exact' })
             .order('created_at', { ascending: false })
             .limit(PAGE_SIZE);
         
         if (error) throw error;
-        if (questionData) {
-            questionList.innerHTML = questionData.map(q => createQuestionCard(q)).join('');
+
+        if (questionData && questionData.length > 0) {
+            questionList.innerHTML = questionData.map(q => {
+                // উত্তর সংখ্যা বের করা হচ্ছে
+                const answerCount = q.answer?.[0]?.count || 0;
+                // মূল অবজেক্টের সাথে answer_count যোগ করে কার্ড তৈরি করা হচ্ছে
+                return createQuestionCard({ ...q, answer_count: answerCount });
+            }).join('');
+            
+            const countEl = document.getElementById('question-count');
+            if (countEl) {
+                countEl.textContent = `সর্বমোট ${toBanglaNumber(count)} টি প্রশ্ন`;
+            }
+        } else {
+            questionList.innerHTML = '<p class="p-6 text-center text-gray-500 text-[13px]">কোনো প্রশ্ন পাওয়া যায়নি।</p>';
         }
     } catch (err) {
         console.error('Error:', err);
+        questionList.innerHTML = `<p class="p-6 text-center text-red-500 text-[13px]">ত্রুটি: ${err.message}</p>`;
     }
 };
 
@@ -138,3 +143,5 @@ export const initHomePage = () => {
 };
 
 document.addEventListener('DOMContentLoaded', initHomePage);
+
+export { loadLatestQuestion, formatTimeAgo, toBanglaNumber };
