@@ -98,12 +98,12 @@ const renderQuestion = (question, currentUser) => {
     `).join('');
 
     // লেখকের তথ্য
-    const authorName = question.profiles?.username || question.profiles?.full_name || 'অজ্ঞাত';
+    const authorName = question.profile?.username || question.profile?.full_name || 'অজ্ঞাত';
     document.getElementById('author-name').textContent = authorName;
     document.getElementById('author-avatar-placeholder').textContent = getInitials(authorName);
-    if (question.profiles?.avatar_url) {
+    if (question.profile?.avatar_url) {
         const avatarEl = document.getElementById('author-avatar-placeholder');
-        avatarEl.outerHTML = `<img src="${question.profiles.avatar_url}" class="w-7 h-7 rounded object-cover" alt="${authorName}">`;
+        avatarEl.outerHTML = `<img src="${question.profile.avatar_url}" class="w-7 h-7 rounded object-cover" alt="${authorName}">`;
     }
 
     // ভোট বাটন সেটআপ
@@ -170,7 +170,7 @@ const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
 
 // ===== একটি উত্তর কার্ড তৈরি =====
 const createAnswerCard = (answer, questionAuthorId, currentUser) => {
-    const authorName = answer.profiles?.username || answer.profiles?.full_name || 'অজ্ঞাত';
+    const authorName = answer.profile?.username || answer.profile?.full_name || 'অজ্ঞাত';
     const initials = getInitials(authorName);
     const timeAgo = formatTimeAgo(answer.created_at);
     const isBest = answer.is_best_answer;
@@ -384,7 +384,7 @@ const showAnswerMessage = (msg, type) => {
 const loadAnswers = async (questionId, currentUser, questionAuthorId) => {
     const { data, error } = await supabase
         .from('answer')
-        .select('*, profiles(username, full_name, avatar_url)')
+        .select('*, profile(username, full_name, avatar_url)')
         .eq('question_id', questionId)
         .order('is_best_answer', { ascending: false })
         .order('votes', { ascending: false });
@@ -423,7 +423,7 @@ export const initQuestionPage = async () => {
         // প্রশ্ন ফেচ (লেখকের প্রোফাইল সহ)
         const { data: question, error } = await supabase
             .from('question')
-            .select('*, profiles(username, full_name, avatar_url)')
+            .select('*, profile(username, full_name, avatar_url)')
             .eq('id', questionId)
             .single();
 
