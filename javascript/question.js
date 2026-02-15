@@ -274,50 +274,62 @@ const loadComments = async (answerId, currentUser) => {
 // ===== উত্তর কার্ড =====
 const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     const authorName = answer.profile?.username || answer.profile?.full_name || 'অজ্ঞাত';
-    const initials = getInitials(authorName);
+    const avatarUrl = answer.profile?.avatar_url; 
     const timeAgo = formatTimeAgo(answer.created_at);
-    
+    const isBest = answer.is_best_answer;
+
+    const profileDisplay = avatarUrl 
+        ? `<img src="${avatarUrl}" class="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-100 dark:border-gray-800" alt="${authorName}">`
+        : `<div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[12px]">${getInitials(authorName)}</div>`;
+
     return `
-        <div class="flex gap-4 p-4 mb-4 bg-white dark:bg-[#1a1a1b] rounded-xl transition-all border border-transparent hover:border-gray-100 dark:hover:border-gray-800" id="answer-card-${answer.id}">
-            <div class="shrink-0">
-                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                    ${initials}
-                </div>
-            </div>
-
-            <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="font-bold text-[14px] text-gray-900 dark:text-gray-100">${authorName}</span>
-                    <span class="text-gray-400 text-[12px]">• ${timeAgo}</span>
+        <div class="py-6 border-b border-gray-100 dark:border-gray-800 last:border-0" id="answer-card-${answer.id}">
+            <div class="flex gap-4">
+                <div class="shrink-0">
+                    ${profileDisplay}
                 </div>
 
-                <div class="answer-body-content text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed">
-                    ${answer.body || ''}
-                </div>
-
-                <div class="flex items-center gap-4 mt-3">
-                    <div class="flex items-center bg-gray-50 dark:bg-[#2d2d2d] rounded-full px-2 py-1">
-                        <button id="ans-${answer.id}-vote-up" class="vote-btn p-1 hover:text-blue-600 transition">
-                            <i class="fas fa-arrow-up text-[14px]"></i>
-                        </button>
-                        <span id="ans-${answer.id}-vote-count" class="px-2 text-[13px] font-medium">${toBanglaNumber(answer.votes || 0)}</span>
-                        <button id="ans-${answer.id}-vote-down" class="vote-btn p-1 hover:text-red-500 transition">
-                            <i class="fas fa-arrow-down text-[14px]"></i>
-                        </button>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1.5">
+                        <span class="font-bold text-[14px] text-gray-900 dark:text-gray-100">${authorName}</span>
+                        <span class="text-gray-400 text-[11px]">${timeAgo}</span>
+                        ${isBest ? `<span class="ml-2 text-[10px] bg-green-50 text-green-600 dark:bg-green-900/20 dark:text-green-400 px-2 py-0.5 rounded-full font-bold border border-green-100 dark:border-green-800">সেরা উত্তর</span>` : ''}
                     </div>
 
-                    <button id="ans-${answer.id}-comment" class="text-gray-500 hover:text-blue-600 text-[13px] font-medium transition">
-                        রিপ্লাই
-                    </button>
-                    
-                    <button id="ans-${answer.id}-bookmark" class="text-gray-400 hover:text-blue-600 transition">
-                        <i class="far fa-bookmark text-[13px]"></i>
-                    </button>
+                    <div class="answer-body-content text-[15px] text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                        ${answer.body || ''}
+                    </div>
+
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-800/50 rounded-full px-3 py-1">
+                            <button id="ans-${answer.id}-vote-up" class="text-gray-400 hover:text-blue-600 transition-colors">
+                                <i class="fas fa-arrow-up text-[13px]"></i>
+                            </button>
+                            <span id="ans-${answer.id}-vote-count" class="text-[12px] font-bold text-gray-600 dark:text-gray-400">${toBanglaNumber(answer.votes || 0)}</span>
+                            <button id="ans-${answer.id}-vote-down" class="text-gray-400 hover:text-red-500 transition-colors">
+                                <i class="fas fa-arrow-down text-[13px]"></i>
+                            </button>
+                        </div>
+
+                        <button id="ans-${answer.id}-comment" class="text-gray-500 hover:text-blue-600 text-[13px] font-semibold transition-colors">
+                            রিপ্লাই
+                        </button>
+
+                        ${currentUser && currentUser.id === questionAuthorId && !isBest ? `
+                            <button class="mark-best-btn text-gray-300 hover:text-green-500 transition-colors" data-answer-id="${answer.id}">
+                                <i class="fas fa-check-circle text-[16px]"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div id="nested-comments-${answer.id}" class="mt-4 ml-2 pl-6 border-l-2 border-gray-100 dark:border-gray-800 space-y-4 relative">
+                        </div>
                 </div>
             </div>
         </div>
     `;
 };
+
 
 
 let allAnswers = [];
