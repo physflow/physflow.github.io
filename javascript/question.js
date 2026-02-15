@@ -4,7 +4,6 @@ import { supabase } from './supabase-config.js';
 let allAnswers = []; 
 let currentSort = 'votes';
 
-// ===== ইউটিলিটি ফাংশনসমূহ =====
 const toBanglaNumber = (num) => {
     const banglaDigits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
     return String(num).split('').map(digit => banglaDigits[parseInt(digit)] || digit).join('');
@@ -35,7 +34,7 @@ const getQuestionId = () => {
     return params.get('id');
 };
 
-// ===== প্রোফাইল পিকচার রেন্ডার লজিক =====
+// প্রোফাইল পিকচার রেন্ডার লজিক
 const getAvatarHtml = (avatarUrl, name, sizeClass = "w-9 h-9") => {
     if (avatarUrl) {
         return `<img src="${avatarUrl}" class="${sizeClass} rounded-full object-cover border border-gray-100 dark:border-gray-800" alt="${name}">`;
@@ -44,7 +43,6 @@ const getAvatarHtml = (avatarUrl, name, sizeClass = "w-9 h-9") => {
     return `<div class="${sizeClass} rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[12px] shadow-sm">${initials}</div>`;
 };
 
-// ===== প্রশ্ন ও ভিউ কাউন্ট =====
 const incrementViewCount = async (questionId) => {
     const sessionKey = `viewed_${questionId}`;
     if (sessionStorage.getItem(sessionKey)) return;
@@ -52,6 +50,7 @@ const incrementViewCount = async (questionId) => {
     sessionStorage.setItem(sessionKey, 'true');
 };
 
+// ===== প্রশ্ন রেন্ডার =====
 const renderQuestion = (question, currentUser) => {
     document.getElementById('question-skeleton').classList.add('hidden');
     document.getElementById('question-content').classList.remove('hidden');
@@ -77,7 +76,28 @@ const renderQuestion = (question, currentUser) => {
     setupVoteButtons(question.id, question.votes || 0, currentUser, 'question');
 };
 
-// ===== রিপ্লাই/কমেন্ট লজিক (Hyvor Style) =====
+// ===== ভোট সিস্টেম =====
+const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
+    const prefix = type === 'question' ? 'q' : `ans-${id}`;
+    const upBtn = document.getElementById(`${prefix}-vote-up`);
+    const downBtn = document.getElementById(`${prefix}-vote-down`);
+    const countEl = document.getElementById(`${prefix}-vote-count`);
+    if (!upBtn || !downBtn || !countEl) return;
+
+    const handleVote = async (direction) => {
+        if (!currentUser) { alert('ভোট দিতে লগ ইন করো।'); return; }
+        const { data: currentData } = await supabase.from(type === 'question' ? 'question' : 'answer').select('votes').eq('id', id).single();
+        let newVotes = (currentData?.votes || 0) + (direction === 'up' ? 1 : -1);
+        countEl.textContent = toBanglaNumber(newVotes);
+        await supabase.from(type === 'question' ? 'question' : 'answer').update({ votes: newVotes }).eq('id', id);
+    };
+
+    upBtn.onclick = () => handleVote('up');
+    downBtn.onclick = () => handleVote('down');
+};
+
+
+// ===== রিপ্লাই ও কমেন্ট লজিক (Hyvor Style) =====
 window.toggleReplyBox = (answerId) => {
     const box = document.getElementById(`reply-box-${answerId}`);
     if (box) {
@@ -113,14 +133,14 @@ const loadComments = async (answerId) => {
 
     const { data, error } = await supabase
         .from('comment')
-        .select('*, profile(username, full_name, avatar_url)')
+        .select('*, profile(username, avatar_url)')
         .eq('answer_id', answerId)
         .order('created_at', { ascending: true });
 
     if (error || !data || data.length === 0) return;
 
     listEl.innerHTML = data.map(c => {
-        const name = c.profile?.username || c.profile?.full_name || 'অজ্ঞাত';
+        const name = c.profile?.username || 'অজ্ঞাত';
         return `
             <div class="flex gap-2.5 relative">
                 <div class="shrink-0 mt-1">${getAvatarHtml(c.profile?.avatar_url, name, "w-6 h-6")}</div>
@@ -136,7 +156,7 @@ const loadComments = async (answerId) => {
     }).join('');
 };
 
-// ===== উত্তর কার্ড তৈরি (In-line Reply) =====
+// ===== উত্তর কার্ড ও রেন্ডারিং =====
 const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     const name = answer.profile?.username || 'অজ্ঞাত';
     return `
@@ -160,7 +180,7 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
                         <button onclick="toggleReplyBox('${answer.id}')" class="text-gray-500 hover:text-blue-600 text-[13px] font-semibold transition-colors">রিপ্লাই</button>
                     </div>
                     <div id="reply-box-${answer.id}" class="hidden mt-4 pl-4 border-l-2 border-blue-500">
-                        <textarea id="reply-input-${answer.id}" class="w-full p-2 text-sm bg-gray-50 dark:bg-[#2d2d2d] border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none" placeholder="আপনার রিপ্লাই লেখো..."></textarea>
+                        <textarea id="reply-input-${answer.id}" class="w-full p-2 text-sm bg-white dark:bg-[#2d2d2d] border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none" placeholder="রিপ্লাই লেখো..."></textarea>
                         <div class="flex justify-end gap-2 mt-2">
                             <button onclick="toggleReplyBox('${answer.id}')" class="text-xs text-gray-500">বাতিল</button>
                             <button onclick="submitReply('${answer.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs">পাঠাও</button>
@@ -173,16 +193,10 @@ const createAnswerCard = (answer, questionAuthorId, currentUser) => {
     `;
 };
 
-// ===== রেন্ডারিং ও সর্টিং =====
 const renderAnswers = (answers, questionAuthorId, currentUser) => {
     const listEl = document.getElementById('answer-list');
     if (!listEl) return;
-
-    const sorted = [...answers].sort((a, b) => {
-        if (currentSort === 'votes') return (b.votes || 0) - (a.votes || 0);
-        return new Date(b.created_at) - new Date(a.created_at);
-    });
-
+    const sorted = [...answers].sort((a, b) => currentSort === 'votes' ? (b.votes || 0) - (a.votes || 0) : new Date(b.created_at) - new Date(a.created_at));
     listEl.innerHTML = sorted.map(ans => createAnswerCard(ans, questionAuthorId, currentUser)).join('');
     sorted.forEach(ans => {
         setupVoteButtons(ans.id, ans.votes || 0, currentUser, 'answer');
@@ -190,70 +204,55 @@ const renderAnswers = (answers, questionAuthorId, currentUser) => {
     });
 };
 
-const setupSortButtons = (questionAuthorId, currentUser) => {
-    const btnVotes = document.getElementById('sort-votes');
-    const btnLatest = document.getElementById('sort-latest');
-    
-    const updateUI = (active, inactive) => {
-        active?.classList.add('bg-blue-50', 'text-[#0056b3]', 'font-medium');
-        inactive?.classList.remove('bg-blue-50', 'text-[#0056b3]', 'font-medium');
-    };
-
-    btnVotes?.addEventListener('click', () => { currentSort = 'votes'; updateUI(btnVotes, btnLatest); renderAnswers(allAnswers, questionAuthorId, currentUser); });
-    btnLatest?.addEventListener('click', () => { currentSort = 'latest'; updateUI(btnLatest, btnVotes); renderAnswers(allAnswers, questionAuthorId, currentUser); });
+const setupSortButtons = (authorId, user) => {
+    const vBtn = document.getElementById('sort-votes'), lBtn = document.getElementById('sort-latest');
+    vBtn?.addEventListener('click', () => { currentSort = 'votes'; renderAnswers(allAnswers, authorId, user); });
+    lBtn?.addEventListener('click', () => { currentSort = 'latest'; renderAnswers(allAnswers, authorId, user); });
 };
 
-// ===== ভোট সিস্টেম (সংশোধিত) =====
-const setupVoteButtons = (id, initialVotes, currentUser, type = 'question') => {
-    const prefix = type === 'question' ? 'q' : `ans-${id}`;
-    const upBtn = document.getElementById(`${prefix}-vote-up`);
-    const downBtn = document.getElementById(`${prefix}-vote-down`);
-    const countEl = document.getElementById(`${prefix}-vote-count`);
-    if (!upBtn || !downBtn || !countEl) return;
-
-    const handleVote = async (direction) => {
-        if (!currentUser) { alert('ভোট দিতে লগ ইন করো।'); return; }
-        const { data: currentData } = await supabase.from(type === 'question' ? 'question' : 'answer').select('votes').eq('id', id).single();
-        let newVotes = (currentData?.votes || 0) + (direction === 'up' ? 1 : -1);
-        countEl.textContent = toBanglaNumber(newVotes);
-        await supabase.from(type === 'question' ? 'question' : 'answer').update({ votes: newVotes }).eq('id', id);
-    };
-
-    upBtn.onclick = () => handleVote('up');
-    downBtn.onclick = () => handleVote('down');
-};
-
-// ===== ডাটা লোড ও ইনিট =====
-const loadAnswers = async (questionId, currentUser, questionAuthorId) => {
-    const { data, error } = await supabase.from('answer').select('*').eq('question_id', questionId);
-    if (error || !data || data.length === 0) {
-        document.getElementById('answer-list').innerHTML = `<div class="text-center py-6 text-gray-400 text-[13px]">এখনো কোনো উত্তর নেই।</div>`;
-        return;
+// ===== FAB ও উত্তর জমা দেওয়া =====
+const setupAnswerFAB = (questionId, currentUser) => {
+    let fab = document.getElementById('answer-fab');
+    if (!fab) {
+        fab = document.createElement('button');
+        fab.id = 'answer-fab';
+        fab.innerHTML = '<i class="fas fa-plus"></i>';
+        fab.className = 'fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg z-50';
+        document.body.appendChild(fab);
     }
+    fab.onclick = () => {
+        const body = prompt("আপনার উত্তরটি লিখুন (কমপক্ষে ২০ অক্ষর):");
+        if (body && body.length >= 20) submitAnswer(questionId, body, currentUser);
+        else if(body) alert("উত্তর খুব ছোট!");
+    };
+};
 
-    const authorIds = [...new Set(data.map(a => a.author_id))];
-    const { data: profiles } = await supabase.from('profile').select('id, username, avatar_url').in('id', authorIds);
-    const profileMap = Object.fromEntries(profiles?.map(p => [p.id, p]) || []);
+const submitAnswer = async (qId, body, user) => {
+    if (!user) return alert("লগ ইন করো!");
+    const { error } = await supabase.from('answer').insert([{ question_id: qId, body, author_id: user.id, votes: 0 }]);
+    if (!error) location.reload();
+};
 
-    allAnswers = data.map(a => ({ ...a, profile: profileMap[a.author_id] }));
-    document.getElementById('answer-count-text').textContent = toBanglaNumber(allAnswers.length);
-    renderAnswers(allAnswers, questionAuthorId, currentUser);
-    setupSortButtons(questionAuthorId, currentUser);
+const loadAnswers = async (qId, user, authorId) => {
+    const { data } = await supabase.from('answer').select('*').eq('question_id', qId);
+    if (!data || data.length === 0) return;
+    const uIds = [...new Set(data.map(a => a.author_id))];
+    const { data: profs } = await supabase.from('profile').select('id, username, avatar_url').in('id', uIds);
+    const pMap = Object.fromEntries(profs?.map(p => [p.id, p]) || []);
+    allAnswers = data.map(a => ({ ...a, profile: pMap[a.author_id] }));
+    renderAnswers(allAnswers, authorId, user);
+    setupSortButtons(authorId, user);
 };
 
 export const initQuestionPage = async () => {
-    const questionId = getQuestionId();
-    if (!questionId) return;
-
-    try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        const { data: question, error } = await supabase.from('question').select('*, profile(username, avatar_url)').eq('id', questionId).single();
-        if (error || !question) return;
-
-        renderQuestion(question, currentUser);
-        incrementViewCount(questionId);
-        await loadAnswers(questionId, currentUser, question.author_id);
-    } catch (err) {
-        console.error(err);
+    const qId = getQuestionId();
+    if (!qId) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: q } = await supabase.from('question').select('*, profile(username, avatar_url)').eq('id', qId).single();
+    if (q) {
+        renderQuestion(q, user);
+        incrementViewCount(qId);
+        await loadAnswers(qId, user, q.author_id);
+        setupAnswerFAB(qId, user);
     }
 };
